@@ -4,42 +4,44 @@ Instructions for coding agents working in this repo.
 
 ## What this repo is
 
-A Claude Code / Codex / ChatGPT plugin marketplace. Plugins are git
-submodules under `plugins/`, not vendored source — never edit files inside a
-submodule directory and expect the change to persist. A submodule is a
-separate git repo pinned to a commit; edits there are local-only unless you
-have push access to that upstream repo and commit/push inside it directly.
+A Claude Code / Codex / ChatGPT plugin marketplace. Every plugin except
+`ai-plugins` itself is a pinned remote git ref (`url` or `git-subdir` source,
+with a `sha`) — not a vendored copy, not a submodule. There's nothing to
+edit locally for those plugins; a fix belongs in the upstream repo.
+`ai-plugins` is the one exception: its source lives directly in this repo
+at `plugins/ai-plugins/`.
 
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
-- `.agents/plugins/marketplace.json` — read by Codex / ChatGPT. Different
-  schema (`source: {"source": "local", "path": "..."}` instead of a bare
-  string), and only includes plugins whose submodule ships a
-  `.codex-plugin/plugin.json` or portable root `plugin.json`.
+- `.agents/plugins/marketplace.json` — read by Codex / ChatGPT. Same
+  `source` object shape (`url`/`git-subdir` with `sha`), but only includes
+  plugins whose repo ships a `.codex-plugin/plugin.json` or portable root
+  `plugin.json`.
 
-When adding, removing, or moving a plugin, update both files unless the
+When adding, removing, or re-pinning a plugin, update both files unless the
 plugin has no Codex manifest (currently only `andrej-karpathy-skills`).
 
 ## Path quirks
 
-Two submodules bundle a Claude variant and a Codex variant at *different*
-depths, and which one is root vs. nested differs per plugin:
+`caveman` and `avoid-ai-writing` each bundle a Claude variant and a Codex
+variant at *different* depths within their own repo, and which one is root
+vs. nested differs per plugin:
 
-- `caveman`: `.claude-plugin/plugin.json` is at the submodule root
-  (`plugins/caveman/.claude-plugin/`) — the Claude entry uses
-  `./plugins/caveman`. Its `.codex-plugin/plugin.json` is nested at
-  `plugins/caveman/plugins/caveman/.codex-plugin/` — the Codex entry uses
-  `./plugins/caveman/plugins/caveman`.
+- `caveman`: `.claude-plugin/plugin.json` is at the repo root — Claude's
+  entry uses `"source": "url"` with no `path`. Its `.codex-plugin/plugin.json`
+  is nested at `plugins/caveman/` inside that same repo — Codex's entry uses
+  `"source": "git-subdir"` with `"path": "plugins/caveman"`.
 - `avoid-ai-writing`: the reverse. `.codex-plugin/plugin.json` is at the
-  submodule root (`plugins/avoid-ai-writing/.codex-plugin/`) — the Codex
-  entry uses `./plugins/avoid-ai-writing`. Its `.claude-plugin/plugin.json`
-  is nested at `plugins/avoid-ai-writing/plugins/avoid-ai-writing/.claude-plugin/`
-  — the Claude entry uses that nested path.
+  repo root — Codex's entry uses `"source": "url"` with no `path`. Its
+  `.claude-plugin/plugin.json` is nested at `plugins/avoid-ai-writing/`
+  inside that repo — Claude's entry uses `"source": "git-subdir"` with
+  `"path": "plugins/avoid-ai-writing"`.
 
-Don't assume `./plugins/<name>` is always the right `source` path for both
-files — check where that submodule's `.claude-plugin/plugin.json` or
-`.codex-plugin/plugin.json` actually lives before wiring up an entry.
+Don't assume a bare `url` source is always right for both files — check
+where that repo's `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`
+actually lives before wiring up an entry. (Cloning the repo once to check is
+fine; just don't commit the clone.)
 
 ## Validating changes
 
@@ -47,23 +49,30 @@ files — check where that submodule's `.claude-plugin/plugin.json` or
 claude plugin validate .
 ```
 
-only checks `.claude-plugin/marketplace.json`. There's no CLI validator for
-the Codex file — check its JSON parses and that every `source.path` resolves
-to a real `.codex-plugin/plugin.json` (or portable root `plugin.json`).
+only checks `.claude-plugin/marketplace.json`, and only validates local
+relative-path sources' `plugin.json` — it does not fetch remote `url`/
+`git-subdir` sources to check them. There's no CLI validator for the Codex
+file either; check its JSON parses and that `source.sha` is a real commit
+reachable from `source.url` (+ `path`, for `git-subdir`).
 
 ## Regex gotcha
 
-`plugins/ai-plugins/skills/update/scripts/update-submodules.sh` parses
-`.gitmodules` with `git config --get-regexp`. Anchor any regex against these
-keys (`\.path$`, not `path`) — an unanchored `path` substring-matches inside
-`andrej-**karpath**y-skills`, so it isn't a hypothetical edge case here.
+`plugins/ai-plugins/skills/update/scripts/update-refs.sh` reads plugin
+entries with `jq`, not a hand-rolled regex — if you touch its parsing, don't
+reintroduce unanchored substring matching. A past version parsed
+`.gitmodules` with `git config --get-regexp path` (unanchored), which
+false-matched `andrej-**karpath**y-skills`. Anchor to `\.path$` if you ever
+need config-file regex again.
 
-## Updating submodules
+## Updating pinned refs
 
-Use the `ai-plugins:update` skill (or run its script directly — see
-README.md) rather than `git submodule update --remote --recursive` by hand,
-so the before/after comparison gets printed. It leaves gitlink bumps
-uncommitted; review with `git diff --submodule` before committing.
+Use the `ai-plugins:update` skill (or run
+`plugins/ai-plugins/skills/update/scripts/update-refs.sh` directly — see
+README.md) rather than hand-editing `source.sha`. It resolves each remote
+plugin's latest commit via `git ls-remote`, prints a before/after SHA +
+commit subject, and rewrites `source.sha` in both marketplace files for
+anything that moved. Leaves the edits uncommitted; review with `git diff`
+before committing.
 
 ## Commit convention
 

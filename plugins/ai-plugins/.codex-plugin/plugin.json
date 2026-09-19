@@ -1,14 +1,14 @@
 {
   "name": "ai-plugins",
   "version": "1.0.0",
-  "description": "Maintenance skill for the ai-plugins marketplace itself: update submodules to latest HEAD.",
+  "description": "Maintenance skill for the ai-plugins marketplace itself: update pinned plugin refs to latest upstream HEAD.",
   "author": {
     "name": "Ralph Shao"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "AI Plugins",
-    "shortDescription": "Update this marketplace's plugin submodules",
+    "shortDescription": "Update this marketplace's pinned plugin refs",
     "developerName": "Ralph Shao",
     "category": "Productivity"
   }

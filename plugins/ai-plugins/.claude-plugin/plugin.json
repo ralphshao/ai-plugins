@@ -1,6 +1,6 @@
 {
   "name": "ai-plugins",
-  "description": "Maintenance skill for the ai-plugins marketplace itself: update submodules to latest HEAD.",
+  "description": "Maintenance skill for the ai-plugins marketplace itself: update pinned plugin refs to latest upstream HEAD.",
   "version": "1.0.0",
   "author": {
     "name": "Ralph Shao"
