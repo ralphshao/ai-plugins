@@ -29,7 +29,7 @@ omitted from the Codex catalog.
 
 | Plugin | Description | Version |
 | --- | --- | --- |
-| [`ai-plugins`](plugins/ai-plugins) | Maintenance skill for this marketplace itself: `ai-plugins:update` bumps every pinned ref to its latest upstream HEAD | 1.0.0 |
+| [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 1.0.0 |
 | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Behavioral guidelines to reduce common LLM coding mistakes | 1.0.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
 | [context-mode](https://github.com/mksglu/context-mode) | MCP server for session continuity, sandboxed code execution, and an FTS5 knowledge base | 1.0.169 |
