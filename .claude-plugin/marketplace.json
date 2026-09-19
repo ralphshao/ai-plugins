@@ -1,0 +1,19 @@
+{
+  "name": "ai-plugins",
+  "description": "Ralph's collection of Claude Code plugins",
+  "owner": {
+    "name": "Ralph Shao",
+    "email": "ralph@ralphshao.com"
+  },
+  "plugins": [
+    {
+      "name": "andrej-karpathy-skills",
+      "source": "./plugins/andrej-karpathy-skills",
+      "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations on LLM coding pitfalls",
+      "version": "1.0.0",
+      "author": {
+        "name": "forrestchang"
+      }
+    }
+  ]
+}

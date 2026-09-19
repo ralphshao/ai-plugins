@@ -1,0 +1,3 @@
+[submodule "plugins/andrej-karpathy-skills"]
+	path = plugins/andrej-karpathy-skills
+	url = https://github.com/multica-ai/andrej-karpathy-skills.git
