@@ -14,6 +14,19 @@
       "category": "Productivity"
     },
     {
+      "name": "avoid-ai-writing",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
+        "sha": "c4783463cf019a8943364c1ef5f80e0a4c8bff94"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "caveman",
       "source": {
         "source": "git-subdir",
@@ -41,37 +54,24 @@
       "category": "Productivity"
     },
     {
-      "name": "ponytail",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
-      "name": "avoid-ai-writing",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
-        "sha": "c4783463cf019a8943364c1ef5f80e0a4c8bff94"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
       "name": "i-have-adhd",
       "source": {
         "source": "url",
         "url": "https://github.com/ayghri/i-have-adhd.git",
         "sha": "ef1a07df87cefee1195397d197815813941caa2f"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
+      "name": "ponytail",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/dietrichgebert/ponytail.git",
+        "sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
       },
       "policy": {
         "installation": "AVAILABLE",

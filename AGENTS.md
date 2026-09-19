@@ -24,19 +24,20 @@ plugin has no Codex manifest (currently only `andrej-karpathy-skills`).
 
 ## Path quirks
 
-`caveman` and `avoid-ai-writing` each bundle a Claude variant and a Codex
+`avoid-ai-writing` and `caveman` each bundle a Claude variant and a Codex
 variant at *different* depths within their own repo, and which one is root
 vs. nested differs per plugin:
 
-- `caveman`: `.claude-plugin/plugin.json` is at the repo root — Claude's
-  entry uses `"source": "url"` with no `path`. Its `.codex-plugin/plugin.json`
-  is nested at `plugins/caveman/` inside that same repo — Codex's entry uses
-  `"source": "git-subdir"` with `"path": "plugins/caveman"`.
-- `avoid-ai-writing`: the reverse. `.codex-plugin/plugin.json` is at the
-  repo root — Codex's entry uses `"source": "url"` with no `path`. Its
+- `avoid-ai-writing`: `.codex-plugin/plugin.json` is at the repo root —
+  Codex's entry uses `"source": "url"` with no `path`. Its
   `.claude-plugin/plugin.json` is nested at `plugins/avoid-ai-writing/`
   inside that repo — Claude's entry uses `"source": "git-subdir"` with
   `"path": "plugins/avoid-ai-writing"`.
+- `caveman`: the reverse. `.claude-plugin/plugin.json` is at the repo root —
+  Claude's entry uses `"source": "url"` with no `path`. Its
+  `.codex-plugin/plugin.json` is nested at `plugins/caveman/` inside that
+  same repo — Codex's entry uses `"source": "git-subdir"` with
+  `"path": "plugins/caveman"`.
 
 Don't assume a bare `url` source is always right for both files — check
 where that repo's `.claude-plugin/plugin.json` or `.codex-plugin/plugin.json`

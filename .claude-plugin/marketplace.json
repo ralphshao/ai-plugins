@@ -29,6 +29,20 @@
       }
     },
     {
+      "name": "avoid-ai-writing",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
+        "path": "plugins/avoid-ai-writing",
+        "sha": "c4783463cf019a8943364c1ef5f80e0a4c8bff94"
+      },
+      "description": "Audit & rewrite content to remove AI writing patterns (\"AI-isms\"). Supports detect-only and edit-in-place modes, voice profiles, and iterate-to-convergence.",
+      "version": "3.35.0",
+      "author": {
+        "name": "Conor Bronsdon"
+      }
+    },
+    {
       "name": "caveman",
       "source": {
         "source": "url",
@@ -57,34 +71,6 @@
       }
     },
     {
-      "name": "ponytail",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
-      },
-      "description": "Lazy senior dev mode. Forces the simplest, shortest solution that actually works: YAGNI, stdlib first, no unrequested abstractions.",
-      "version": "4.10.0",
-      "author": {
-        "name": "Dietrich Gebert",
-        "url": "https://github.com/DietrichGebert"
-      }
-    },
-    {
-      "name": "avoid-ai-writing",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
-        "path": "plugins/avoid-ai-writing",
-        "sha": "c4783463cf019a8943364c1ef5f80e0a4c8bff94"
-      },
-      "description": "Audit & rewrite content to remove AI writing patterns (\"AI-isms\"). Supports detect-only and edit-in-place modes, voice profiles, and iterate-to-convergence.",
-      "version": "3.35.0",
-      "author": {
-        "name": "Conor Bronsdon"
-      }
-    },
-    {
       "name": "i-have-adhd",
       "source": {
         "source": "url",
@@ -96,6 +82,20 @@
       "author": {
         "name": "Ayoub G.",
         "url": "https://github.com/ayghri"
+      }
+    },
+    {
+      "name": "ponytail",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/dietrichgebert/ponytail.git",
+        "sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
+      },
+      "description": "Lazy senior dev mode. Forces the simplest, shortest solution that actually works: YAGNI, stdlib first, no unrequested abstractions.",
+      "version": "4.10.0",
+      "author": {
+        "name": "Dietrich Gebert",
+        "url": "https://github.com/DietrichGebert"
       }
     }
   ]
