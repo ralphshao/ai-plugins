@@ -9,6 +9,6 @@ The script:
 - Reads every plugin in `.claude-plugin/marketplace.json` whose `source` is a `url`, `github`, or `git-subdir` object (skips plain relative-path/local entries like `ai-plugins` itself).
 - Resolves each plugin's latest commit on its tracked ref (default branch if no `ref` is set) via `git ls-remote`.
 - Prints, per plugin: `up to date` with its SHA + subject, or `updated` with before/after SHA + commit subject.
-- When a plugin has a newer commit, rewrites its `source.sha` in `.claude-plugin/marketplace.json` and, if a matching entry exists, `.agents/plugins/marketplace.json` too. Leaves those edits uncommitted — review with `git diff`, commit yourself when ready.
+- When a plugin has a newer commit, rewrites its `source.sha` in `.claude-plugin/marketplace.json` and, if a matching entry exists, `.agents/plugins/marketplace.json` too. Also reads the plugin's `version` at the new commit and, if it changed, updates the `version` field in `.claude-plugin/marketplace.json` and the matching row in `README.md`'s plugin table. Leaves those edits uncommitted — review with `git diff`, commit yourself when ready.
 
-After running, summarize which plugins changed and to what commit.
+After running, summarize which plugins changed, to what commit, and any version bumps.

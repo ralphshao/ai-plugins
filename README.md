@@ -60,9 +60,10 @@ Install the `ai-plugins` plugin from this marketplace, then run its
 `plugins/ai-plugins/skills/update/scripts/update-refs.sh` directly from the
 repo root). It resolves each pinned plugin's latest commit via
 `git ls-remote`, prints a before/after SHA + commit subject, and — for
-anything that moved — rewrites `source.sha` in both marketplace files.
-Leaves the edits uncommitted for you to review with `git diff` before
-committing.
+anything that moved — rewrites `source.sha` in both marketplace files and,
+if the plugin's own version changed, updates the `version` field in
+`.claude-plugin/marketplace.json` and this README's plugin table. Leaves
+the edits uncommitted for you to review with `git diff` before committing.
 
 ## Adding a plugin
 

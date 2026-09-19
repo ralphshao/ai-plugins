@@ -58,7 +58,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/ayghri/i-have-adhd.git",
-        "sha": "ef1a07df87cefee1195397d197815813941caa2f"
+        "sha": "839872f9d1cd634fed642b4589ce7226199cc15f"
       },
       "policy": {
         "installation": "AVAILABLE",
