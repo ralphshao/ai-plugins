@@ -41,7 +41,7 @@
       "name": "avoid-ai-writing",
       "source": {
         "source": "local",
-        "path": "./plugins/avoid-ai-writing/plugins/avoid-ai-writing"
+        "path": "./plugins/avoid-ai-writing"
       },
       "policy": {
         "installation": "AVAILABLE",
