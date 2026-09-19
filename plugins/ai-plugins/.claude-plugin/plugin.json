@@ -1,0 +1,9 @@
+{
+  "name": "ai-plugins",
+  "description": "Maintenance skill for the ai-plugins marketplace itself: update submodules to latest HEAD.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ralph Shao"
+  },
+  "skills": ["./skills/update"]
+}

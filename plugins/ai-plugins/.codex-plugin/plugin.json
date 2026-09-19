@@ -1,0 +1,15 @@
+{
+  "name": "ai-plugins",
+  "version": "1.0.0",
+  "description": "Maintenance skill for the ai-plugins marketplace itself: update submodules to latest HEAD.",
+  "author": {
+    "name": "Ralph Shao"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AI Plugins",
+    "shortDescription": "Update this marketplace's plugin submodules",
+    "developerName": "Ralph Shao",
+    "category": "Productivity"
+  }
+}

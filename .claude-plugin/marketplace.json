@@ -7,6 +7,15 @@
   },
   "plugins": [
     {
+      "name": "ai-plugins",
+      "source": "./plugins/ai-plugins",
+      "description": "Maintenance skill for the ai-plugins marketplace itself: update submodules to latest HEAD.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ralph Shao"
+      }
+    },
+    {
       "name": "andrej-karpathy-skills",
       "source": "./plugins/andrej-karpathy-skills",
       "description": "Behavioral guidelines to reduce common LLM coding mistakes, derived from Andrej Karpathy's observations on LLM coding pitfalls",
