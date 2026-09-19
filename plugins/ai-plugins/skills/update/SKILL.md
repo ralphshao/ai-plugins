@@ -3,7 +3,7 @@ name: update
 description: Update every plugin submodule in this marketplace to its latest upstream HEAD and print a before/after SHA comparison. Use for "update submodules", "update plugins", "pull latest plugin versions", or /ai-plugins:update.
 ---
 
-Run `${CLAUDE_PLUGIN_ROOT}/scripts/update-submodules.sh` from the repo root.
+Run `${CLAUDE_PLUGIN_ROOT}/skills/update/scripts/update-submodules.sh` from the repo root.
 
 The script:
 - Updates each submodule listed in `.gitmodules` to the latest commit on its tracked branch.
