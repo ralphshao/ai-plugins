@@ -73,15 +73,17 @@ def test_sh_remove_passes_exit_code_through(market):
 
 
 @needs_bash
-def test_sh_without_python(market, tmp_path):
-    # A PATH holding only the tools the wrapper needs, but no python.
+def test_sh_without_python_3_9(market, tmp_path):
+    # PATH has a python3 that fails the version check (like Python 2) and no python.
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    os.symlink(shutil.which("dirname"), bin_dir / "dirname")
+    fake = bin_dir / "python3"
+    fake.write_text("#!/bin/sh\nexit 1\n")
+    fake.chmod(0o755)
     result = run_sh("update", cwd=market.path,
                     env={**os.environ, "PATH": str(bin_dir)})
     assert result.returncode == 1
-    assert "Python 3 is required" in result.stderr
+    assert "Python 3.9+ is required" in result.stderr
 
 
 # --- PowerShell --------------------------------------------------------------

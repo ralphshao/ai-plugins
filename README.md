@@ -67,7 +67,7 @@ Install the `ai-plugins` plugin from this marketplace. It has three skills:
 Each skill calls a thin wrapper, `scripts/run.sh` or `scripts/run.ps1`,
 which runs the shared
 [`plugins/ai-plugins/scripts/ai-plugins.py`](plugins/ai-plugins/scripts/ai-plugins.py).
-That script needs Python 3 and `git`, and nothing else. You can also run it
+That script needs Python 3.9+ and `git`, and nothing else. You can also run it
 directly from anywhere inside the repo:
 
 ```bash

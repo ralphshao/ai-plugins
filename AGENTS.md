@@ -72,7 +72,7 @@ When you change the script, add or update a test for the new behavior.
 
 ## Maintenance script
 
-`plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3) implements
+`plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3.9+) implements
 the `add`, `remove`, and `update` subcommands. Each skill under
 `plugins/ai-plugins/skills/<name>/` calls it through a shared wrapper,
 `scripts/run.sh` or `scripts/run.ps1`, which only finds Python on PATH.

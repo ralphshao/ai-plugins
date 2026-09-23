@@ -2,3 +2,6 @@
 # and nothing under plugins/ should ship compiled files)
 __pycache__/
 .pytest_cache/
+
+# Local CodeGraph index
+.codegraph/
