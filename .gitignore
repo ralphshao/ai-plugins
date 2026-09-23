@@ -1,0 +1,7 @@
+# Python bytecode (the tests import plugins/ai-plugins/scripts/ai-plugins.py,
+# and nothing under plugins/ should ship compiled files)
+__pycache__/
+.pytest_cache/
+
+# Local CodeGraph index
+.codegraph/

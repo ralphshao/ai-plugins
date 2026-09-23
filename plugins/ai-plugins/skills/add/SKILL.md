@@ -4,7 +4,7 @@ description: Add a new plugin to this marketplace from a GitHub URL or owner/rep
 argument-hint: <github-url-or-owner/repo> [--path <subdir>] [--description <text>]
 ---
 
-From the repo root, run `${CLAUDE_PLUGIN_ROOT}/skills/add/scripts/add.sh $ARGUMENTS` (on Windows, `${CLAUDE_PLUGIN_ROOT}/skills/add/scripts/add.ps1 $ARGUMENTS`). Both are thin wrappers around `${CLAUDE_PLUGIN_ROOT}/scripts/ai-plugins.py add`.
+From the repo root, run `${CLAUDE_PLUGIN_ROOT}/scripts/run.sh add $ARGUMENTS` (on Windows, `${CLAUDE_PLUGIN_ROOT}/scripts/run.ps1 add $ARGUMENTS`). Both find a Python on PATH and run `${CLAUDE_PLUGIN_ROOT}/scripts/ai-plugins.py add`.
 
 The argument can be `owner/repo`, `https://github.com/owner/repo(.git)`, or a `https://github.com/owner/repo/tree/<ref>/<subdir>` link. For a `/tree/` link, the script pins that ref and searches only under that subdirectory.
 

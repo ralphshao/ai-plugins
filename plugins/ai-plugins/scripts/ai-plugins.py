@@ -19,7 +19,7 @@ SELF = "ai-plugins"
 CLAUDE_FILE = os.path.join(".claude-plugin", "marketplace.json")
 CODEX_FILE = os.path.join(".agents", "plugins", "marketplace.json")
 README_FILE = "README.md"
-REMOTE_SOURCES = ("url", "github", "git-subdir")
+REMOTE_SOURCES = ("url", "git-subdir")
 DEFAULT_CATEGORY = "Productivity"
 
 # README plugin table row: "| <name cell> | <description> | <version> |"
@@ -150,12 +150,6 @@ def latest_sha(url, ref):
     return out.split("\t", 1)[0] if out else ""
 
 
-def source_url(source):
-    if source.get("source") == "github":
-        return f"https://github.com/{source['repo']}.git"
-    return source["url"]
-
-
 def commit_subject(clone):
     if not clone:
         return ""
@@ -192,7 +186,7 @@ def cmd_update(_args):
     for plugin in remote:
         name = plugin["name"]
         source = plugin["source"]
-        url = source_url(source)
+        url = source["url"]
         old_sha = source.get("sha", "")
         subdir = source.get("path", ".") if source["source"] == "git-subdir" else "."
 
@@ -302,14 +296,12 @@ def cmd_add(args):
     if args.path is not None:
         path_hint = args.path
 
-    pinned_ref = ref
-    ref = ref or "HEAD"
     try:
         sha = latest_sha(clone_url, ref)
     except RuntimeError as e:
         die(f"Could not reach {clone_url}: {e}")
     if not sha:
-        die(f"Could not resolve {ref} on {clone_url}")
+        die(f"Could not resolve {ref or 'HEAD'} on {clone_url}")
 
     clone = fetch_commit(clone_url, sha)
     if not clone:
@@ -355,9 +347,9 @@ def cmd_add(args):
             "source": make_source(clone_url, sha, claude_dir),
             "description": description,
         }
-        if pinned_ref:
+        if ref:
             # update tracks this ref instead of the default branch.
-            entry["source"]["ref"] = pinned_ref
+            entry["source"]["ref"] = ref
         if version:
             entry["version"] = version
         if claude_manifest.get("author"):
@@ -424,7 +416,7 @@ def cmd_remove(args):
 
     print(f"== {name}: removed ==")
     for where in removed:
-        print(f"   {where}")
+        print(f"   {where.replace(os.sep, '/')}")
 
     # Prose elsewhere (e.g. "X is Claude-only") is left for a human to edit.
     for doc in (README_FILE, "AGENTS.md"):

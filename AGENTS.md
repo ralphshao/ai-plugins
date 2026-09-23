@@ -57,13 +57,26 @@ relative-path sources' `plugin.json` — it does not fetch remote `url`/
 file either; check its JSON parses and that `source.sha` is a real commit
 reachable from `source.url` (+ `path`, for `git-subdir`).
 
+## Tests
+
+```bash
+python3 -m pip install pytest   # once
+python3 -m pytest               # from the repo root
+```
+
+`tests/` runs offline: upstream plugin repos are local git repos, and a
+private `GIT_CONFIG_GLOBAL` rewrites `https://github.com/` to point at them.
+
+CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
+When you change the script, add or update a test for the new behavior.
+
 ## Maintenance script
 
-`plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3) implements
+`plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3.9+) implements
 the `add`, `remove`, and `update` subcommands. Each skill under
-`plugins/ai-plugins/skills/<name>/` only calls a thin wrapper,
-`scripts/<name>.sh` or `scripts/<name>.ps1`, that runs it. Put logic in
-the Python script, not in the wrappers.
+`plugins/ai-plugins/skills/<name>/` calls it through a shared wrapper,
+`scripts/run.sh` or `scripts/run.ps1`, which only finds Python on PATH.
+Put logic in the Python script, not in the wrappers.
 
 The script parses the marketplace files as JSON and matches plugins by exact
 `name`. Keep it that way, with no substring matching: a past version matched
@@ -90,5 +103,5 @@ uncommitted. Review them with `git diff` before committing.
 ## Commit convention
 
 This repo pushes real commits per change (not squashed), with a body
-explaining *why*, and a `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
-trailer when Claude made the change.
+explaining *why*, and a `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
+trailer naming the Claude model that made the change.
