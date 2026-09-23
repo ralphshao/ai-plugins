@@ -57,6 +57,29 @@ relative-path sources' `plugin.json` — it does not fetch remote `url`/
 file either; check its JSON parses and that `source.sha` is a real commit
 reachable from `source.url` (+ `path`, for `git-subdir`).
 
+## Tests
+
+```bash
+python3 -m pip install pytest   # once
+python3 -m pytest               # from the repo root
+```
+
+`tests/` covers `ai-plugins.py` and the skill wrappers:
+
+- `test_helpers.py`: unit tests for the script's parsing, sorting, and README
+  table helpers.
+- `test_add.py`, `test_remove.py`, `test_update.py`, `test_cli.py`: run the
+  script end to end against a throwaway marketplace repo. Upstream plugin
+  repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
+  `https://github.com/` to point at them, so nothing touches the network.
+- `test_wrappers.py`: the `.sh` and `.ps1` wrappers forward their arguments
+  and exit code. The `.ps1` tests skip when `pwsh` isn't installed.
+- `test_marketplace.py`: this repo's committed catalogs and README table
+  are consistent (sorted, pinned, Codex SHAs match Claude's, versions agree).
+
+CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
+When you change the script, add or update a test for the new behavior.
+
 ## Maintenance script
 
 `plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3) implements

@@ -43,6 +43,7 @@ omitted from the Codex catalog.
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
 .agents/plugins/marketplace.json  # Codex / ChatGPT marketplace catalog
 plugins/ai-plugins/               # the one plugin whose source actually lives in this repo
+tests/                            # pytest suite for the ai-plugins scripts
 ```
 
 Every other plugin's `source` is a `url` or `git-subdir` object with a
@@ -79,6 +80,13 @@ All three commands keep the plugin lists sorted alphabetically, with
 `ai-plugins` first, in both marketplace files and the table above. They
 leave their edits uncommitted, so review them with `git diff` before
 committing. Run `claude plugin validate .` to check the Claude manifest.
+
+The script and wrappers have an offline pytest suite in [`tests/`](tests):
+
+```bash
+python3 -m pip install pytest
+python3 -m pytest
+```
 
 Each plugin keeps its own upstream license; this repo adds no license of its
 own for the marketplace glue.
