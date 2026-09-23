@@ -26,14 +26,16 @@ def test_add_root_manifests(market, both_at_root):
 
     assert market.plugin("widget") == {
         "name": "widget",
-        "source": {"source": "url", "url": remote.clone_url, "sha": sha},
+        "source": {"source": "url", "url": remote.clone_url, "sha": sha,
+                   "ref": "main"},
         "description": "Does widget things",
         "version": "2.1.0",
         "author": AUTHOR,
     }
     assert market.plugin("widget", "codex") == {
         "name": "widget",
-        "source": {"source": "url", "url": remote.clone_url, "sha": sha},
+        "source": {"source": "url", "url": remote.clone_url, "sha": sha,
+                   "ref": "main"},
         "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
         "category": "Coding",
     }
@@ -66,11 +68,11 @@ def test_add_claude_root_codex_nested(market, make_remote):
     })
     result = market.run("add", remote.slug, check=True)
     assert market.plugin("caveman")["source"] == {
-        "source": "url", "url": remote.clone_url, "sha": remote.head(),
+        "source": "url", "url": remote.clone_url, "sha": remote.head(), "ref": "main",
     }
     assert market.plugin("caveman", "codex")["source"] == {
         "source": "git-subdir", "url": remote.clone_url,
-        "path": "./plugins/caveman", "sha": remote.head(),
+        "path": "./plugins/caveman", "sha": remote.head(), "ref": "main",
     }
     assert market.plugin("caveman", "codex")["category"] == "Productivity"
     assert "codex:  ./plugins/caveman" in result.stdout
@@ -86,7 +88,7 @@ def test_add_codex_root_claude_nested(market, make_remote):
     result = market.run("add", remote.slug, check=True)
     assert market.plugin("avoid")["source"] == {
         "source": "git-subdir", "url": remote.clone_url,
-        "path": "plugins/avoid", "sha": remote.head(),
+        "path": "plugins/avoid", "sha": remote.head(), "ref": "main",
     }
     assert market.plugin("avoid", "codex")["source"]["source"] == "url"
     assert market.table_rows()[-1].startswith(
@@ -99,17 +101,33 @@ def test_add_claude_only(market, make_remote):
     remote.commit({CLAUDE: manifest("solo")})
     result = market.run("add", remote.slug, check=True)
     assert market.plugin("solo") is not None
-    assert market.plugin("solo", "codex") is None
-    assert "Claude-only" in result.stdout
+    assert market.plugin("solo", "codex")["source"] == market.plugin("solo")["source"]
+    assert "using Claude plugin root" in result.stdout
+
+
+def test_add_claude_only_nested(market, make_remote):
+    remote = make_remote("nest")
+    remote.commit({f"plugins/nest/{CLAUDE}": manifest("nest")})
+    market.run("add", remote.slug, check=True)
+    assert market.plugin("nest", "codex")["source"]["path"] == "./plugins/nest"
+    assert market.plugin("nest")["source"]["path"] == "plugins/nest"
+
+
+def test_add_codex_only_nested(market, make_remote):
+    remote = make_remote("cnest")
+    remote.commit({f"plugins/cnest/{CODEX}": manifest("cnest")})
+    market.run("add", remote.slug, check=True)
+    assert market.plugin("cnest")["source"]["path"] == "plugins/cnest"
+    assert market.plugin("cnest", "codex")["source"]["path"] == "./plugins/cnest"
 
 
 def test_add_codex_only(market, make_remote):
     remote = make_remote("cdx")
     remote.commit({CODEX: manifest("cdx", description="Codex thing")})
     result = market.run("add", remote.slug, check=True)
-    assert market.plugin("cdx") is None
-    assert market.plugin("cdx", "codex") is not None
-    assert "claude: no .claude-plugin/plugin.json, skipped" in result.stdout
+    assert market.plugin("cdx")["source"] == market.plugin("cdx", "codex")["source"]
+    assert market.plugin("cdx")["description"] == "Codex thing"
+    assert "using Codex plugin root" in result.stdout
     assert market.table_rows()[-1] == f"| [cdx]({remote.web_url}) | Codex thing | 1.0.0 |"
 
 
@@ -145,9 +163,10 @@ def test_add_pins_latest_release(market, make_remote):
 
     result = market.run("add", remote.slug, check=True)
     entry = market.plugin("tagged")
-    # No "ref": update re-resolves the latest release each time.
+    # update moves a release-tag ref to the newest release.
     assert entry["source"] == {"source": "url", "url": remote.clone_url,
-                               "sha": release}
+                               "sha": release, "ref": "v1.2.0"}
+    assert market.plugin("tagged", "codex")["source"]["ref"] == "v1.2.0"
     assert entry["version"] == "1.2.0"
     assert f"commit: {release[:12]} Release 1.2.0 (release v1.2.0)" in result.stdout
 
@@ -168,6 +187,7 @@ def test_add_tree_link_pins_ref_and_path(market, make_remote):
         "sha": next_sha, "ref": "next",
     }
     assert entry["source"]["sha"] != main_sha
+    assert market.plugin("a", "codex")["source"]["ref"] == "next"
     assert entry["version"] == "2.0.0-beta"
 
 

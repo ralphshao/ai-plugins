@@ -1,8 +1,8 @@
 # ai-plugins
 
-A personal Claude Code / Codex / ChatGPT plugin marketplace. Every plugin
-except `ai-plugins` itself is fetched directly from its upstream git repo,
-pinned to a specific commit SHA — there's no vendored copy in this repo.
+A personal Claude Code / Codex plugin marketplace. Every plugin except
+`ai-plugins` itself is fetched directly from its upstream git repo, pinned
+to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
 
@@ -13,23 +13,18 @@ claude plugin marketplace add ralphshao/ai-plugins
 claude plugin install <plugin-name>@ai-plugins
 ```
 
-### Codex / ChatGPT
+### Codex
 
-Codex and the ChatGPT desktop app read a separate catalog at
-[`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json). Clone
-this repo and point Codex at it — see
-[Package your plugin](https://developers.openai.com/plugins/build/plugins)
-for how repo-scoped marketplaces are picked up.
-
-`andrej-karpathy-skills` is Claude-only: its upstream repo ships only a
-`.claude-plugin/plugin.json`, with no Codex-compatible manifest, so it's
-omitted from the Codex catalog.
+```bash
+codex plugin marketplace add ralphshao/ai-plugins
+codex plugin install <plugin-name>@ai-plugins
+```
 
 ## Plugins
 
 | Plugin | Description | Version |
 | --- | --- | --- |
-| [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 1.3.0 |
+| [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 1.4.0 |
 | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Behavioral guidelines to reduce common LLM coding mistakes | 1.0.0 |
 | [avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) | Audit & rewrite content to remove AI writing patterns ("AI-isms") | 3.36.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
@@ -41,7 +36,7 @@ omitted from the Codex catalog.
 
 ```
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
-.agents/plugins/marketplace.json  # Codex / ChatGPT marketplace catalog
+.agents/plugins/marketplace.json  # Codex marketplace catalog
 plugins/ai-plugins/               # the one plugin whose source actually lives in this repo
 tests/                            # pytest suite for the ai-plugins scripts
 ```
@@ -60,9 +55,9 @@ Install the `ai-plugins` plugin from this marketplace. It has three skills:
 
 | Skill | Does |
 | --- | --- |
-| `ai-plugins:add <github-url-or-owner/repo>` | Pins the repo's latest release (highest `vX.Y.Z` tag), or its latest commit if it has no release tags. Detects where its `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live, and adds entries to both marketplace files (Codex only if it has a Codex manifest) and a row to the table above. Optional flags: `--path <subdir>` when the repo holds several plugins, `--description <text>` to override the upstream description. |
+| `ai-plugins:add <github-url-or-owner/repo>` | Pins the repo's latest release (highest `vX.Y.Z` tag), or its latest commit if it has no release tags. Detects where its `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live, and adds entries to both marketplace files, with `ref` set to the release tag or branch next to `sha`. The repo needs at least one of the two; each catalog uses its own manifest's folder as the plugin root, falling back to the other. It also adds a row to the table above. Optional flags: `--path <subdir>` when the repo holds several plugins, `--description <text>` to override the upstream description. |
 | `ai-plugins:remove <name>` | Removes the plugin from both marketplace files and the table above, then lists any other lines in README.md and AGENTS.md that still mention it. |
-| `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest release (or latest commit on its `ref` or default branch, if it has no release tags or sets a `ref`), and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the table above. |
+| `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest release (or latest commit on its default branch if it has no release tags, or on its `ref` if that is some other branch), and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` and `source.ref` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the table above. |
 
 Each skill calls a thin wrapper, `scripts/run.sh` or `scripts/run.ps1`,
 which runs the shared

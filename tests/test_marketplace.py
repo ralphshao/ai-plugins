@@ -80,6 +80,10 @@ def test_codex_plugins_match_claude_pins(claude, codex):
         assert plugin["source"]["sha"] == other["sha"], plugin["name"]
 
 
+def test_catalogs_list_the_same_plugins(claude, codex):
+    assert [p["name"] for p in claude["plugins"]] == [p["name"] for p in codex["plugins"]]
+
+
 def test_codex_entries_have_policy_and_category(codex):
     for plugin in codex["plugins"]:
         assert plugin["policy"] == {"installation": "AVAILABLE",
@@ -95,15 +99,6 @@ def test_readme_table_lists_every_plugin_in_order(ai_plugins, claude, codex, tab
 def test_readme_versions_match_claude_catalog(claude, table):
     for plugin in claude["plugins"]:
         assert table[plugin["name"]][0] == plugin.get("version", "—"), plugin["name"]
-
-
-def test_claude_only_plugins_are_called_out_in_readme(claude, codex):
-    codex_names = {p["name"] for p in codex["plugins"]}
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    prose = "\n".join(l for l in readme.split("\n") if not l.startswith("|"))
-    for plugin in claude["plugins"]:
-        if plugin["name"] not in codex_names:
-            assert f"`{plugin['name']}` is Claude-only" in prose
 
 
 def test_self_plugin_versions_agree(claude):

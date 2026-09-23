@@ -3,6 +3,7 @@
 from conftest import codex_entry, manifest, pin
 
 CLAUDE = ".claude-plugin/plugin.json"
+CODEX = ".codex-plugin/plugin.json"
 
 
 def test_update_nothing_remote(market):
@@ -15,7 +16,7 @@ def test_update_nothing_remote(market):
 def test_update_up_to_date_leaves_files_byte_identical(market, make_remote):
     remote = make_remote("steady")
     sha = remote.commit({CLAUDE: manifest("steady")}, "Initial release")
-    pin(market, remote, sha)
+    pin(market, remote, sha, ref="main")
     before = market.snapshot()
 
     result = market.run("update", check=True)
@@ -55,6 +56,16 @@ def test_update_bumps_version_and_readme_row(market, make_remote):
     assert market.table_rows()[-1] == f"| [bumpy]({remote.web_url}) | Does 1.0.0 | 1.1.0 |"
     # The Codex catalog has no version field to bump.
     assert "version" not in market.plugin("bumpy", "codex")
+
+
+def test_update_codex_only_plugin_reads_codex_manifest(market, make_remote):
+    remote = make_remote("cdx")
+    old = remote.commit({CODEX: manifest("cdx", "1.0.0")})
+    remote.commit({CODEX: manifest("cdx", "1.1.0")})
+    pin(market, remote, old)
+
+    market.run("update", check=True)
+    assert market.plugin("cdx")["version"] == "1.1.0"
 
 
 def test_update_git_subdir_reads_version_from_path(market, make_remote):
@@ -188,6 +199,47 @@ def test_update_pins_latest_release_not_branch_tip(market, make_remote):
     assert v19 != v110
 
 
+def test_update_adds_missing_ref_when_up_to_date(market, make_remote):
+    remote = make_remote("noref")
+    sha = remote.commit({CLAUDE: manifest("noref")})
+    remote.tag("v1.0.0")
+    pin(market, remote, sha)
+
+    result = market.run("update", check=True)
+    assert "ref: (none) -> v1.0.0" in result.stdout
+    for which in ("claude", "codex"):
+        source = market.plugin("noref", which)["source"]
+        assert source["sha"] == sha
+        assert list(source)[-2:] == ["sha", "ref"]
+        assert source["ref"] == "v1.0.0"
+
+
+def test_update_moves_release_tag_ref_to_newest_release(market, make_remote):
+    remote = make_remote("tagref")
+    old = remote.commit({CLAUDE: manifest("tagref", "1.0.0")})
+    remote.tag("v1.0.0")
+    new = remote.commit({CLAUDE: manifest("tagref", "2.0.0")})
+    remote.tag("v2.0.0")
+    pin(market, remote, old, ref="v1.0.0")
+
+    market.run("update", check=True)
+    for which in ("claude", "codex"):
+        source = market.plugin("tagref", which)["source"]
+        assert (source["sha"], source["ref"]) == (new, "v2.0.0")
+
+
+def test_update_default_branch_ref_switches_to_first_release(market, make_remote):
+    remote = make_remote("late")
+    old = remote.commit({CLAUDE: manifest("late")})
+    new = remote.commit({"x": "1"}, "First release")
+    remote.tag("v1.0.0")
+    pin(market, remote, old, ref="main")
+
+    market.run("update", check=True)
+    source = market.plugin("late")["source"]
+    assert (source["sha"], source["ref"]) == (new, "v1.0.0")
+
+
 def test_update_without_release_tags_follows_default_branch(market, make_remote):
     remote = make_remote("untagged")
     old = remote.commit({CLAUDE: manifest("untagged")})
@@ -197,4 +249,5 @@ def test_update_without_release_tags_follows_default_branch(market, make_remote)
 
     result = market.run("update", check=True)
     assert market.plugin("untagged")["source"]["sha"] == new
+    assert market.plugin("untagged", "codex")["source"]["ref"] == "main"
     assert "(default branch)" in result.stdout

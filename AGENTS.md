@@ -4,7 +4,7 @@ Instructions for coding agents working in this repo.
 
 ## What this repo is
 
-A Claude Code / Codex / ChatGPT plugin marketplace. Every plugin except
+A Claude Code / Codex plugin marketplace. Every plugin except
 `ai-plugins` itself is a pinned remote git ref (`url` or `git-subdir` source,
 with a `sha`) — not a vendored copy, not a submodule. There's nothing to
 edit locally for those plugins; a fix belongs in the upstream repo.
@@ -14,13 +14,13 @@ at `plugins/ai-plugins/`.
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
-- `.agents/plugins/marketplace.json` — read by Codex / ChatGPT. Same
-  `source` object shape (`url`/`git-subdir` with `sha`), but only includes
-  plugins whose repo ships a `.codex-plugin/plugin.json` or portable root
-  `plugin.json`.
+- `.agents/plugins/marketplace.json` — read by Codex. Same plugins, same
+  `source` object shape (`url`/`git-subdir` with `sha` and `ref`). A plugin
+  with only one manifest (e.g. `andrej-karpathy-skills`, which has no
+  `.codex-plugin/plugin.json`) uses that manifest's folder as the plugin
+  root in both files; Claude Code and Codex both load either layout.
 
-When adding, removing, or re-pinning a plugin, update both files unless the
-plugin has no Codex manifest (currently only `andrej-karpathy-skills`). The
+When adding, removing, or re-pinning a plugin, update both files. The
 `ai-plugins` skills do this for you.
 
 ## Path quirks
@@ -95,10 +95,10 @@ Use the `ai-plugins:add`, `ai-plugins:remove`, and `ai-plugins:update`
 skills, or run `python3 plugins/ai-plugins/scripts/ai-plugins.py
 <add|remove|update>` directly (see README.md), rather than hand-editing the
 marketplace files. `add` detects where each manifest lives, so it handles
-the path quirks above. `remove` does not edit prose, such as the Claude-only
-note in README.md or the path quirks above. It lists the lines that still
-mention the plugin, so update those by hand. All three leave their edits
-uncommitted. Review them with `git diff` before committing.
+the path quirks above. `remove` does not edit prose, such as the path quirks
+above. It lists the lines that still mention the plugin, so update those by
+hand. All three leave their edits uncommitted. Review them with `git diff`
+before committing.
 
 ## Commit convention
 

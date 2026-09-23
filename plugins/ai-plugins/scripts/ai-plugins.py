@@ -174,17 +174,41 @@ def latest_release(url):
     return tag, shas[tag]
 
 
-def resolve_pin(url, ref):
-    """Return (sha, label) for what to pin.
+def default_branch(url):
+    for line in git("ls-remote", "--symref", url, "HEAD").splitlines():
+        if line.startswith("ref: refs/heads/"):
+            return line[len("ref: refs/heads/"):].split("\t", 1)[0]
+    return None
 
-    An explicit ref is followed as-is. Otherwise the latest release tag wins,
-    falling back to the default branch when the repo has no release tags.
+
+def resolve_pin(url, ref, follow_releases=False):
+    """Return (sha, ref, label) for what to pin.
+
+    With no ref, the latest release tag wins, falling back to the default
+    branch when the repo has no release tags. An explicit ref is followed
+    as-is, unless follow_releases is set and it is a release tag or the
+    default branch: then it is re-resolved as if there were no ref.
     """
-    if not ref:
-        release = latest_release(url)
-        if release:
-            return release[1], f"release {release[0]}"
-    return latest_sha(url, ref), f"ref {ref}" if ref else "default branch"
+    if ref and follow_releases and (
+            RELEASE_TAG_RE.match(ref) or ref == default_branch(url)):
+        ref = None
+    if ref:
+        return latest_sha(url, ref), ref, f"ref {ref}"
+    release = latest_release(url)
+    if release:
+        return release[1], release[0], f"release {release[0]}"
+    branch = default_branch(url)
+    return latest_sha(url, branch), branch, "default branch"
+
+
+def set_pin(source, sha, ref):
+    """Set sha and ref in place, keeping ref right after sha."""
+    items = [(k, v) for k, v in source.items() if k not in ("sha", "ref")]
+    source.clear()
+    source.update(items)
+    source["sha"] = sha
+    if ref:
+        source["ref"] = ref
 
 
 def commit_subject(clone):
@@ -228,7 +252,8 @@ def cmd_update(_args):
         subdir = source.get("path", ".") if source["source"] == "git-subdir" else "."
 
         try:
-            new_sha, label = resolve_pin(url, source.get("ref"))
+            new_sha, new_ref, label = resolve_pin(
+                url, source.get("ref"), follow_releases=True)
         except RuntimeError:
             new_sha = ""
         if not new_sha:
@@ -239,14 +264,26 @@ def cmd_update(_args):
         old_subject = commit_subject(old_clone)
         rmtree(old_clone)
 
+        codex_plugin = find_plugin(codex, name) if codex else None
+        codex_source = codex_plugin.get("source") if codex_plugin else None
+        sources = [source] + ([codex_source] if isinstance(codex_source, dict) else [])
+
         if old_sha == new_sha:
             print(f"== {name}: up to date ==")
-            print(f"   {old_sha[:12]} {old_subject} ({label})\n")
+            print(f"   {old_sha[:12]} {old_subject} ({label})")
+            if any(s.get("ref") != new_ref for s in sources):
+                print(f"   ref: {source.get('ref') or '(none)'} -> {new_ref}")
+                for s in sources:
+                    set_pin(s, new_sha, new_ref)
+            print()
             continue
 
         new_clone = fetch_commit(url, new_sha)
         new_subject = commit_subject(new_clone)
-        manifest = read_manifest(new_clone, subdir, "claude") if new_clone else None
+        manifest = (
+            read_manifest(new_clone, subdir, "claude")
+            or read_manifest(new_clone, subdir, "codex")
+        ) if new_clone else None
         rmtree(new_clone)
         new_version = (manifest or {}).get("version", "")
         old_version = plugin.get("version", "")
@@ -255,10 +292,8 @@ def cmd_update(_args):
         print(f"   before: {old_sha[:12]} {old_subject}")
         print(f"   after:  {new_sha[:12]} {new_subject} ({label})")
 
-        source["sha"] = new_sha
-        codex_plugin = find_plugin(codex, name) if codex else None
-        if codex_plugin and isinstance(codex_plugin.get("source"), dict):
-            codex_plugin["source"]["sha"] = new_sha
+        for s in sources:
+            set_pin(s, new_sha, new_ref)
 
         if new_version and new_version != old_version:
             print(f"   version: {old_version} -> {new_version}")
@@ -321,11 +356,14 @@ def pick_manifest_dir(root, kind, path_hint):
     return dirs[0] if dirs else None
 
 
-def make_source(url, sha, subdir, codex_style=False):
+def make_source(url, sha, ref, subdir, codex_style=False):
     if not subdir:
-        return {"source": "url", "url": url, "sha": sha}
-    path = f"./{subdir}" if codex_style else subdir
-    return {"source": "git-subdir", "url": url, "path": path, "sha": sha}
+        source = {"source": "url", "url": url}
+    else:
+        path = f"./{subdir}" if codex_style else subdir
+        source = {"source": "git-subdir", "url": url, "path": path}
+    set_pin(source, sha, ref)
+    return source
 
 
 def cmd_add(args):
@@ -334,7 +372,7 @@ def cmd_add(args):
         path_hint = args.path
 
     try:
-        sha, label = resolve_pin(clone_url, ref)
+        sha, ref, label = resolve_pin(clone_url, ref)
     except RuntimeError as e:
         die(f"Could not reach {clone_url}: {e}")
     if not sha:
@@ -362,10 +400,19 @@ def cmd_add(args):
             f"{web_url}{' under ' + path_hint if path_hint else ''}"
         )
 
-    primary = claude_manifest or codex_manifest
-    name = primary.get("name") or web_url.rsplit("/", 1)[-1]
-    description = args.description or primary.get("description", "")
-    version = primary.get("version", "")
+    # Each catalog uses its own manifest's folder as the plugin root, falling
+    # back to the other one: Claude Code and Codex both load either layout.
+    claude_note = codex_note = ""
+    if not claude_manifest:
+        claude_dir, claude_manifest = codex_dir, codex_manifest
+        claude_note = " (no .claude-plugin/plugin.json, using Codex plugin root)"
+    if not codex_manifest:
+        codex_dir, codex_manifest = claude_dir, claude_manifest
+        codex_note = " (no .codex-plugin/plugin.json, using Claude plugin root)"
+
+    name = claude_manifest.get("name") or web_url.rsplit("/", 1)[-1]
+    description = args.description or claude_manifest.get("description", "")
+    version = claude_manifest.get("version", "")
 
     claude = load_json(CLAUDE_FILE)
     codex = load_json(CODEX_FILE) if os.path.isfile(CODEX_FILE) else None
@@ -378,37 +425,29 @@ def cmd_add(args):
     if version:
         print(f"   version: {version}")
 
-    if claude_manifest:
-        entry = {
-            "name": name,
-            "source": make_source(clone_url, sha, claude_dir),
-            "description": description,
-        }
-        if ref:
-            # update tracks this ref instead of the default branch.
-            entry["source"]["ref"] = ref
-        if version:
-            entry["version"] = version
-        if claude_manifest.get("author"):
-            entry["author"] = claude_manifest["author"]
-        claude["plugins"].append(entry)
-        print(f"   claude: {'./' + claude_dir if claude_dir else 'repo root'}")
-        save_catalog(CLAUDE_FILE, claude)
-    else:
-        print("   claude: no .claude-plugin/plugin.json, skipped")
+    entry = {
+        "name": name,
+        "source": make_source(clone_url, sha, ref, claude_dir),
+        "description": description,
+    }
+    if version:
+        entry["version"] = version
+    if claude_manifest.get("author"):
+        entry["author"] = claude_manifest["author"]
+    claude["plugins"].append(entry)
+    print(f"   claude: {'./' + claude_dir if claude_dir else 'repo root'}{claude_note}")
+    save_catalog(CLAUDE_FILE, claude)
 
-    if codex is not None and codex_manifest:
+    if codex is not None:
         category = (codex_manifest.get("interface") or {}).get("category")
         codex["plugins"].append({
             "name": name,
-            "source": make_source(clone_url, sha, codex_dir, codex_style=True),
+            "source": make_source(clone_url, sha, ref, codex_dir, codex_style=True),
             "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
             "category": category or DEFAULT_CATEGORY,
         })
-        print(f"   codex:  {'./' + codex_dir if codex_dir else 'repo root'}")
+        print(f"   codex:  {'./' + codex_dir if codex_dir else 'repo root'}{codex_note}")
         save_catalog(CODEX_FILE, codex)
-    else:
-        print("   codex:  no .codex-plugin/plugin.json, skipped (Claude-only)")
 
     table = read_readme_table()
     if table:
@@ -455,7 +494,7 @@ def cmd_remove(args):
     for where in removed:
         print(f"   {where.replace(os.sep, '/')}")
 
-    # Prose elsewhere (e.g. "X is Claude-only") is left for a human to edit.
+    # Prose elsewhere (e.g. the path quirks in AGENTS.md) is left for a human to edit.
     for doc in (README_FILE, "AGENTS.md"):
         if not os.path.isfile(doc):
             continue

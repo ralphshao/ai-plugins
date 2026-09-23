@@ -14,11 +14,26 @@
       "category": "Productivity"
     },
     {
+      "name": "andrej-karpathy-skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
+        "sha": "2c606141936f1eeef17fa3043a72095b4765b9c2",
+        "ref": "main"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    },
+    {
       "name": "avoid-ai-writing",
       "source": {
         "source": "url",
         "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
-        "sha": "6135015a28c228ff24e2a0b86f5bbd816649a0d2"
+        "sha": "6135015a28c228ff24e2a0b86f5bbd816649a0d2",
+        "ref": "v3.36.0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -32,7 +47,8 @@
         "source": "git-subdir",
         "url": "https://github.com/JuliusBrussee/caveman.git",
         "path": "./plugins/caveman",
-        "sha": "8b0c1d3699b8d83e87fe4605b378da20c41555e0"
+        "sha": "8b0c1d3699b8d83e87fe4605b378da20c41555e0",
+        "ref": "v2.7.0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -45,7 +61,8 @@
       "source": {
         "source": "url",
         "url": "https://github.com/mksglu/context-mode.git",
-        "sha": "589d8214d56740a28b5f7bf63167743d586b0b40"
+        "sha": "589d8214d56740a28b5f7bf63167743d586b0b40",
+        "ref": "v1.0.169"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -58,7 +75,8 @@
       "source": {
         "source": "url",
         "url": "https://github.com/ayghri/i-have-adhd.git",
-        "sha": "839872f9d1cd634fed642b4589ce7226199cc15f"
+        "sha": "839872f9d1cd634fed642b4589ce7226199cc15f",
+        "ref": "main"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -71,7 +89,8 @@
       "source": {
         "source": "url",
         "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "1d95ff7d39de12d87014ea40d4e22201bddc501b"
+        "sha": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
+        "ref": "v4.10.0"
       },
       "policy": {
         "installation": "AVAILABLE",
