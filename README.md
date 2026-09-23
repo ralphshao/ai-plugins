@@ -1,8 +1,8 @@
 # ai-plugins
 
-A personal Claude Code / Codex / ChatGPT plugin marketplace. Every plugin
-except `ai-plugins` itself is fetched directly from its upstream git repo,
-pinned to a specific commit SHA — there's no vendored copy in this repo.
+A personal Claude Code / Codex plugin marketplace. Every plugin except
+`ai-plugins` itself is fetched directly from its upstream git repo, pinned
+to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
 
@@ -13,17 +13,12 @@ claude plugin marketplace add ralphshao/ai-plugins
 claude plugin install <plugin-name>@ai-plugins
 ```
 
-### Codex / ChatGPT
+### Codex
 
-Codex and the ChatGPT desktop app read a separate catalog at
-[`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json). Clone
-this repo and point Codex at it — see
-[Package your plugin](https://developers.openai.com/plugins/build/plugins)
-for how repo-scoped marketplaces are picked up.
-
-`andrej-karpathy-skills` is Claude-only: its upstream repo ships only a
-`.claude-plugin/plugin.json`, with no Codex-compatible manifest, so it's
-omitted from the Codex catalog.
+```bash
+codex plugin marketplace add ralphshao/ai-plugins
+codex plugin install <plugin-name>@ai-plugins
+```
 
 ## Plugins
 
@@ -41,7 +36,7 @@ omitted from the Codex catalog.
 
 ```
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
-.agents/plugins/marketplace.json  # Codex / ChatGPT marketplace catalog
+.agents/plugins/marketplace.json  # Codex marketplace catalog
 plugins/ai-plugins/               # the one plugin whose source actually lives in this repo
 tests/                            # pytest suite for the ai-plugins scripts
 ```

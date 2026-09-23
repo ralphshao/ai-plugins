@@ -97,15 +97,6 @@ def test_readme_versions_match_claude_catalog(claude, table):
         assert table[plugin["name"]][0] == plugin.get("version", "—"), plugin["name"]
 
 
-def test_claude_only_plugins_are_called_out_in_readme(claude, codex):
-    codex_names = {p["name"] for p in codex["plugins"]}
-    readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    prose = "\n".join(l for l in readme.split("\n") if not l.startswith("|"))
-    for plugin in claude["plugins"]:
-        if plugin["name"] not in codex_names:
-            assert f"`{plugin['name']}` is Claude-only" in prose
-
-
 def test_self_plugin_versions_agree(claude):
     entry = next(p for p in claude["plugins"] if p["name"] == "ai-plugins")
     for kind in ("claude", "codex"):

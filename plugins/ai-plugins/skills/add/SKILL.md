@@ -19,4 +19,3 @@ What the script does:
 
 After running:
 - If the description is long (more than about one sentence), suggest a shorter README description and offer to re-run with `--description`: first `remove <name>`, then `add` again.
-- If the plugin is Claude-only, mention that the README's Codex section lists Claude-only plugins, and offer to add it there.
