@@ -81,12 +81,5 @@ All three commands keep the plugin lists sorted alphabetically, with
 leave their edits uncommitted, so review them with `git diff` before
 committing. Run `claude plugin validate .` to check the Claude manifest.
 
-The script and wrappers have an offline pytest suite in [`tests/`](tests):
-
-```bash
-python3 -m pip install pytest
-python3 -m pytest
-```
-
 Each plugin keeps its own upstream license; this repo adds no license of its
 own for the marketplace glue.

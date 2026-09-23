@@ -20,17 +20,13 @@ CLAUDE_FILE = Path(".claude-plugin", "marketplace.json")
 CODEX_FILE = Path(".agents", "plugins", "marketplace.json")
 
 
-def load_script_module():
+@pytest.fixture(scope="session")
+def ai_plugins():
     # The file name has a hyphen, so it can't be imported the normal way.
     spec = importlib.util.spec_from_file_location("ai_plugins", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-@pytest.fixture(scope="session")
-def ai_plugins():
-    return load_script_module()
 
 
 def write(path, text):
@@ -114,8 +110,8 @@ class Remote:
         git("commit", "-q", "--allow-empty", "-m", message, cwd=self.path)
         return self.head()
 
-    def head(self, ref="HEAD"):
-        return git("rev-parse", ref, cwd=self.path)
+    def head(self):
+        return git("rev-parse", "HEAD", cwd=self.path)
 
     def checkout(self, branch, create=False):
         git("checkout", "-q", *(["-b"] if create else []), branch, cwd=self.path)
@@ -160,51 +156,43 @@ Notes about plugins live here.
 """
 
 
+def table_rows(readme_text):
+    """Body rows of the README plugin table, in file order."""
+    lines = readme_text.split("\n")
+    start = next(i for i, l in enumerate(lines) if l.startswith("| Plugin |")) + 2
+    rows = []
+    for line in lines[start:]:
+        if not line.startswith("|"):
+            break
+        rows.append(line)
+    return rows
+
+
 class Market:
     """A throwaway git repo shaped like this marketplace."""
 
     def __init__(self, path):
         self.path = path
+        self.claude_path = path / CLAUDE_FILE
+        self.codex_path = path / CODEX_FILE
+        self.readme_path = path / "README.md"
 
-    @property
-    def claude_path(self):
-        return self.path / CLAUDE_FILE
-
-    @property
-    def codex_path(self):
-        return self.path / CODEX_FILE
-
-    @property
-    def readme_path(self):
-        return self.path / "README.md"
-
-    def claude(self):
-        return json.loads(self.claude_path.read_text(encoding="utf-8"))
-
-    def codex(self):
-        return json.loads(self.codex_path.read_text(encoding="utf-8"))
+    def catalog(self, which="claude"):
+        path = self.claude_path if which == "claude" else self.codex_path
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def readme(self):
         return self.readme_path.read_text(encoding="utf-8")
 
-    def claude_plugin(self, name):
-        return next((p for p in self.claude()["plugins"] if p["name"] == name), None)
-
-    def codex_plugin(self, name):
-        return next((p for p in self.codex()["plugins"] if p["name"] == name), None)
+    def plugin(self, name, which="claude"):
+        return next((p for p in self.catalog(which)["plugins"] if p["name"] == name),
+                    None)
 
     def names(self, which="claude"):
-        return [p["name"] for p in getattr(self, which)()["plugins"]]
+        return [p["name"] for p in self.catalog(which)["plugins"]]
 
     def table_rows(self):
-        lines = self.readme().split("\n")
-        start = next(i for i, l in enumerate(lines) if l.startswith("| Plugin |")) + 2
-        rows = []
-        for line in lines[start:]:
-            if not line.startswith("|"):
-                break
-            rows.append(line)
-        return rows
+        return table_rows(self.readme())
 
     def snapshot(self):
         """Bytes of every file the script may touch, for no-change checks."""
@@ -225,15 +213,14 @@ class Market:
             assert result.returncode != 0, result.stdout + result.stderr
         return result
 
-    def add_claude(self, entry):
-        data = self.claude()
-        data["plugins"].append(entry)
-        write(self.claude_path, json.dumps(data, indent=2) + "\n")
+    def save(self, data, which="claude"):
+        path = self.claude_path if which == "claude" else self.codex_path
+        write(path, json.dumps(data, indent=2) + "\n")
 
-    def add_codex(self, entry):
-        data = self.codex()
+    def add_entry(self, entry, which="claude"):
+        data = self.catalog(which)
         data["plugins"].append(entry)
-        write(self.codex_path, json.dumps(data, indent=2) + "\n")
+        self.save(data, which)
 
     def add_row(self, row):
         text = self.readme()
@@ -249,6 +236,30 @@ def codex_entry(name, source):
         "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
         "category": "Productivity",
     }
+
+
+def pin(market, remote, sha, name=None, version="1.0.0", subdir=None, ref=None,
+        codex=True, row=True, kind="url"):
+    """Add a catalog entry pinned to sha, as `add` would have written it."""
+    name = name or remote.repo
+    if kind == "github":
+        source = {"source": "github", "repo": remote.slug, "sha": sha}
+    elif subdir:
+        source = {"source": "git-subdir", "url": remote.clone_url, "path": subdir,
+                  "sha": sha}
+    else:
+        source = {"source": "url", "url": remote.clone_url, "sha": sha}
+    if ref:
+        source["ref"] = ref
+    market.add_entry({"name": name, "source": source, "description": name,
+                      "version": version})
+    if codex:
+        codex_source = dict(source)
+        if subdir:
+            codex_source["path"] = f"./{subdir}"
+        market.add_entry(codex_entry(name, codex_source), "codex")
+    if row:
+        market.add_row(f"| [{name}]({remote.web_url}) | Does {version} | {version} |")
 
 
 @pytest.fixture

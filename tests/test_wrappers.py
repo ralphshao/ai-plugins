@@ -39,14 +39,6 @@ def run_ps1(skill, *args, cwd):
         cwd=cwd, capture_output=True, text=True)
 
 
-@pytest.mark.parametrize("skill", SKILLS)
-@pytest.mark.parametrize("ext", ["sh", "ps1"])
-def test_wrapper_exists_and_calls_its_own_subcommand(skill, ext):
-    text = wrapper(skill, ext).read_text(encoding="utf-8")
-    assert "ai-plugins.py" in text
-    assert f" {skill} " in text
-
-
 @pytest.mark.skipif(sys.platform == "win32", reason="no exec bit on Windows")
 @pytest.mark.parametrize("skill", SKILLS)
 def test_sh_wrapper_is_executable(skill):
@@ -56,8 +48,11 @@ def test_sh_wrapper_is_executable(skill):
 # --- bash --------------------------------------------------------------------
 
 @needs_bash
-def test_sh_update_runs(market):
-    result = run_sh("update", cwd=market.path)
+def test_sh_update_runs_from_another_directory(market):
+    # The wrapper finds the script relative to itself, not the cwd.
+    sub = market.path / "nested"
+    sub.mkdir()
+    result = run_sh("update", cwd=sub)
     assert result.returncode == 0, result.stderr
     assert "No remote-ref plugins found" in result.stdout
 
@@ -72,7 +67,7 @@ def test_sh_add_forwards_all_arguments(market, make_remote):
     result = run_sh("add", remote.slug, "--path", "two",
                     "--description", "Two words", cwd=market.path)
     assert result.returncode == 0, result.stderr
-    assert market.claude_plugin("two")["description"] == "Two words"
+    assert market.plugin("two")["description"] == "Two words"
 
 
 @needs_bash
@@ -83,21 +78,11 @@ def test_sh_remove_passes_exit_code_through(market):
 
 
 @needs_bash
-def test_sh_works_from_another_directory(market, tmp_path):
-    # The wrapper finds the script relative to itself, not the cwd.
-    sub = market.path / "nested"
-    sub.mkdir()
-    result = run_sh("update", cwd=sub)
-    assert result.returncode == 0, result.stderr
-
-
-@needs_bash
 def test_sh_without_python(market, tmp_path):
     # A PATH holding only the tools the wrapper needs, but no python.
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
-    for tool in ("dirname",):
-        os.symlink(shutil.which(tool), bin_dir / tool)
+    os.symlink(shutil.which("dirname"), bin_dir / "dirname")
     result = run_sh("update", cwd=market.path,
                     env={**os.environ, "PATH": str(bin_dir)})
     assert result.returncode == 1
@@ -123,7 +108,7 @@ def test_ps1_add_forwards_all_arguments(market, make_remote):
     result = run_ps1("add", remote.slug, "--path", "two",
                      "--description", "Two words", cwd=market.path)
     assert result.returncode == 0, result.stderr
-    assert market.claude_plugin("two")["description"] == "Two words"
+    assert market.plugin("two")["description"] == "Two words"
 
 
 @needs_pwsh

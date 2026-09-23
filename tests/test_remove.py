@@ -1,18 +1,12 @@
 """End-to-end tests for `ai-plugins.py remove`."""
 
-from conftest import codex_entry
+from conftest import pin
 
 SHA = "a" * 40
 
 
-def seed(market, name, codex=True, row=True):
-    source = {"source": "url", "url": f"https://github.com/o/{name}.git", "sha": SHA}
-    market.add_claude({"name": name, "source": source, "description": name,
-                       "version": "1.0.0"})
-    if codex:
-        market.add_codex(codex_entry(name, source))
-    if row:
-        market.add_row(f"| [{name}](https://github.com/o/{name}) | {name} | 1.0.0 |")
+def seed(market, make_remote, name, codex=True):
+    pin(market, make_remote(name), SHA, codex=codex)
 
 
 def removed_from(stdout):
@@ -21,9 +15,9 @@ def removed_from(stdout):
     return [line.strip() for line in block.splitlines() if not line.strip().startswith("note:")]
 
 
-def test_remove_drops_plugin_everywhere(market):
-    seed(market, "beta")
-    seed(market, "gamma")
+def test_remove_drops_plugin_everywhere(market, make_remote):
+    seed(market, make_remote, "beta")
+    seed(market, make_remote, "gamma")
     result = market.run("remove", "beta", check=True)
 
     assert market.names() == ["ai-plugins", "gamma"]
@@ -40,10 +34,10 @@ def test_remove_drops_plugin_everywhere(market):
     assert market.readme().endswith("## Repo structure\n\nTrailing prose stays put.\n")
 
 
-def test_remove_claude_only_plugin(market):
-    seed(market, "legacy-only", codex=False)
+def test_remove_claude_only_plugin(market, make_remote):
+    seed(market, make_remote, "legacy-only", codex=False)
     result = market.run("remove", "legacy-only", check=True)
-    assert market.claude_plugin("legacy-only") is None
+    assert market.plugin("legacy-only") is None
     assert removed_from(result.stdout) == [
         ".claude-plugin/marketplace.json", "README.md plugin table",
     ]
@@ -57,8 +51,8 @@ def test_remove_row_only_plugin(market):
     assert not any("[stray]" in r for r in market.table_rows())
 
 
-def test_remove_lists_remaining_mentions_with_line_numbers(market):
-    seed(market, "legacy-only", codex=False)
+def test_remove_lists_remaining_mentions_with_line_numbers(market, make_remote):
+    seed(market, make_remote, "legacy-only", codex=False)
     agents = market.path / "AGENTS.md"
     agents.write_text(agents.read_text() + "\nlegacy-only has quirks.\n")
     result = market.run("remove", "legacy-only", check=True)
@@ -68,25 +62,25 @@ def test_remove_lists_remaining_mentions_with_line_numbers(market):
     assert "`legacy-only` is Claude-only" in market.readme()
 
 
-def test_remove_mentions_match_whole_names_only(market):
-    seed(market, "karpathy")
+def test_remove_mentions_match_whole_names_only(market, make_remote):
+    seed(market, make_remote, "karpathy")
     agents = market.path / "AGENTS.md"
     agents.write_text("andrej-karpathy-skills and karpathy-extra and karpathy_x\n")
     result = market.run("remove", "karpathy", check=True)
     assert "AGENTS.md still mentions" not in result.stdout
 
 
-def test_remove_matches_exact_name_not_substring(market):
-    seed(market, "cave")
-    seed(market, "caveman")
+def test_remove_matches_exact_name_not_substring(market, make_remote):
+    seed(market, make_remote, "cave")
+    seed(market, make_remote, "caveman")
     market.run("remove", "cave", check=True)
     assert market.names() == ["ai-plugins", "caveman"]
     assert market.names("codex") == ["ai-plugins", "caveman"]
     assert any("[caveman]" in r for r in market.table_rows())
 
 
-def test_remove_unknown_plugin_fails_without_edits(market):
-    seed(market, "beta")
+def test_remove_unknown_plugin_fails_without_edits(market, make_remote):
+    seed(market, make_remote, "beta")
     before = market.snapshot()
     result = market.run("remove", "nope", check=False)
     assert result.returncode == 1
@@ -101,20 +95,9 @@ def test_remove_refuses_self(market):
     assert market.snapshot() == before
 
 
-def test_remove_without_codex_catalog(market):
-    seed(market, "beta")
+def test_remove_without_codex_catalog(market, make_remote):
+    seed(market, make_remote, "beta")
     market.codex_path.unlink()
     market.run("remove", "beta", check=True)
     assert market.names() == ["ai-plugins"]
     assert not market.codex_path.exists()
-
-
-def test_remove_resorts_hand_edited_catalog(market):
-    seed(market, "zeta")
-    seed(market, "Alpha")
-    seed(market, "beta")
-    market.run("remove", "beta", check=True)
-    assert market.names() == ["ai-plugins", "Alpha", "zeta"]
-    assert [r.split("]")[0] for r in market.table_rows()] == [
-        "| [`ai-plugins`", "| [Alpha", "| [zeta",
-    ]

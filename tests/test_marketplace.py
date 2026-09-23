@@ -9,7 +9,7 @@ import re
 
 import pytest
 
-from conftest import CLAUDE_FILE, CODEX_FILE, PLUGIN_ROOT, REPO_ROOT
+from conftest import CLAUDE_FILE, CODEX_FILE, PLUGIN_ROOT, REPO_ROOT, table_rows
 
 REMOTE = ("url", "github", "git-subdir")
 
@@ -31,12 +31,8 @@ def codex():
 @pytest.fixture(scope="module")
 def table(ai_plugins):
     """README plugin table as {name: (version cell, row)}, in file order."""
-    lines = (REPO_ROOT / "README.md").read_text(encoding="utf-8").split("\n")
-    header = next(i for i, l in enumerate(lines) if l.startswith("| Plugin |"))
     rows = {}
-    for line in lines[header + 2:]:
-        if not line.startswith("|"):
-            break
+    for line in table_rows((REPO_ROOT / "README.md").read_text(encoding="utf-8")):
         m = ai_plugins.ROW_RE.match(line)
         assert m, f"malformed README row: {line}"
         name = ai_plugins.ROW_NAME_RE.search(m.group("name")).group(1)

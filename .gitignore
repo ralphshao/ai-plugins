@@ -1,13 +1,4 @@
 # Python bytecode (the tests import plugins/ai-plugins/scripts/ai-plugins.py,
 # and nothing under plugins/ should ship compiled files)
 __pycache__/
-*.py[cod]
-
-# Test tooling
 .pytest_cache/
-.venv/
-venv/
-
-# OS cruft
-.DS_Store
-Thumbs.db
