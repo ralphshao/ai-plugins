@@ -99,17 +99,33 @@ def test_add_claude_only(market, make_remote):
     remote.commit({CLAUDE: manifest("solo")})
     result = market.run("add", remote.slug, check=True)
     assert market.plugin("solo") is not None
-    assert market.plugin("solo", "codex") is None
-    assert "Claude-only" in result.stdout
+    assert market.plugin("solo", "codex")["source"] == market.plugin("solo")["source"]
+    assert "using Claude plugin root" in result.stdout
+
+
+def test_add_claude_only_nested(market, make_remote):
+    remote = make_remote("nest")
+    remote.commit({f"plugins/nest/{CLAUDE}": manifest("nest")})
+    market.run("add", remote.slug, check=True)
+    assert market.plugin("nest", "codex")["source"]["path"] == "./plugins/nest"
+    assert market.plugin("nest")["source"]["path"] == "plugins/nest"
+
+
+def test_add_codex_only_nested(market, make_remote):
+    remote = make_remote("cnest")
+    remote.commit({f"plugins/cnest/{CODEX}": manifest("cnest")})
+    market.run("add", remote.slug, check=True)
+    assert market.plugin("cnest")["source"]["path"] == "plugins/cnest"
+    assert market.plugin("cnest", "codex")["source"]["path"] == "./plugins/cnest"
 
 
 def test_add_codex_only(market, make_remote):
     remote = make_remote("cdx")
     remote.commit({CODEX: manifest("cdx", description="Codex thing")})
     result = market.run("add", remote.slug, check=True)
-    assert market.plugin("cdx") is None
-    assert market.plugin("cdx", "codex") is not None
-    assert "claude: no .claude-plugin/plugin.json, skipped" in result.stdout
+    assert market.plugin("cdx")["source"] == market.plugin("cdx", "codex")["source"]
+    assert market.plugin("cdx")["description"] == "Codex thing"
+    assert "using Codex plugin root" in result.stdout
     assert market.table_rows()[-1] == f"| [cdx]({remote.web_url}) | Codex thing | 1.0.0 |"
 
 

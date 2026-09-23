@@ -14,13 +14,13 @@ at `plugins/ai-plugins/`.
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
-- `.agents/plugins/marketplace.json` — read by Codex. Same
-  `source` object shape (`url`/`git-subdir` with `sha`), but only includes
-  plugins whose repo ships a `.codex-plugin/plugin.json` or portable root
-  `plugin.json`.
+- `.agents/plugins/marketplace.json` — read by Codex. Same plugins, same
+  `source` object shape (`url`/`git-subdir` with `sha`). A plugin with only
+  one manifest (e.g. `andrej-karpathy-skills`, which has no
+  `.codex-plugin/plugin.json`) uses that manifest's folder as the plugin
+  root in both files; Claude Code and Codex both load either layout.
 
-When adding, removing, or re-pinning a plugin, update both files unless the
-plugin has no Codex manifest (currently only `andrej-karpathy-skills`). The
+When adding, removing, or re-pinning a plugin, update both files. The
 `ai-plugins` skills do this for you.
 
 ## Path quirks

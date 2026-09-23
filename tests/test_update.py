@@ -3,6 +3,7 @@
 from conftest import codex_entry, manifest, pin
 
 CLAUDE = ".claude-plugin/plugin.json"
+CODEX = ".codex-plugin/plugin.json"
 
 
 def test_update_nothing_remote(market):
@@ -55,6 +56,16 @@ def test_update_bumps_version_and_readme_row(market, make_remote):
     assert market.table_rows()[-1] == f"| [bumpy]({remote.web_url}) | Does 1.0.0 | 1.1.0 |"
     # The Codex catalog has no version field to bump.
     assert "version" not in market.plugin("bumpy", "codex")
+
+
+def test_update_codex_only_plugin_reads_codex_manifest(market, make_remote):
+    remote = make_remote("cdx")
+    old = remote.commit({CODEX: manifest("cdx", "1.0.0")})
+    remote.commit({CODEX: manifest("cdx", "1.1.0")})
+    pin(market, remote, old)
+
+    market.run("update", check=True)
+    assert market.plugin("cdx")["version"] == "1.1.0"
 
 
 def test_update_git_subdir_reads_version_from_path(market, make_remote):

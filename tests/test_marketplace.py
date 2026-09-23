@@ -80,6 +80,10 @@ def test_codex_plugins_match_claude_pins(claude, codex):
         assert plugin["source"]["sha"] == other["sha"], plugin["name"]
 
 
+def test_catalogs_list_the_same_plugins(claude, codex):
+    assert [p["name"] for p in claude["plugins"]] == [p["name"] for p in codex["plugins"]]
+
+
 def test_codex_entries_have_policy_and_category(codex):
     for plugin in codex["plugins"]:
         assert plugin["policy"] == {"installation": "AVAILABLE",

@@ -246,7 +246,10 @@ def cmd_update(_args):
 
         new_clone = fetch_commit(url, new_sha)
         new_subject = commit_subject(new_clone)
-        manifest = read_manifest(new_clone, subdir, "claude") if new_clone else None
+        manifest = (
+            read_manifest(new_clone, subdir, "claude")
+            or read_manifest(new_clone, subdir, "codex")
+        ) if new_clone else None
         rmtree(new_clone)
         new_version = (manifest or {}).get("version", "")
         old_version = plugin.get("version", "")
@@ -362,10 +365,19 @@ def cmd_add(args):
             f"{web_url}{' under ' + path_hint if path_hint else ''}"
         )
 
-    primary = claude_manifest or codex_manifest
-    name = primary.get("name") or web_url.rsplit("/", 1)[-1]
-    description = args.description or primary.get("description", "")
-    version = primary.get("version", "")
+    # Each catalog uses its own manifest's folder as the plugin root, falling
+    # back to the other one: Claude Code and Codex both load either layout.
+    claude_note = codex_note = ""
+    if not claude_manifest:
+        claude_dir, claude_manifest = codex_dir, codex_manifest
+        claude_note = " (no .claude-plugin/plugin.json, using Codex plugin root)"
+    if not codex_manifest:
+        codex_dir, codex_manifest = claude_dir, claude_manifest
+        codex_note = " (no .codex-plugin/plugin.json, using Claude plugin root)"
+
+    name = claude_manifest.get("name") or web_url.rsplit("/", 1)[-1]
+    description = args.description or claude_manifest.get("description", "")
+    version = claude_manifest.get("version", "")
 
     claude = load_json(CLAUDE_FILE)
     codex = load_json(CODEX_FILE) if os.path.isfile(CODEX_FILE) else None
@@ -378,26 +390,23 @@ def cmd_add(args):
     if version:
         print(f"   version: {version}")
 
-    if claude_manifest:
-        entry = {
-            "name": name,
-            "source": make_source(clone_url, sha, claude_dir),
-            "description": description,
-        }
-        if ref:
-            # update tracks this ref instead of the default branch.
-            entry["source"]["ref"] = ref
-        if version:
-            entry["version"] = version
-        if claude_manifest.get("author"):
-            entry["author"] = claude_manifest["author"]
-        claude["plugins"].append(entry)
-        print(f"   claude: {'./' + claude_dir if claude_dir else 'repo root'}")
-        save_catalog(CLAUDE_FILE, claude)
-    else:
-        print("   claude: no .claude-plugin/plugin.json, skipped")
+    entry = {
+        "name": name,
+        "source": make_source(clone_url, sha, claude_dir),
+        "description": description,
+    }
+    if ref:
+        # update tracks this ref instead of the default branch.
+        entry["source"]["ref"] = ref
+    if version:
+        entry["version"] = version
+    if claude_manifest.get("author"):
+        entry["author"] = claude_manifest["author"]
+    claude["plugins"].append(entry)
+    print(f"   claude: {'./' + claude_dir if claude_dir else 'repo root'}{claude_note}")
+    save_catalog(CLAUDE_FILE, claude)
 
-    if codex is not None and codex_manifest:
+    if codex is not None:
         category = (codex_manifest.get("interface") or {}).get("category")
         codex["plugins"].append({
             "name": name,
@@ -405,10 +414,8 @@ def cmd_add(args):
             "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
             "category": category or DEFAULT_CATEGORY,
         })
-        print(f"   codex:  {'./' + codex_dir if codex_dir else 'repo root'}")
+        print(f"   codex:  {'./' + codex_dir if codex_dir else 'repo root'}{codex_note}")
         save_catalog(CODEX_FILE, codex)
-    else:
-        print("   codex:  no .codex-plugin/plugin.json, skipped (Claude-only)")
 
     table = read_readme_table()
     if table:
@@ -455,7 +462,7 @@ def cmd_remove(args):
     for where in removed:
         print(f"   {where.replace(os.sep, '/')}")
 
-    # Prose elsewhere (e.g. "X is Claude-only") is left for a human to edit.
+    # Prose elsewhere (e.g. the path quirks in AGENTS.md) is left for a human to edit.
     for doc in (README_FILE, "AGENTS.md"):
         if not os.path.isfile(doc):
             continue
