@@ -10,7 +10,7 @@
       "name": "ai-plugins",
       "source": "./plugins/ai-plugins",
       "description": "Maintenance skills for the ai-plugins marketplace itself",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "author": {
         "name": "Ralph Shao"
       }
