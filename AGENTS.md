@@ -103,5 +103,5 @@ uncommitted. Review them with `git diff` before committing.
 ## Commit convention
 
 This repo pushes real commits per change (not squashed), with a body
-explaining *why*, and a `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`
-trailer when Claude made the change.
+explaining *why*, and a `Co-Authored-By: Claude <model> <noreply@anthropic.com>`
+trailer naming the Claude model that made the change.
