@@ -20,7 +20,8 @@ at `plugins/ai-plugins/`.
   `plugin.json`.
 
 When adding, removing, or re-pinning a plugin, update both files unless the
-plugin has no Codex manifest (currently only `andrej-karpathy-skills`).
+plugin has no Codex manifest (currently only `andrej-karpathy-skills`). The
+`ai-plugins` skills do this for you.
 
 ## Path quirks
 
@@ -56,24 +57,35 @@ relative-path sources' `plugin.json` — it does not fetch remote `url`/
 file either; check its JSON parses and that `source.sha` is a real commit
 reachable from `source.url` (+ `path`, for `git-subdir`).
 
-## Regex gotcha
+## Maintenance script
 
-`plugins/ai-plugins/skills/update/scripts/update-refs.sh` reads plugin
-entries with `jq`, not a hand-rolled regex — if you touch its parsing, don't
-reintroduce unanchored substring matching. A past version parsed
-`.gitmodules` with `git config --get-regexp path` (unanchored), which
-false-matched `andrej-**karpath**y-skills`. Anchor to `\.path$` if you ever
-need config-file regex again.
+`plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3) implements
+the `add`, `remove`, and `update` subcommands. Each skill under
+`plugins/ai-plugins/skills/<name>/` only calls a thin wrapper,
+`scripts/<name>.sh` or `scripts/<name>.ps1`, that runs it. Put logic in
+the Python script, not in the wrappers.
 
-## Updating pinned refs
+The script parses the marketplace files as JSON and matches plugins by exact
+`name`. Keep it that way, with no substring matching: a past version matched
+paths with an unanchored regex and false-matched `andrej-**karpath**y-skills`.
+The README plugin table is matched by the link text in each row's first
+cell, parsed exactly.
 
-Use the `ai-plugins:update` skill (or run
-`plugins/ai-plugins/skills/update/scripts/update-refs.sh` directly — see
-README.md) rather than hand-editing `source.sha`. It resolves each remote
-plugin's latest commit via `git ls-remote`, prints a before/after SHA +
-commit subject, and rewrites `source.sha` in both marketplace files for
-anything that moved. Leaves the edits uncommitted; review with `git diff`
-before committing.
+Plugin order is alphabetical (case-insensitive), with `ai-plugins` always
+first. It's the same in both marketplace files and in the README table.
+The script re-sorts on every write, so hand edits get normalized the next
+time it runs.
+
+## Adding, removing, and updating plugins
+
+Use the `ai-plugins:add`, `ai-plugins:remove`, and `ai-plugins:update`
+skills, or run `python3 plugins/ai-plugins/scripts/ai-plugins.py
+<add|remove|update>` directly (see README.md), rather than hand-editing the
+marketplace files. `add` detects where each manifest lives, so it handles
+the path quirks above. `remove` does not edit prose, such as the Claude-only
+note in README.md or the path quirks above. It lists the lines that still
+mention the plugin, so update those by hand. All three leave their edits
+uncommitted. Review them with `git diff` before committing.
 
 ## Commit convention
 
