@@ -80,6 +80,7 @@ def test_update_follows_pinned_ref_not_default_branch(market, make_remote):
     stable = remote.commit({"s": "1"}, "Stable fix")
     remote.checkout("main")
     remote.commit({"m": "1"}, "Main work")
+    remote.tag("v9.0.0")  # an explicit ref beats the latest release
     pin(market, remote, base, ref="stable")
 
     market.run("update", check=True)
@@ -162,3 +163,38 @@ def test_update_codex_entry_with_non_dict_source_is_left_alone(market, make_remo
     market.run("update", check=True)
     assert market.plugin("odd")["source"]["sha"] == new
     assert market.plugin("odd", "codex")["source"] == "./vendored/odd"
+
+
+def test_update_pins_latest_release_not_branch_tip(market, make_remote):
+    remote = make_remote("released")
+    old = remote.commit({CLAUDE: manifest("released", "1.0.0")})
+    remote.tag("v1.0.0")
+    v19 = remote.commit({CLAUDE: manifest("released", "1.9.0")}, "Release 1.9.0")
+    remote.tag("v1.9.0", annotated=True)
+    v110 = remote.commit({CLAUDE: manifest("released", "1.10.0")}, "Release 1.10.0")
+    # Annotated: ls-remote lists the tag object, then the peeled commit.
+    remote.tag("v1.10.0", annotated=True)
+    remote.commit({CLAUDE: manifest("released", "2.0.0-beta")}, "Beta")
+    remote.tag("v2.0.0-beta")
+    remote.tag("nightly")
+    remote.commit({"x": "1"}, "Unreleased work")
+    pin(market, remote, old)
+
+    result = market.run("update", check=True)
+    assert market.plugin("released")["source"]["sha"] == v110
+    assert market.plugin("released", "codex")["source"]["sha"] == v110
+    assert market.plugin("released")["version"] == "1.10.0"
+    assert f"after:  {v110[:12]} Release 1.10.0 (release v1.10.0)" in result.stdout
+    assert v19 != v110
+
+
+def test_update_without_release_tags_follows_default_branch(market, make_remote):
+    remote = make_remote("untagged")
+    old = remote.commit({CLAUDE: manifest("untagged")})
+    remote.tag("not-a-release")
+    new = remote.commit({"x": "1"}, "Tip")
+    pin(market, remote, old)
+
+    result = market.run("update", check=True)
+    assert market.plugin("untagged")["source"]["sha"] == new
+    assert "(default branch)" in result.stdout

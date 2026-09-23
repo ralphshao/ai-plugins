@@ -110,6 +110,10 @@ class Remote:
         git("commit", "-q", "--allow-empty", "-m", message, cwd=self.path)
         return self.head()
 
+    def tag(self, name, sha=None, annotated=False):
+        args = ["-a", "-m", name] if annotated else []
+        git("tag", *args, name, *([sha] if sha else []), cwd=self.path)
+
     def head(self):
         return git("rev-parse", "HEAD", cwd=self.path)
 

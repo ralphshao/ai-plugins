@@ -137,6 +137,21 @@ def test_add_several_manifests_fails_then_path_picks(market, make_remote):
     assert market.plugin("one") is None
 
 
+def test_add_pins_latest_release(market, make_remote):
+    remote = make_remote("tagged")
+    release = remote.commit({CLAUDE: manifest("tagged", "1.2.0")}, "Release 1.2.0")
+    remote.tag("v1.2.0", annotated=True)
+    remote.commit({CLAUDE: manifest("tagged", "1.3.0-dev")}, "Unreleased work")
+
+    result = market.run("add", remote.slug, check=True)
+    entry = market.plugin("tagged")
+    # No "ref": update re-resolves the latest release each time.
+    assert entry["source"] == {"source": "url", "url": remote.clone_url,
+                               "sha": release}
+    assert entry["version"] == "1.2.0"
+    assert f"commit: {release[:12]} Release 1.2.0 (release v1.2.0)" in result.stdout
+
+
 def test_add_tree_link_pins_ref_and_path(market, make_remote):
     remote = make_remote("branchy")
     main_sha = remote.commit({f"plugins/a/{CLAUDE}": manifest("a", "1.0.0"),
@@ -144,6 +159,7 @@ def test_add_tree_link_pins_ref_and_path(market, make_remote):
     remote.checkout("next", create=True)
     next_sha = remote.commit({f"plugins/a/{CLAUDE}": manifest("a", "2.0.0-beta")})
     remote.checkout("main")
+    remote.tag("v1.0.0")  # an explicit ref beats the latest release
 
     market.run("add", f"{remote.web_url}/tree/next/plugins/a", check=True)
     entry = market.plugin("a")

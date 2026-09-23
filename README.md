@@ -29,7 +29,7 @@ omitted from the Codex catalog.
 
 | Plugin | Description | Version |
 | --- | --- | --- |
-| [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 1.2.0 |
+| [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 1.3.0 |
 | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Behavioral guidelines to reduce common LLM coding mistakes | 1.0.0 |
 | [avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) | Audit & rewrite content to remove AI writing patterns ("AI-isms") | 3.35.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
@@ -60,9 +60,9 @@ Install the `ai-plugins` plugin from this marketplace. It has three skills:
 
 | Skill | Does |
 | --- | --- |
-| `ai-plugins:add <github-url-or-owner/repo>` | Pins the repo's latest commit. Detects where its `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live, and adds entries to both marketplace files (Codex only if it has a Codex manifest) and a row to the table above. Optional flags: `--path <subdir>` when the repo holds several plugins, `--description <text>` to override the upstream description. |
+| `ai-plugins:add <github-url-or-owner/repo>` | Pins the repo's latest release (highest `vX.Y.Z` tag), or its latest commit if it has no release tags. Detects where its `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live, and adds entries to both marketplace files (Codex only if it has a Codex manifest) and a row to the table above. Optional flags: `--path <subdir>` when the repo holds several plugins, `--description <text>` to override the upstream description. |
 | `ai-plugins:remove <name>` | Removes the plugin from both marketplace files and the table above, then lists any other lines in README.md and AGENTS.md that still mention it. |
-| `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest commit, and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the table above. |
+| `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest release (or latest commit on its `ref` or default branch, if it has no release tags or sets a `ref`), and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the table above. |
 
 Each skill calls a thin wrapper, `scripts/run.sh` or `scripts/run.ps1`,
 which runs the shared

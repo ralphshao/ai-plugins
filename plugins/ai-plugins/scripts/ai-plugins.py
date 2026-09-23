@@ -25,6 +25,7 @@ DEFAULT_CATEGORY = "Productivity"
 # README plugin table row: "| <name cell> | <description> | <version> |"
 ROW_RE = re.compile(r"^\| (?P<name>[^|]+?) \| (?P<desc>.*) \| (?P<version>[^|]*?) \|$")
 ROW_NAME_RE = re.compile(r"\[`?([^`\]]+)`?\]")
+RELEASE_TAG_RE = re.compile(r"^v?(\d+(?:\.\d+)+)$")
 
 
 def die(msg):
@@ -150,6 +151,42 @@ def latest_sha(url, ref):
     return out.split("\t", 1)[0] if out else ""
 
 
+def latest_release(url):
+    """Return (tag, commit sha) of the highest release tag, or None.
+
+    Release tags look like v1.2.3 or 1.2; pre-release tags (v1.2.3-beta) and
+    other names are ignored.
+    """
+    # ponytail: tags stand in for GitHub releases (no API call, works offline);
+    # a tagged commit with no published release still counts.
+    shas = {}
+    for line in git("ls-remote", "--tags", url).splitlines():
+        sha, ref = line.split("\t", 1)
+        tag = ref[len("refs/tags/"):]
+        peeled = tag.endswith("^{}")  # annotated tag: this line has the commit
+        tag = tag[:-3] if peeled else tag
+        if RELEASE_TAG_RE.match(tag) and (peeled or tag not in shas):
+            shas[tag] = sha
+    if not shas:
+        return None
+    tag = max(shas, key=lambda t: tuple(
+        int(n) for n in RELEASE_TAG_RE.match(t).group(1).split(".")))
+    return tag, shas[tag]
+
+
+def resolve_pin(url, ref):
+    """Return (sha, label) for what to pin.
+
+    An explicit ref is followed as-is. Otherwise the latest release tag wins,
+    falling back to the default branch when the repo has no release tags.
+    """
+    if not ref:
+        release = latest_release(url)
+        if release:
+            return release[1], f"release {release[0]}"
+    return latest_sha(url, ref), f"ref {ref}" if ref else "default branch"
+
+
 def commit_subject(clone):
     if not clone:
         return ""
@@ -191,7 +228,7 @@ def cmd_update(_args):
         subdir = source.get("path", ".") if source["source"] == "git-subdir" else "."
 
         try:
-            new_sha = latest_sha(url, source.get("ref"))
+            new_sha, label = resolve_pin(url, source.get("ref"))
         except RuntimeError:
             new_sha = ""
         if not new_sha:
@@ -204,7 +241,7 @@ def cmd_update(_args):
 
         if old_sha == new_sha:
             print(f"== {name}: up to date ==")
-            print(f"   {old_sha[:12]} {old_subject}\n")
+            print(f"   {old_sha[:12]} {old_subject} ({label})\n")
             continue
 
         new_clone = fetch_commit(url, new_sha)
@@ -216,7 +253,7 @@ def cmd_update(_args):
 
         print(f"== {name}: updated ==")
         print(f"   before: {old_sha[:12]} {old_subject}")
-        print(f"   after:  {new_sha[:12]} {new_subject}")
+        print(f"   after:  {new_sha[:12]} {new_subject} ({label})")
 
         source["sha"] = new_sha
         codex_plugin = find_plugin(codex, name) if codex else None
@@ -297,7 +334,7 @@ def cmd_add(args):
         path_hint = args.path
 
     try:
-        sha = latest_sha(clone_url, ref)
+        sha, label = resolve_pin(clone_url, ref)
     except RuntimeError as e:
         die(f"Could not reach {clone_url}: {e}")
     if not sha:
@@ -337,7 +374,7 @@ def cmd_add(args):
 
     print(f"== {name}: adding ==")
     print(f"   repo:   {web_url}")
-    print(f"   commit: {sha[:12]} {subject}")
+    print(f"   commit: {sha[:12]} {subject} ({label})")
     if version:
         print(f"   version: {version}")
 
