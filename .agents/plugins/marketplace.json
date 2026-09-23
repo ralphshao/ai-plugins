@@ -18,7 +18,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
-        "sha": "c4783463cf019a8943364c1ef5f80e0a4c8bff94"
+        "sha": "6135015a28c228ff24e2a0b86f5bbd816649a0d2"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -32,7 +32,7 @@
         "source": "git-subdir",
         "url": "https://github.com/JuliusBrussee/caveman.git",
         "path": "./plugins/caveman",
-        "sha": "542442bab314973709f95b85b1ac0b3f6f5b5dc6"
+        "sha": "8b0c1d3699b8d83e87fe4605b378da20c41555e0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -45,7 +45,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/mksglu/context-mode.git",
-        "sha": "5283a70780305994433cb65d6a0275386e797172"
+        "sha": "589d8214d56740a28b5f7bf63167743d586b0b40"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -71,7 +71,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "e3ba2aa6f1e6f0bc4d69eb09c9f0d0a93af56156"
+        "sha": "1d95ff7d39de12d87014ea40d4e22201bddc501b"
       },
       "policy": {
         "installation": "AVAILABLE",
