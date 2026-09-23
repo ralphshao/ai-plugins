@@ -15,8 +15,8 @@ at `plugins/ai-plugins/`.
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
 - `.agents/plugins/marketplace.json` — read by Codex. Same plugins, same
-  `source` object shape (`url`/`git-subdir` with `sha`). A plugin with only
-  one manifest (e.g. `andrej-karpathy-skills`, which has no
+  `source` object shape (`url`/`git-subdir` with `sha` and `ref`). A plugin
+  with only one manifest (e.g. `andrej-karpathy-skills`, which has no
   `.codex-plugin/plugin.json`) uses that manifest's folder as the plugin
   root in both files; Claude Code and Codex both load either layout.
 
