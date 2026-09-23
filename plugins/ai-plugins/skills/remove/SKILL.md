@@ -4,7 +4,7 @@ description: Remove a named plugin from this marketplace, from the Claude and Co
 argument-hint: <plugin-name>
 ---
 
-From the repo root, run `${CLAUDE_PLUGIN_ROOT}/skills/remove/scripts/remove.sh $ARGUMENTS` (on Windows, `${CLAUDE_PLUGIN_ROOT}/skills/remove/scripts/remove.ps1 $ARGUMENTS`). Both are thin wrappers around `${CLAUDE_PLUGIN_ROOT}/scripts/ai-plugins.py remove`.
+From the repo root, run `${CLAUDE_PLUGIN_ROOT}/scripts/run.sh remove $ARGUMENTS` (on Windows, `${CLAUDE_PLUGIN_ROOT}/scripts/run.ps1 remove $ARGUMENTS`). Both find a Python on PATH and run `${CLAUDE_PLUGIN_ROOT}/scripts/ai-plugins.py remove`.
 
 What the script does:
 - Removes the plugin's entry from `.claude-plugin/marketplace.json`, `.agents/plugins/marketplace.json`, and `README.md`'s plugin table, wherever it appears.

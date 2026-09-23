@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# Thin wrapper: ai-plugins.py add
+# Runs ai-plugins.py with the Python on PATH: run.sh <add|remove|update> [args]
 set -euo pipefail
-script="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../scripts" && pwd)/ai-plugins.py"
 python="$(command -v python3 || command -v python || true)"
 [ -n "$python" ] || { echo "Python 3 is required" >&2; exit 1; }
-exec "$python" "$script" add "$@"
+exec "$python" "$(dirname "${BASH_SOURCE[0]}")/ai-plugins.py" "$@"

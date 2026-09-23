@@ -1,8 +1,8 @@
-"""Tests for the per-skill .sh and .ps1 wrappers around ai-plugins.py.
+"""Tests for the run.sh and run.ps1 wrappers around ai-plugins.py.
 
-The wrappers must forward their subcommand and every argument, and pass the
-script's exit code through. The .sh tests need bash (skipped on Windows); the
-.ps1 tests need PowerShell 7 (`pwsh`), and are skipped when it isn't installed.
+The wrappers must forward every argument and pass the script's exit code
+through. The .sh tests need bash (skipped on Windows); the .ps1 tests need
+PowerShell 7 (`pwsh`), and are skipped when it isn't installed.
 """
 
 import os
@@ -12,9 +12,10 @@ import sys
 
 import pytest
 
-from conftest import PLUGIN_ROOT, manifest
+from conftest import SCRIPT, manifest
 
-SKILLS = ("add", "remove", "update")
+RUN_SH = SCRIPT.with_name("run.sh")
+RUN_PS1 = SCRIPT.with_name("run.ps1")
 BASH = shutil.which("bash")
 PWSH = shutil.which("pwsh")
 
@@ -23,26 +24,20 @@ needs_bash = pytest.mark.skipif(
 needs_pwsh = pytest.mark.skipif(not PWSH, reason="pwsh is not installed")
 
 
-def wrapper(skill, ext):
-    return PLUGIN_ROOT / "skills" / skill / "scripts" / f"{skill}.{ext}"
-
-
-def run_sh(skill, *args, cwd, env=None):
-    return subprocess.run([BASH, str(wrapper(skill, "sh")), *args], cwd=cwd,
+def run_sh(*args, cwd, env=None):
+    return subprocess.run([BASH, str(RUN_SH), *args], cwd=cwd,
                           capture_output=True, text=True, env=env)
 
 
-def run_ps1(skill, *args, cwd):
+def run_ps1(*args, cwd):
     return subprocess.run(
-        [PWSH, "-NoProfile", "-NonInteractive", "-File", str(wrapper(skill, "ps1")),
-         *args],
+        [PWSH, "-NoProfile", "-NonInteractive", "-File", str(RUN_PS1), *args],
         cwd=cwd, capture_output=True, text=True)
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="no exec bit on Windows")
-@pytest.mark.parametrize("skill", SKILLS)
-def test_sh_wrapper_is_executable(skill):
-    assert os.access(wrapper(skill, "sh"), os.X_OK)
+def test_sh_wrapper_is_executable():
+    assert os.access(RUN_SH, os.X_OK)
 
 
 # --- bash --------------------------------------------------------------------

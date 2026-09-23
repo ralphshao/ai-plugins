@@ -11,7 +11,7 @@ import pytest
 
 from conftest import CLAUDE_FILE, CODEX_FILE, PLUGIN_ROOT, REPO_ROOT, table_rows
 
-REMOTE = ("url", "github", "git-subdir")
+REMOTE = ("url", "git-subdir")
 
 
 def load(path):
@@ -114,10 +114,3 @@ def test_self_plugin_versions_agree(claude):
         assert manifest["name"] == "ai-plugins"
         assert manifest["version"] == entry["version"], f".{kind}-plugin/plugin.json"
 
-
-def test_self_plugin_lists_every_skill():
-    manifest = json.loads(
-        (PLUGIN_ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
-    on_disk = sorted(f"./skills/{d.name}" for d in (PLUGIN_ROOT / "skills").iterdir()
-                     if (d / "SKILL.md").is_file())
-    assert sorted(manifest["skills"]) == on_disk

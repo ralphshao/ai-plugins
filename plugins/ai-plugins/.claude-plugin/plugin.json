@@ -1,9 +1,8 @@
 {
   "name": "ai-plugins",
   "description": "Maintenance skills for the ai-plugins marketplace itself",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Ralph Shao"
-  },
-  "skills": ["./skills/add", "./skills/remove", "./skills/update"]
+  }
 }

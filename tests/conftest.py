@@ -239,12 +239,10 @@ def codex_entry(name, source):
 
 
 def pin(market, remote, sha, name=None, version="1.0.0", subdir=None, ref=None,
-        codex=True, row=True, kind="url"):
+        codex=True, row=True):
     """Add a catalog entry pinned to sha, as `add` would have written it."""
     name = name or remote.repo
-    if kind == "github":
-        source = {"source": "github", "repo": remote.slug, "sha": sha}
-    elif subdir:
+    if subdir:
         source = {"source": "git-subdir", "url": remote.clone_url, "path": subdir,
                   "sha": sha}
     else:

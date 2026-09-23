@@ -74,9 +74,9 @@ When you change the script, add or update a test for the new behavior.
 
 `plugins/ai-plugins/scripts/ai-plugins.py` (stdlib-only Python 3) implements
 the `add`, `remove`, and `update` subcommands. Each skill under
-`plugins/ai-plugins/skills/<name>/` only calls a thin wrapper,
-`scripts/<name>.sh` or `scripts/<name>.ps1`, that runs it. Put logic in
-the Python script, not in the wrappers.
+`plugins/ai-plugins/skills/<name>/` calls it through a shared wrapper,
+`scripts/run.sh` or `scripts/run.ps1`, which only finds Python on PATH.
+Put logic in the Python script, not in the wrappers.
 
 The script parses the marketplace files as JSON and matches plugins by exact
 `name`. Keep it that way, with no substring matching: a past version matched

@@ -88,18 +88,6 @@ def test_update_follows_pinned_ref_not_default_branch(market, make_remote):
     assert source["ref"] == "stable"
 
 
-def test_update_github_source(market, make_remote):
-    remote = make_remote("gh")
-    old = remote.commit({CLAUDE: manifest("gh")})
-    new = remote.commit({"x": "1"})
-    pin(market, remote, old, kind="github", codex=False)
-
-    market.run("update", check=True)
-    assert market.plugin("gh")["source"] == {
-        "source": "github", "repo": remote.slug, "sha": new,
-    }
-
-
 def test_update_without_readme_row_or_codex_catalog(market, make_remote):
     remote = make_remote("lean")
     old = remote.commit({CLAUDE: manifest("lean", "1.0.0")})
