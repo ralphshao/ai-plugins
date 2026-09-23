@@ -424,7 +424,7 @@ def cmd_remove(args):
 
     print(f"== {name}: removed ==")
     for where in removed:
-        print(f"   {where}")
+        print(f"   {where.replace(os.sep, '/')}")
 
     # Prose elsewhere (e.g. "X is Claude-only") is left for a human to edit.
     for doc in (README_FILE, "AGENTS.md"):
