@@ -277,3 +277,32 @@ def test_add_unknown_ref_fails(market, both_at_root):
     result = market.run("add", f"{both_at_root.web_url}/tree/no-such-branch",
                         check=False)
     assert "Could not resolve no-such-branch" in result.stderr
+
+
+def test_add_bad_readme_row_fails_before_any_edit(market, both_at_root):
+    market.add_row("| hand-written | no link here | 1.0 |")
+    before = market.snapshot()
+    market.run("add", both_at_root.slug, check=False)
+    assert market.snapshot() == before
+    assert not list(market.path.rglob("*.tmp"))
+
+
+def test_add_path_dot_means_repo_root(market, make_remote):
+    remote = make_remote("rooted")
+    remote.commit({CLAUDE: manifest("rooted"),
+                   f"plugins/other/{CLAUDE}": manifest("other")})
+    market.run("add", remote.slug, "--path", ".", check=True)
+    assert market.plugin("rooted")["source"] == {
+        "source": "url", "url": remote.clone_url,
+        "sha": market.plugin("rooted")["source"]["sha"], "ref": "main",
+    }
+
+
+def test_add_empty_claude_manifest_keeps_its_own_root(market, make_remote):
+    # An empty {} manifest is still a manifest: don't swap in the Codex root.
+    remote = make_remote("emptyish")
+    remote.commit({CLAUDE: {}, f"plugins/x/{CODEX}": manifest("x")})
+    market.run("add", remote.slug, check=True)
+    entry = market.plugin("emptyish")
+    assert entry["source"]["source"] == "url"
+    assert market.plugin("emptyish", "codex")["source"]["path"] == "./plugins/x"

@@ -75,6 +75,20 @@ def test_pick_manifest_dir_hint_narrows(ai_plugins, tmp_path, hint):
     assert ai_plugins.pick_manifest_dir(str(tmp_path), "claude", hint) == "plugins/x"
 
 
+@pytest.mark.parametrize("hint", [".", "./", "", "/"])
+def test_pick_manifest_dir_root_hint(ai_plugins, tmp_path, hint):
+    write_manifest(tmp_path, ".", "claude")
+    write_manifest(tmp_path, "plugins/x", "claude")
+    assert ai_plugins.pick_manifest_dir(str(tmp_path), "claude", hint) == ""
+
+
+@pytest.mark.parametrize("hint", ["./plugins/x", "plugins/x/", "plugins/./x"])
+def test_pick_manifest_dir_normalizes_hint(ai_plugins, tmp_path, hint):
+    write_manifest(tmp_path, ".", "claude")
+    write_manifest(tmp_path, "plugins/x", "claude")
+    assert ai_plugins.pick_manifest_dir(str(tmp_path), "claude", hint) == "plugins/x"
+
+
 def test_pick_manifest_dir_hint_is_prefix_on_path_segments(ai_plugins, tmp_path):
     # "plug" must not match "plugins/x".
     write_manifest(tmp_path, "plugins/x", "claude")
@@ -102,3 +116,49 @@ def test_fetch_commit_returns_none_and_cleans_up_on_failure(ai_plugins, make_rem
     remote.commit({"a.txt": "1"})
     assert ai_plugins.fetch_commit(remote.clone_url, "0" * 40) is None
     assert not any(temp.iterdir())
+
+
+def test_git_disables_prompts_and_times_out(ai_plugins, monkeypatch):
+    seen = {}
+
+    def fake_run(cmd, **kwargs):
+        seen.update(kwargs)
+        raise ai_plugins.subprocess.TimeoutExpired(cmd, kwargs["timeout"])
+
+    monkeypatch.setattr(ai_plugins.subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match="timed out"):
+        ai_plugins.git("ls-remote", "https://example.invalid/x.git")
+    assert seen["env"]["GIT_TERMINAL_PROMPT"] == "0"
+    assert seen["timeout"] == ai_plugins.GIT_TIMEOUT
+
+
+def test_write_file_replaces_without_leaving_temp(ai_plugins, tmp_path):
+    target = tmp_path / "f.json"
+    target.write_text("old")
+    ai_plugins.write_file(str(target), "new\n")
+    assert target.read_bytes() == b"new\n"
+    assert [p.name for p in tmp_path.iterdir()] == ["f.json"]
+
+
+def test_write_file_removes_temp_when_rename_fails(ai_plugins, tmp_path, monkeypatch):
+    target = tmp_path / "f.json"
+    target.write_text("old")
+
+    def fail(src, dst):
+        raise OSError("disk full")
+
+    monkeypatch.setattr(ai_plugins.os, "replace", fail)
+    with pytest.raises(OSError, match="disk full"):
+        ai_plugins.write_file(str(target), "new")
+    assert target.read_text() == "old"
+    assert [p.name for p in tmp_path.iterdir()] == ["f.json"]
+
+
+def test_write_file_removes_temp_when_encoding_fails(ai_plugins, tmp_path):
+    target = tmp_path / "f.json"
+    target.write_text("old")
+    # A lone surrogate (e.g. from a "\\ud800" JSON escape) can't be UTF-8 encoded.
+    with pytest.raises(UnicodeEncodeError):
+        ai_plugins.write_file(str(target), "bad \ud800")
+    assert target.read_text() == "old"
+    assert [p.name for p in tmp_path.iterdir()] == ["f.json"]

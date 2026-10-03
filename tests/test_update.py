@@ -21,7 +21,9 @@ def test_update_up_to_date_leaves_files_byte_identical(market, make_remote):
 
     result = market.run("update", check=True)
     assert "== steady: up to date ==" in result.stdout
-    assert f"{sha[:12]} Initial release" in result.stdout
+    # No clone just to print a subject when nothing changed.
+    assert f"{sha[:12]} (" in result.stdout
+    assert "Initial release" not in result.stdout
     assert market.snapshot() == before
 
 
@@ -251,3 +253,99 @@ def test_update_without_release_tags_follows_default_branch(market, make_remote)
     assert market.plugin("untagged")["source"]["sha"] == new
     assert market.plugin("untagged", "codex")["source"]["ref"] == "main"
     assert "(default branch)" in result.stdout
+
+
+def test_update_pinned_ref_matches_branch_name_exactly(market, make_remote):
+    remote = make_remote("suffix")
+    base = remote.commit({CLAUDE: manifest("suffix")})
+    remote.checkout("stable", create=True)
+    stable = remote.commit({"s": "1"}, "Stable fix")
+    # Sorts before refs/heads/stable and ends in "stable".
+    remote.checkout("feature/stable", create=True)
+    remote.commit({"f": "1"}, "Feature work")
+    remote.checkout("main")
+    pin(market, remote, base, ref="stable")
+
+    market.run("update", check=True)
+    assert market.plugin("suffix")["source"]["sha"] == stable
+
+
+def test_update_annotated_tag_ref_pins_the_commit(market, make_remote):
+    remote = make_remote("tagged")
+    base = remote.commit({CLAUDE: manifest("tagged")})
+    target = remote.commit({"t": "1"}, "Tagged")
+    remote.tag("pinned-here", annotated=True)  # not a release tag, so followed as-is
+    remote.commit({"m": "1"}, "Later")
+    pin(market, remote, base, ref="pinned-here")
+
+    market.run("update", check=True)
+    assert market.plugin("tagged")["source"]["sha"] == target
+    assert market.plugin("tagged", "codex")["source"]["sha"] == target
+
+
+def test_update_refuses_readme_row_it_cannot_parse(market, make_remote):
+    remote = make_remote("rowy")
+    sha = remote.commit({CLAUDE: manifest("rowy")})
+    pin(market, remote, sha, ref="main")
+    market.add_row("| hand-written | no link here | 1.0 |")
+    before = market.snapshot()
+
+    result = market.run("update", check=False)
+    assert "| hand-written |" in result.stderr
+    assert market.snapshot() == before
+
+
+def test_update_refuses_duplicate_readme_rows(market, make_remote):
+    remote = make_remote("twice")
+    sha = remote.commit({CLAUDE: manifest("twice")})
+    pin(market, remote, sha, ref="main")
+    market.add_row(f"| [twice]({remote.web_url}) | Again | 1.0.0 |")
+    before = market.snapshot()
+
+    result = market.run("update", check=False)
+    assert "lists twice more than once" in result.stderr
+    assert market.snapshot() == before
+
+
+def test_update_repairs_codex_sha_drift_when_claude_is_current(market, make_remote):
+    remote = make_remote("drifty")
+    old = remote.commit({CLAUDE: manifest("drifty")}, "Old")
+    new = remote.commit({"x": "1"}, "New")
+    pin(market, remote, new, ref="main")
+    codex = market.catalog("codex")
+    next(p for p in codex["plugins"] if p["name"] == "drifty")["source"]["sha"] = old
+    market.save(codex, "codex")
+
+    result = market.run("update", check=True)
+    assert "== drifty: up to date ==" in result.stdout
+    assert f"sha: {old[:12]} -> {new[:12]}" in result.stdout
+    assert market.plugin("drifty", "codex")["source"]["sha"] == new
+    assert market.plugin("drifty")["source"]["sha"] == new
+
+
+def test_update_follows_fully_qualified_ref(market, make_remote):
+    remote = make_remote("qualified")
+    base = remote.commit({CLAUDE: manifest("qualified")})
+    remote.checkout("stable", create=True)
+    stable = remote.commit({"s": "1"}, "Stable fix")
+    remote.checkout("main")
+    pin(market, remote, base, ref="refs/heads/stable")
+
+    market.run("update", check=True)
+    source = market.plugin("qualified")["source"]
+    assert source["sha"] == stable
+    assert source["ref"] == "refs/heads/stable"
+
+
+def test_update_names_the_file_whose_ref_is_stale(market, make_remote):
+    remote = make_remote("refdrift")
+    sha = remote.commit({CLAUDE: manifest("refdrift")})
+    pin(market, remote, sha, ref="main")
+    codex = market.catalog("codex")
+    del next(p for p in codex["plugins"] if p["name"] == "refdrift")["source"]["ref"]
+    market.save(codex, "codex")
+
+    result = market.run("update", check=True)
+    assert ".agents/plugins/marketplace.json ref: (none) -> main" in result.stdout
+    assert ".claude-plugin/marketplace.json ref" not in result.stdout
+    assert market.plugin("refdrift", "codex")["source"]["ref"] == "main"
