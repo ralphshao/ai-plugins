@@ -9,6 +9,7 @@ current directory. Never commits. Standard library only; needs `git` on PATH.
 import argparse
 import json
 import os
+import posixpath
 import re
 import shutil
 import subprocess
@@ -21,6 +22,7 @@ CODEX_FILE = os.path.join(".agents", "plugins", "marketplace.json")
 README_FILE = "README.md"
 REMOTE_SOURCES = ("url", "git-subdir")
 DEFAULT_CATEGORY = "Productivity"
+GIT_TIMEOUT = 120  # seconds, per git call
 
 # README plugin table row: "| <name cell> | <description> | <version> |"
 ROW_RE = re.compile(r"^\| (?P<name>[^|]+?) \| (?P<desc>.*) \| (?P<version>[^|]*?) \|$")
@@ -34,9 +36,14 @@ def die(msg):
 
 
 def git(*args, cwd=None):
-    result = subprocess.run(
-        ["git", *args], cwd=cwd, capture_output=True, text=True
-    )
+    try:
+        # A private or mistyped repo URL must fail, not hang on a credential prompt.
+        result = subprocess.run(
+            ["git", *args], cwd=cwd, capture_output=True, text=True,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"}, timeout=GIT_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"git {args[0]} timed out after {GIT_TIMEOUT}s")
     if result.returncode != 0:
         raise RuntimeError(result.stderr.strip() or f"git {args[0]} failed")
     return result.stdout.strip()
@@ -54,10 +61,25 @@ def load_json(path):
         return json.load(f)
 
 
+def write_file(path, text):
+    """Write via a temp file and rename, so a crash never leaves it half-written."""
+    tmp = path + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+        os.replace(tmp, path)
+    except BaseException:
+        # Covers encode errors and Ctrl-C too; keep the original error.
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
+
+
 def save_catalog(path, data):
     data["plugins"].sort(key=lambda p: sort_key(p["name"]))
-    with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(json.dumps(data, indent=2, ensure_ascii=False) + "\n")
+    write_file(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
 def find_plugin(data, name):
@@ -70,7 +92,8 @@ def read_readme_table():
     """Return (lines, start, end, rows) where rows maps name -> row line.
 
     start..end is the slice of body rows (after the header and separator).
-    Returns None if README.md or its plugin table is missing.
+    Returns None if README.md or its plugin table is missing. Exits on a row
+    with no [name] link or a duplicate name: rewriting would drop it.
     """
     if not os.path.isfile(README_FILE):
         return None
@@ -88,8 +111,11 @@ def read_readme_table():
     rows = {}
     for line in lines[start:end]:
         m = ROW_NAME_RE.search(line.split("|")[1])
-        if m:
-            rows[m.group(1)] = line
+        if not m:
+            die(f"Can't find the plugin name in this {README_FILE} table row:\n{line}")
+        if m.group(1) in rows:
+            die(f"{README_FILE} plugin table lists {m.group(1)} more than once")
+        rows[m.group(1)] = line
     return lines, start, end, rows
 
 
@@ -97,8 +123,7 @@ def write_readme_table(table, rows):
     lines, start, end, _ = table
     body = [rows[name] for name in sorted(rows, key=sort_key)]
     lines[start:end] = body
-    with open(README_FILE, "w", encoding="utf-8", newline="\n") as f:
-        f.write("\n".join(lines))
+    write_file(README_FILE, "\n".join(lines))
 
 
 def readme_row(name, link, description, version):
@@ -147,8 +172,25 @@ def rmtree(path):
 
 
 def latest_sha(url, ref):
-    out = git("ls-remote", url, ref or "HEAD")
-    return out.split("\t", 1)[0] if out else ""
+    """Return the commit sha that ref names on url, or "" if there is none.
+
+    A bare ref is matched exactly as a tag or a branch, tag first like git
+    does; a full one (refs/heads/x) is matched as given.
+    ls-remote alone matches on suffix (main also hits feature/main) and gives
+    an annotated tag's own sha, not its commit's.
+    """
+    if not ref or ref == "HEAD":
+        out = git("ls-remote", url, "HEAD")
+        return out.split("\t", 1)[0] if out else ""
+    if ref.startswith("refs/"):
+        wanted = [f"{ref}^{{}}", ref]
+    else:
+        wanted = [f"refs/tags/{ref}^{{}}", f"refs/tags/{ref}", f"refs/heads/{ref}"]
+    found = {}
+    for line in git("ls-remote", url, *wanted).splitlines():
+        sha, name = line.split("\t", 1)
+        found[name] = sha
+    return next((found[n] for n in wanted if n in found), "")
 
 
 def latest_release(url):
@@ -234,7 +276,7 @@ def cmd_update(_args):
     claude = load_json(CLAUDE_FILE)
     codex = load_json(CODEX_FILE) if os.path.isfile(CODEX_FILE) else None
     table = read_readme_table()
-    rows = table[3] if table else {}
+    rows = table[3] if table is not None else {}
 
     remote = [
         p for p in claude["plugins"]
@@ -260,23 +302,34 @@ def cmd_update(_args):
             print(f"== {name}: could not resolve latest ref from {url} ==\n")
             continue
 
-        old_clone = fetch_commit(url, old_sha) if old_sha else None
-        old_subject = commit_subject(old_clone)
-        rmtree(old_clone)
-
-        codex_plugin = find_plugin(codex, name) if codex else None
-        codex_source = codex_plugin.get("source") if codex_plugin else None
+        codex_plugin = find_plugin(codex, name) if codex is not None else None
+        codex_source = codex_plugin.get("source") if codex_plugin is not None else None
         sources = [source] + ([codex_source] if isinstance(codex_source, dict) else [])
 
         if old_sha == new_sha:
             print(f"== {name}: up to date ==")
-            print(f"   {old_sha[:12]} {old_subject} ({label})")
-            if any(s.get("ref") != new_ref for s in sources):
-                print(f"   ref: {source.get('ref') or '(none)'} -> {new_ref}")
+            print(f"   {old_sha[:12]} ({label})")
+            # The Codex pin can drift from the Claude one after a hand edit,
+            # so report each file's sha and ref separately.
+            stale = False
+            for path, s in zip((CLAUDE_FILE, CODEX_FILE), sources):
+                path = path.replace(os.sep, "/")
+                if s.get("sha") != new_sha:
+                    stale = True
+                    print(f"   {path} sha: "
+                          f"{(s.get('sha') or '(none)')[:12]} -> {new_sha[:12]}")
+                if s.get("ref") != new_ref:
+                    stale = True
+                    print(f"   {path} ref: {s.get('ref') or '(none)'} -> {new_ref}")
+            if stale:
                 for s in sources:
                     set_pin(s, new_sha, new_ref)
             print()
             continue
+
+        old_clone = fetch_commit(url, old_sha) if old_sha else None
+        old_subject = commit_subject(old_clone)
+        rmtree(old_clone)
 
         new_clone = fetch_commit(url, new_sha)
         new_subject = commit_subject(new_clone)
@@ -303,9 +356,9 @@ def cmd_update(_args):
         print()
 
     save_catalog(CLAUDE_FILE, claude)
-    if codex:
+    if codex is not None:
         save_catalog(CODEX_FILE, codex)
-    if table:
+    if table is not None:
         write_readme_table(table, rows)
     print_review_hint("Pinned refs (and versions, where changed) updated")
 
@@ -313,7 +366,12 @@ def cmd_update(_args):
 # --- add ------------------------------------------------------------------
 
 def parse_repo(spec):
-    """Turn a GitHub slug or URL into (clone_url, web_url, ref, path_hint)."""
+    """Turn a GitHub slug or URL into (clone_url, web_url, ref, path_hint).
+
+    A /tree/ link is split at its first slash, so a ref with a slash in it
+    (feature/x) reads as ref "feature", path "x". Pass the slug and --path
+    for those.
+    """
     spec = spec.strip().rstrip("/")
     m = re.match(
         r"^(?:(?:https?://|git@)?(?:www\.)?github\.com[/:])?"
@@ -345,7 +403,9 @@ def find_manifests(root, kind):
 def pick_manifest_dir(root, kind, path_hint):
     dirs = find_manifests(root, kind)
     if path_hint is not None:
-        hint = re.sub(r"^(\./)+", "", path_hint).strip("/")
+        # "", ".", and "./" all mean the repo root.
+        hint = posixpath.normpath(path_hint.replace("\\", "/") or ".").strip("/")
+        hint = "" if hint == "." else hint
         dirs = [d for d in dirs if d == hint or d.startswith(hint + "/")]
     if len(dirs) > 1:
         listing = "\n".join(f"  {d or '.'}" for d in dirs)
@@ -394,7 +454,7 @@ def cmd_add(args):
     finally:
         rmtree(clone)
 
-    if not claude_manifest and not codex_manifest:
+    if claude_manifest is None and codex_manifest is None:
         die(
             f"No .claude-plugin/plugin.json or .codex-plugin/plugin.json found in "
             f"{web_url}{' under ' + path_hint if path_hint else ''}"
@@ -403,10 +463,10 @@ def cmd_add(args):
     # Each catalog uses its own manifest's folder as the plugin root, falling
     # back to the other one: Claude Code and Codex both load either layout.
     claude_note = codex_note = ""
-    if not claude_manifest:
+    if claude_manifest is None:
         claude_dir, claude_manifest = codex_dir, codex_manifest
         claude_note = " (no .claude-plugin/plugin.json, using Codex plugin root)"
-    if not codex_manifest:
+    if codex_manifest is None:
         codex_dir, codex_manifest = claude_dir, claude_manifest
         codex_note = " (no .codex-plugin/plugin.json, using Claude plugin root)"
 
@@ -416,7 +476,8 @@ def cmd_add(args):
 
     claude = load_json(CLAUDE_FILE)
     codex = load_json(CODEX_FILE) if os.path.isfile(CODEX_FILE) else None
-    if find_plugin(claude, name) or (codex and find_plugin(codex, name)):
+    table = read_readme_table()
+    if any(c is not None and find_plugin(c, name) is not None for c in (claude, codex)):
         die(f"A plugin named {name} is already in this marketplace")
 
     print(f"== {name}: adding ==")
@@ -436,7 +497,6 @@ def cmd_add(args):
         entry["author"] = claude_manifest["author"]
     claude["plugins"].append(entry)
     print(f"   claude: {'./' + claude_dir if claude_dir else 'repo root'}{claude_note}")
-    save_catalog(CLAUDE_FILE, claude)
 
     if codex is not None:
         category = (codex_manifest.get("interface") or {}).get("category")
@@ -447,10 +507,11 @@ def cmd_add(args):
             "category": category or DEFAULT_CATEGORY,
         })
         print(f"   codex:  {'./' + codex_dir if codex_dir else 'repo root'}{codex_note}")
-        save_catalog(CODEX_FILE, codex)
 
-    table = read_readme_table()
-    if table:
+    save_catalog(CLAUDE_FILE, claude)
+    if codex is not None:
+        save_catalog(CODEX_FILE, codex)
+    if table is not None:
         rows = table[3]
         link = f"{web_url}/tree/HEAD/{claude_dir}" if claude_dir else web_url
         rows[name] = readme_row(name, link, description, version or "—")
@@ -466,25 +527,19 @@ def cmd_remove(args):
     if name == SELF:
         die(f"Refusing to remove {SELF} itself")
 
-    removed = []
-    claude = load_json(CLAUDE_FILE)
-    if find_plugin(claude, name):
-        claude["plugins"] = [p for p in claude["plugins"] if p["name"] != name]
-        save_catalog(CLAUDE_FILE, claude)
-        removed.append(CLAUDE_FILE)
-
-    if os.path.isfile(CODEX_FILE):
-        codex = load_json(CODEX_FILE)
-        if find_plugin(codex, name):
-            codex["plugins"] = [p for p in codex["plugins"] if p["name"] != name]
-            save_catalog(CODEX_FILE, codex)
-            removed.append(CODEX_FILE)
-
+    catalogs = [(path, load_json(path)) for path in (CLAUDE_FILE, CODEX_FILE)
+                if os.path.isfile(path)]
     table = read_readme_table()
-    if table and name in table[3]:
-        rows = table[3]
-        del rows[name]
-        write_readme_table(table, rows)
+
+    removed = []
+    for path, data in catalogs:
+        if find_plugin(data, name) is not None:
+            data["plugins"] = [p for p in data["plugins"] if p["name"] != name]
+            save_catalog(path, data)
+            removed.append(path)
+    if table is not None and name in table[3]:
+        del table[3][name]
+        write_readme_table(table, table[3])
         removed.append(f"{README_FILE} plugin table")
 
     if not removed:
