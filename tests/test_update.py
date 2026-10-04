@@ -125,8 +125,41 @@ def test_update_missing_manifest_keeps_version(market, make_remote):
     entry = market.plugin("gone")
     assert entry["source"]["sha"] == new
     assert entry["version"] == "1.0.0"
-    assert f"note: could not read a plugin.json at {new[:12]}; version left at 1.0.0" \
-        in result.stdout
+    assert f"note: version left at 1.0.0 (no plugin.json at {new[:12]})" in result.stdout
+
+
+def test_update_failed_fetch_of_new_commit_says_why(market, make_remote, ai_plugins,
+                                                    monkeypatch, capsys):
+    remote = make_remote("flaky")
+    old = remote.commit({CLAUDE: manifest("flaky", "1.0.0")})
+    new = remote.commit({CLAUDE: manifest("flaky", "2.0.0")})
+    pin(market, remote, old)
+
+    # ls-remote sees the new commit, but fetching it fails (e.g. a timeout).
+    def fail(url, ref):
+        raise RuntimeError("git fetch timed out after 120s")
+
+    monkeypatch.setattr(ai_plugins, "fetch_commit", fail)
+    monkeypatch.chdir(market.path)
+    ai_plugins.cmd_update(None)
+    out = capsys.readouterr().out
+    assert (f"note: version left at 1.0.0 (could not fetch {new[:12]}: "
+            "git fetch timed out after 120s)") in out
+    assert market.plugin("flaky")["source"]["sha"] == new
+
+
+def test_update_with_empty_codex_catalog(market, make_remote):
+    remote = make_remote("solo")
+    old = remote.commit({CLAUDE: manifest("solo")})
+    new = remote.commit({"x": "1"})
+    pin(market, remote, old, codex=False)
+    codex = market.catalog("codex")
+    codex["plugins"] = []
+    market.save(codex, "codex")
+
+    market.run("update", check=True)
+    assert market.plugin("solo")["source"]["sha"] == new
+    assert market.catalog("codex")["plugins"] == []
 
 
 def test_update_unreachable_plugin_does_not_block_others(market, make_remote):

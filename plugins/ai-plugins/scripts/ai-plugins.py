@@ -12,9 +12,11 @@ import os
 import posixpath
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+from typing import NoReturn
 
 SELF = "ai-plugins"
 CLAUDE_FILE = os.path.join(".claude-plugin", "marketplace.json")
@@ -30,25 +32,49 @@ ROW_NAME_RE = re.compile(r"\[`?([^`\]]+)`?\]")
 RELEASE_TAG_RE = re.compile(r"^v?(\d+(?:\.\d+)+)$")
 
 
-def die(msg):
+def die(msg) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
 
 def git(*args, cwd=None):
+    # A private or mistyped repo URL must fail, not hang on a credential
+    # prompt: git's own, or Git Credential Manager's GUI (Git for Windows).
+    # start_new_session (POSIX) puts git and its helpers in one process group
+    # that kill_tree can end together.
+    proc = subprocess.Popen(
+        ["git", *args], cwd=cwd, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"},
+        start_new_session=True,
+    )
     try:
-        # A private or mistyped repo URL must fail, not hang on a credential
-        # prompt: git's own, or Git Credential Manager's GUI (Git for Windows).
-        result = subprocess.run(
-            ["git", *args], cwd=cwd, capture_output=True, text=True,
-            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"},
-            timeout=GIT_TIMEOUT,
-        )
+        out, err = proc.communicate(timeout=GIT_TIMEOUT)
     except subprocess.TimeoutExpired:
+        kill_tree(proc)
+        proc.communicate()
         raise RuntimeError(f"git {args[0]} timed out after {GIT_TIMEOUT}s")
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr.strip() or f"git {args[0]} failed")
-    return result.stdout.strip()
+    if proc.returncode != 0:
+        raise RuntimeError(err.strip() or f"git {args[0]} failed")
+    return out.strip()
+
+
+def kill_tree(proc):
+    """Kill proc and its children.
+
+    Killing only git leaves git-remote-https (and any credential helper)
+    running. Those still hold git's output pipes, so on Windows the
+    communicate() after the kill would wait on them forever.
+    """
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                           capture_output=True)
+        else:
+            os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        pass  # Already gone; the kill below is a no-op then too.
+    proc.kill()
 
 
 def sort_key(plugin_name):
@@ -146,7 +172,8 @@ def set_row_version(row, version):
 def fetch_commit(url, ref):
     """Shallow-fetch one commit/ref into a temp dir checked out at FETCH_HEAD.
 
-    Returns the temp dir path, or None on failure. Caller must remove it.
+    Returns the temp dir path; caller must remove it. On failure, removes it
+    and raises RuntimeError with git's error.
     """
     tmp = tempfile.mkdtemp(prefix="ai-plugins-")
     try:
@@ -156,7 +183,7 @@ def fetch_commit(url, ref):
         return tmp
     except RuntimeError:
         rmtree(tmp)
-        return None
+        raise
 
 
 def rmtree(path):
@@ -296,16 +323,16 @@ def cmd_update(_args):
         old_sha = source.get("sha", "")
         subdir = source.get("path", ".") if source["source"] == "git-subdir" else "."
 
+        unresolved = f"== {name}: could not resolve latest ref from {url} =="
         try:
             new_sha, new_ref, label = resolve_pin(
                 url, source.get("ref"), follow_releases=True)
-            error = ""
         except RuntimeError as e:
-            new_sha, error = "", str(e)
+            # Timeout, auth failure, bad URL...: say which.
+            print(f"{unresolved}\n   {e}\n")
+            continue
         if not new_sha:
-            print(f"== {name}: could not resolve latest ref from {url} ==")
-            # Timeout, auth failure, bad URL...; an unknown ref has no error.
-            print(f"   {error}\n" if error else "")
+            print(f"{unresolved}\n")  # The ref isn't there; git had no error.
             continue
 
         codex_plugin = find_plugin(codex, name) if codex is not None else None
@@ -335,11 +362,17 @@ def cmd_update(_args):
             print()
             continue
 
-        old_clone = fetch_commit(url, old_sha) if old_sha else None
+        try:
+            old_clone = fetch_commit(url, old_sha) if old_sha else None
+        except RuntimeError:
+            old_clone = None  # e.g. force-pushed away: no subject to show
         old_subject = commit_subject(old_clone)
         rmtree(old_clone)
 
-        new_clone = fetch_commit(url, new_sha)
+        try:
+            new_clone, fetch_error = fetch_commit(url, new_sha), ""
+        except RuntimeError as e:
+            new_clone, fetch_error = None, str(e)
         new_subject = commit_subject(new_clone)
         manifest = (
             read_manifest(new_clone, subdir, "claude")
@@ -353,10 +386,10 @@ def cmd_update(_args):
         print(f"   before: {old_sha[:12]} {old_subject}")
         print(f"   after:  {new_sha[:12]} {new_subject} ({label})")
         if manifest is None:
-            # Fetch failed or no plugin.json: still pin, but say why the
-            # version didn't move.
-            print(f"   note: could not read a plugin.json at {new_sha[:12]}; "
-                  f"version left at {old_version or '(none)'}")
+            # Still pin, but say why the version didn't move.
+            why = (f"could not fetch {new_sha[:12]}: {fetch_error}" if fetch_error
+                   else f"no plugin.json at {new_sha[:12]}")
+            print(f"   note: version left at {old_version or '(none)'} ({why})")
 
         for _, s in pins:
             set_pin(s, new_sha, new_ref)
@@ -451,9 +484,10 @@ def cmd_add(args):
     if not sha:
         die(f"Could not resolve {ref or 'HEAD'} on {clone_url}")
 
-    clone = fetch_commit(clone_url, sha)
-    if not clone:
-        die(f"Could not fetch {sha[:12]} from {clone_url}")
+    try:
+        clone = fetch_commit(clone_url, sha)
+    except RuntimeError as e:
+        die(f"Could not fetch {sha[:12]} from {clone_url}: {e}")
     try:
         claude_dir = pick_manifest_dir(clone, "claude", path_hint)
         codex_dir = pick_manifest_dir(clone, "codex", path_hint)

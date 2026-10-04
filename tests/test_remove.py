@@ -106,6 +106,20 @@ def test_remove_malformed_codex_catalog_fails_before_any_edit(market, make_remot
     assert market.snapshot() == before
 
 
+def test_remove_with_empty_readme_table(market, make_remote):
+    seed(market, make_remote, "beta")
+    text = market.readme()
+    market.readme_path.write_text(
+        "\n".join(l for l in text.split("\n") if not l.startswith("| [")),
+        encoding="utf-8")
+    readme = market.readme()
+    result = market.run("remove", "beta", check=True)
+    assert removed_from(result.stdout) == [
+        ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json",
+    ]
+    assert market.readme() == readme
+
+
 def test_remove_refuses_self(market):
     before = market.snapshot()
     result = market.run("remove", "ai-plugins", check=False)
