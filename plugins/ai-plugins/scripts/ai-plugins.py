@@ -12,9 +12,11 @@ import os
 import posixpath
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
+from typing import NoReturn
 
 SELF = "ai-plugins"
 CLAUDE_FILE = os.path.join(".claude-plugin", "marketplace.json")
@@ -30,23 +32,49 @@ ROW_NAME_RE = re.compile(r"\[`?([^`\]]+)`?\]")
 RELEASE_TAG_RE = re.compile(r"^v?(\d+(?:\.\d+)+)$")
 
 
-def die(msg):
+def die(msg) -> NoReturn:
     print(msg, file=sys.stderr)
     sys.exit(1)
 
 
 def git(*args, cwd=None):
+    # A private or mistyped repo URL must fail, not hang on a credential
+    # prompt: git's own, or Git Credential Manager's GUI (Git for Windows).
+    # start_new_session (POSIX) puts git and its helpers in one process group
+    # that kill_tree can end together.
+    proc = subprocess.Popen(
+        ["git", *args], cwd=cwd, text=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"},
+        start_new_session=True,
+    )
     try:
-        # A private or mistyped repo URL must fail, not hang on a credential prompt.
-        result = subprocess.run(
-            ["git", *args], cwd=cwd, capture_output=True, text=True,
-            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"}, timeout=GIT_TIMEOUT,
-        )
+        out, err = proc.communicate(timeout=GIT_TIMEOUT)
     except subprocess.TimeoutExpired:
+        kill_tree(proc)
+        proc.communicate()
         raise RuntimeError(f"git {args[0]} timed out after {GIT_TIMEOUT}s")
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr.strip() or f"git {args[0]} failed")
-    return result.stdout.strip()
+    if proc.returncode != 0:
+        raise RuntimeError(err.strip() or f"git {args[0]} failed")
+    return out.strip()
+
+
+def kill_tree(proc):
+    """Kill proc and its children.
+
+    Killing only git leaves git-remote-https (and any credential helper)
+    running. Those still hold git's output pipes, so on Windows the
+    communicate() after the kill would wait on them forever.
+    """
+    try:
+        if os.name == "nt":
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                           capture_output=True)
+        else:
+            os.killpg(proc.pid, signal.SIGKILL)
+    except OSError:
+        pass  # Already gone; the kill below is a no-op then too.
+    proc.kill()
 
 
 def sort_key(plugin_name):
@@ -134,7 +162,8 @@ def readme_row(name, link, description, version):
 def set_row_version(row, version):
     m = ROW_RE.match(row)
     if not m:
-        return row
+        # Returning the row unchanged would leave README behind the catalog.
+        die(f"Can't parse this {README_FILE} table row to update its version:\n{row}")
     return f"| {m.group('name')} | {m.group('desc')} | {version} |"
 
 
@@ -143,7 +172,8 @@ def set_row_version(row, version):
 def fetch_commit(url, ref):
     """Shallow-fetch one commit/ref into a temp dir checked out at FETCH_HEAD.
 
-    Returns the temp dir path, or None on failure. Caller must remove it.
+    Returns the temp dir path; caller must remove it. On failure, removes it
+    and raises RuntimeError with git's error.
     """
     tmp = tempfile.mkdtemp(prefix="ai-plugins-")
     try:
@@ -153,7 +183,7 @@ def fetch_commit(url, ref):
         return tmp
     except RuntimeError:
         rmtree(tmp)
-        return None
+        raise
 
 
 def rmtree(path):
@@ -293,18 +323,23 @@ def cmd_update(_args):
         old_sha = source.get("sha", "")
         subdir = source.get("path", ".") if source["source"] == "git-subdir" else "."
 
+        unresolved = f"== {name}: could not resolve latest ref from {url} =="
         try:
             new_sha, new_ref, label = resolve_pin(
                 url, source.get("ref"), follow_releases=True)
-        except RuntimeError:
-            new_sha = ""
+        except RuntimeError as e:
+            # Timeout, auth failure, bad URL...: say which.
+            print(f"{unresolved}\n   {e}\n")
+            continue
         if not new_sha:
-            print(f"== {name}: could not resolve latest ref from {url} ==\n")
+            print(f"{unresolved}\n")  # The ref isn't there; git had no error.
             continue
 
         codex_plugin = find_plugin(codex, name) if codex is not None else None
         codex_source = codex_plugin.get("source") if codex_plugin is not None else None
-        sources = [source] + ([codex_source] if isinstance(codex_source, dict) else [])
+        pins = [(CLAUDE_FILE, source)]
+        if isinstance(codex_source, dict):
+            pins.append((CODEX_FILE, codex_source))
 
         if old_sha == new_sha:
             print(f"== {name}: up to date ==")
@@ -312,7 +347,7 @@ def cmd_update(_args):
             # The Codex pin can drift from the Claude one after a hand edit,
             # so report each file's sha and ref separately.
             stale = False
-            for path, s in zip((CLAUDE_FILE, CODEX_FILE), sources):
+            for path, s in pins:
                 path = path.replace(os.sep, "/")
                 if s.get("sha") != new_sha:
                     stale = True
@@ -322,16 +357,22 @@ def cmd_update(_args):
                     stale = True
                     print(f"   {path} ref: {s.get('ref') or '(none)'} -> {new_ref}")
             if stale:
-                for s in sources:
+                for _, s in pins:
                     set_pin(s, new_sha, new_ref)
             print()
             continue
 
-        old_clone = fetch_commit(url, old_sha) if old_sha else None
+        try:
+            old_clone = fetch_commit(url, old_sha) if old_sha else None
+        except RuntimeError:
+            old_clone = None  # e.g. force-pushed away: no subject to show
         old_subject = commit_subject(old_clone)
         rmtree(old_clone)
 
-        new_clone = fetch_commit(url, new_sha)
+        try:
+            new_clone, fetch_error = fetch_commit(url, new_sha), ""
+        except RuntimeError as e:
+            new_clone, fetch_error = None, str(e)
         new_subject = commit_subject(new_clone)
         manifest = (
             read_manifest(new_clone, subdir, "claude")
@@ -344,8 +385,13 @@ def cmd_update(_args):
         print(f"== {name}: updated ==")
         print(f"   before: {old_sha[:12]} {old_subject}")
         print(f"   after:  {new_sha[:12]} {new_subject} ({label})")
+        if manifest is None:
+            # Still pin, but say why the version didn't move.
+            why = (f"could not fetch {new_sha[:12]}: {fetch_error}" if fetch_error
+                   else f"no plugin.json at {new_sha[:12]}")
+            print(f"   note: version left at {old_version or '(none)'} ({why})")
 
-        for s in sources:
+        for _, s in pins:
             set_pin(s, new_sha, new_ref)
 
         if new_version and new_version != old_version:
@@ -438,9 +484,10 @@ def cmd_add(args):
     if not sha:
         die(f"Could not resolve {ref or 'HEAD'} on {clone_url}")
 
-    clone = fetch_commit(clone_url, sha)
-    if not clone:
-        die(f"Could not fetch {sha[:12]} from {clone_url}")
+    try:
+        clone = fetch_commit(clone_url, sha)
+    except RuntimeError as e:
+        die(f"Could not fetch {sha[:12]} from {clone_url}: {e}")
     try:
         claude_dir = pick_manifest_dir(clone, "claude", path_hint)
         codex_dir = pick_manifest_dir(clone, "codex", path_hint)
@@ -531,15 +578,23 @@ def cmd_remove(args):
                 if os.path.isfile(path)]
     table = read_readme_table()
 
+    # Edit everything in memory first, so a malformed catalog fails before
+    # any file is written.
     removed = []
     for path, data in catalogs:
         if find_plugin(data, name) is not None:
             data["plugins"] = [p for p in data["plugins"] if p["name"] != name]
-            save_catalog(path, data)
             removed.append(path)
-    if table is not None and name in table[3]:
-        del table[3][name]
-        write_readme_table(table, table[3])
+    rows = table[3] if table is not None else {}
+    in_table = name in rows
+    if in_table:
+        del rows[name]
+
+    for path, data in catalogs:
+        if path in removed:
+            save_catalog(path, data)
+    if in_table:
+        write_readme_table(table, rows)
         removed.append(f"{README_FILE} plugin table")
 
     if not removed:

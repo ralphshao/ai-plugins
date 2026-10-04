@@ -121,10 +121,45 @@ def test_update_missing_manifest_keeps_version(market, make_remote):
     new = remote.commit({}, "Drop manifest")
     pin(market, remote, old)
 
-    market.run("update", check=True)
+    result = market.run("update", check=True)
     entry = market.plugin("gone")
     assert entry["source"]["sha"] == new
     assert entry["version"] == "1.0.0"
+    assert f"note: version left at 1.0.0 (no plugin.json at {new[:12]})" in result.stdout
+
+
+def test_update_failed_fetch_of_new_commit_says_why(market, make_remote, ai_plugins,
+                                                    monkeypatch, capsys):
+    remote = make_remote("flaky")
+    old = remote.commit({CLAUDE: manifest("flaky", "1.0.0")})
+    new = remote.commit({CLAUDE: manifest("flaky", "2.0.0")})
+    pin(market, remote, old)
+
+    # ls-remote sees the new commit, but fetching it fails (e.g. a timeout).
+    def fail(url, ref):
+        raise RuntimeError("git fetch timed out after 120s")
+
+    monkeypatch.setattr(ai_plugins, "fetch_commit", fail)
+    monkeypatch.chdir(market.path)
+    ai_plugins.cmd_update(None)
+    out = capsys.readouterr().out
+    assert (f"note: version left at 1.0.0 (could not fetch {new[:12]}: "
+            "git fetch timed out after 120s)") in out
+    assert market.plugin("flaky")["source"]["sha"] == new
+
+
+def test_update_with_empty_codex_catalog(market, make_remote):
+    remote = make_remote("solo")
+    old = remote.commit({CLAUDE: manifest("solo")})
+    new = remote.commit({"x": "1"})
+    pin(market, remote, old, codex=False)
+    codex = market.catalog("codex")
+    codex["plugins"] = []
+    market.save(codex, "codex")
+
+    market.run("update", check=True)
+    assert market.plugin("solo")["source"]["sha"] == new
+    assert market.catalog("codex")["plugins"] == []
 
 
 def test_update_unreachable_plugin_does_not_block_others(market, make_remote):
@@ -140,8 +175,11 @@ def test_update_unreachable_plugin_does_not_block_others(market, make_remote):
     ghost.path.rename(ghost.path.with_name("moved-away"))
 
     result = market.run("update", check=True)
-    assert f"== ghost: could not resolve latest ref from {ghost.clone_url} ==" \
-        in result.stdout
+    header = f"== ghost: could not resolve latest ref from {ghost.clone_url} =="
+    assert header in result.stdout
+    # git's own error follows, so the user can tell why.
+    reason = result.stdout.split(header + "\n", 1)[1].split("\n", 1)[0]
+    assert reason.startswith("   ") and reason.strip()
     assert market.plugin("ghost")["source"]["sha"] == ghost_sha
     assert market.plugin("good")["source"]["sha"] == new
 
@@ -151,7 +189,9 @@ def test_update_unknown_ref_is_reported(market, make_remote):
     sha = remote.commit({CLAUDE: manifest("reffy")})
     pin(market, remote, sha, ref="deleted-branch")
     result = market.run("update", check=True)
-    assert "== reffy: could not resolve latest ref" in result.stdout
+    # No git error to show for a ref that simply isn't there.
+    assert f"== reffy: could not resolve latest ref from {remote.clone_url} ==\n\n" \
+        in result.stdout
     assert market.plugin("reffy")["source"]["sha"] == sha
 
 
@@ -281,6 +321,58 @@ def test_update_annotated_tag_ref_pins_the_commit(market, make_remote):
     market.run("update", check=True)
     assert market.plugin("tagged")["source"]["sha"] == target
     assert market.plugin("tagged", "codex")["source"]["sha"] == target
+
+
+def test_update_tag_beats_branch_of_the_same_name(market, make_remote):
+    remote = make_remote("dual")
+    base = remote.commit({CLAUDE: manifest("dual")})
+    remote.checkout("pinned", create=True)
+    remote.commit({"b": "1"}, "Branch tip")
+    remote.checkout("main")
+    tagged = remote.commit({"t": "1"}, "Tagged")
+    remote.tag("pinned")
+    pin(market, remote, base, ref="pinned")
+
+    market.run("update", check=True)
+    assert market.plugin("dual")["source"]["sha"] == tagged
+
+
+def test_update_fully_qualified_annotated_tag_pins_the_commit(market, make_remote):
+    remote = make_remote("fqtag")
+    base = remote.commit({CLAUDE: manifest("fqtag")})
+    target = remote.commit({"t": "1"}, "Tagged")
+    remote.tag("pinned-here", annotated=True)
+    remote.commit({"m": "1"}, "Later")
+    pin(market, remote, base, ref="refs/tags/pinned-here")
+
+    market.run("update", check=True)
+    assert market.plugin("fqtag")["source"]["sha"] == target
+
+
+def test_update_head_ref_follows_remote_head(market, make_remote):
+    remote = make_remote("headed")
+    base = remote.commit({CLAUDE: manifest("headed")})
+    tip = remote.commit({"x": "1"}, "Tip")
+    pin(market, remote, base, ref="HEAD")
+
+    market.run("update", check=True)
+    source = market.plugin("headed")["source"]
+    assert (source["sha"], source["ref"]) == (tip, "HEAD")
+
+
+def test_update_unparseable_row_fails_before_any_edit(market, make_remote):
+    # The name link parses, but the row's shape doesn't, so its version
+    # cell can't be rewritten.
+    remote = make_remote("cramped")
+    old = remote.commit({CLAUDE: manifest("cramped", "1.0.0")})
+    remote.commit({CLAUDE: manifest("cramped", "2.0.0")})
+    pin(market, remote, old, row=False)
+    market.add_row(f"|[cramped]({remote.web_url})|Does|1.0.0|")
+    before = market.snapshot()
+
+    result = market.run("update", check=False)
+    assert "|[cramped]" in result.stderr
+    assert market.snapshot() == before
 
 
 def test_update_refuses_readme_row_it_cannot_parse(market, make_remote):

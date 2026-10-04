@@ -88,6 +88,38 @@ def test_remove_unknown_plugin_fails_without_edits(market, make_remote):
     assert market.snapshot() == before
 
 
+def test_remove_bad_readme_row_fails_before_any_edit(market, make_remote):
+    seed(market, make_remote, "beta")
+    market.add_row("| hand-written | no link here | 1.0 |")
+    before = market.snapshot()
+    result = market.run("remove", "beta", check=False)
+    assert "| hand-written |" in result.stderr
+    assert market.snapshot() == before
+
+
+def test_remove_malformed_codex_catalog_fails_before_any_edit(market, make_remote):
+    # The Claude catalog must not be rewritten before the Codex one is read.
+    seed(market, make_remote, "beta")
+    market.save({"name": "no plugins key"}, "codex")
+    before = market.snapshot()
+    market.run("remove", "beta", check=False)
+    assert market.snapshot() == before
+
+
+def test_remove_with_empty_readme_table(market, make_remote):
+    seed(market, make_remote, "beta")
+    text = market.readme()
+    market.readme_path.write_text(
+        "\n".join(l for l in text.split("\n") if not l.startswith("| [")),
+        encoding="utf-8")
+    readme = market.readme()
+    result = market.run("remove", "beta", check=True)
+    assert removed_from(result.stdout) == [
+        ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json",
+    ]
+    assert market.readme() == readme
+
+
 def test_remove_refuses_self(market):
     before = market.snapshot()
     result = market.run("remove", "ai-plugins", check=False)

@@ -1,6 +1,8 @@
 """Unit tests for ai-plugins.py helper branches the end-to-end tests don't reach."""
 
 import json
+import sys
+import time
 
 import pytest
 
@@ -107,29 +109,51 @@ def test_read_manifest_handles_missing_and_invalid(ai_plugins, tmp_path):
 
 # --- git helpers ------------------------------------------------------------
 
-def test_fetch_commit_returns_none_and_cleans_up_on_failure(ai_plugins, make_remote,
-                                                            monkeypatch, tmp_path):
+def test_fetch_commit_raises_and_cleans_up_on_failure(ai_plugins, make_remote,
+                                                      monkeypatch, tmp_path):
     temp = tmp_path / "temp"
     temp.mkdir()
     monkeypatch.setattr(ai_plugins.tempfile, "tempdir", str(temp))
     remote = make_remote("thing")
     remote.commit({"a.txt": "1"})
-    assert ai_plugins.fetch_commit(remote.clone_url, "0" * 40) is None
+    with pytest.raises(RuntimeError) as err:
+        ai_plugins.fetch_commit(remote.clone_url, "0" * 40)
+    assert str(err.value)  # git's own message, for the caller to show
     assert not any(temp.iterdir())
 
 
-def test_git_disables_prompts_and_times_out(ai_plugins, monkeypatch):
+def test_git_disables_prompts(ai_plugins, monkeypatch):
     seen = {}
 
-    def fake_run(cmd, **kwargs):
+    def fake_popen(cmd, **kwargs):
         seen.update(kwargs)
-        raise ai_plugins.subprocess.TimeoutExpired(cmd, kwargs["timeout"])
+        raise OSError("stop here")
 
-    monkeypatch.setattr(ai_plugins.subprocess, "run", fake_run)
-    with pytest.raises(RuntimeError, match="timed out"):
+    monkeypatch.setattr(ai_plugins.subprocess, "Popen", fake_popen)
+    with pytest.raises(OSError):
         ai_plugins.git("ls-remote", "https://example.invalid/x.git")
     assert seen["env"]["GIT_TERMINAL_PROMPT"] == "0"
-    assert seen["timeout"] == ai_plugins.GIT_TIMEOUT
+    assert seen["env"]["GCM_INTERACTIVE"] == "never"
+
+
+def test_git_timeout_kills_the_remote_helper_too(ai_plugins, monkeypatch, tmp_path):
+    # ext:: runs any command as git's remote helper: a child process holding
+    # git's pipes, like git-remote-https on a hung connection. If only git
+    # were killed, it would live on and write the marker.
+    marker = tmp_path / "helper-survived"
+    code = (f"import time,pathlib;time.sleep(3);"
+            f"pathlib.Path({str(marker)!r}).write_text('x')")
+    # ext:: splits on spaces; "% " is a literal one.
+    url = "ext::" + " ".join(a.replace(" ", "% ") for a in (sys.executable, "-c", code))
+    monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "ext")
+    monkeypatch.setattr(ai_plugins, "GIT_TIMEOUT", 1)
+
+    start = time.monotonic()
+    with pytest.raises(RuntimeError, match="timed out after 1s"):
+        ai_plugins.git("ls-remote", url)
+    assert time.monotonic() - start < 10
+    time.sleep(4)
+    assert not marker.exists()
 
 
 def test_write_file_replaces_without_leaving_temp(ai_plugins, tmp_path):
