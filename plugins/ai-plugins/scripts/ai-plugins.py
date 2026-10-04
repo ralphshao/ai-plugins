@@ -37,10 +37,12 @@ def die(msg):
 
 def git(*args, cwd=None):
     try:
-        # A private or mistyped repo URL must fail, not hang on a credential prompt.
+        # A private or mistyped repo URL must fail, not hang on a credential
+        # prompt: git's own, or Git Credential Manager's GUI (Git for Windows).
         result = subprocess.run(
             ["git", *args], cwd=cwd, capture_output=True, text=True,
-            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"}, timeout=GIT_TIMEOUT,
+            env={**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"},
+            timeout=GIT_TIMEOUT,
         )
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"git {args[0]} timed out after {GIT_TIMEOUT}s")
@@ -134,7 +136,8 @@ def readme_row(name, link, description, version):
 def set_row_version(row, version):
     m = ROW_RE.match(row)
     if not m:
-        return row
+        # Returning the row unchanged would leave README behind the catalog.
+        die(f"Can't parse this {README_FILE} table row to update its version:\n{row}")
     return f"| {m.group('name')} | {m.group('desc')} | {version} |"
 
 
@@ -296,15 +299,20 @@ def cmd_update(_args):
         try:
             new_sha, new_ref, label = resolve_pin(
                 url, source.get("ref"), follow_releases=True)
-        except RuntimeError:
-            new_sha = ""
+            error = ""
+        except RuntimeError as e:
+            new_sha, error = "", str(e)
         if not new_sha:
-            print(f"== {name}: could not resolve latest ref from {url} ==\n")
+            print(f"== {name}: could not resolve latest ref from {url} ==")
+            # Timeout, auth failure, bad URL...; an unknown ref has no error.
+            print(f"   {error}\n" if error else "")
             continue
 
         codex_plugin = find_plugin(codex, name) if codex is not None else None
         codex_source = codex_plugin.get("source") if codex_plugin is not None else None
-        sources = [source] + ([codex_source] if isinstance(codex_source, dict) else [])
+        pins = [(CLAUDE_FILE, source)]
+        if isinstance(codex_source, dict):
+            pins.append((CODEX_FILE, codex_source))
 
         if old_sha == new_sha:
             print(f"== {name}: up to date ==")
@@ -312,7 +320,7 @@ def cmd_update(_args):
             # The Codex pin can drift from the Claude one after a hand edit,
             # so report each file's sha and ref separately.
             stale = False
-            for path, s in zip((CLAUDE_FILE, CODEX_FILE), sources):
+            for path, s in pins:
                 path = path.replace(os.sep, "/")
                 if s.get("sha") != new_sha:
                     stale = True
@@ -322,7 +330,7 @@ def cmd_update(_args):
                     stale = True
                     print(f"   {path} ref: {s.get('ref') or '(none)'} -> {new_ref}")
             if stale:
-                for s in sources:
+                for _, s in pins:
                     set_pin(s, new_sha, new_ref)
             print()
             continue
@@ -344,8 +352,13 @@ def cmd_update(_args):
         print(f"== {name}: updated ==")
         print(f"   before: {old_sha[:12]} {old_subject}")
         print(f"   after:  {new_sha[:12]} {new_subject} ({label})")
+        if manifest is None:
+            # Fetch failed or no plugin.json: still pin, but say why the
+            # version didn't move.
+            print(f"   note: could not read a plugin.json at {new_sha[:12]}; "
+                  f"version left at {old_version or '(none)'}")
 
-        for s in sources:
+        for _, s in pins:
             set_pin(s, new_sha, new_ref)
 
         if new_version and new_version != old_version:
@@ -531,15 +544,23 @@ def cmd_remove(args):
                 if os.path.isfile(path)]
     table = read_readme_table()
 
+    # Edit everything in memory first, so a malformed catalog fails before
+    # any file is written.
     removed = []
     for path, data in catalogs:
         if find_plugin(data, name) is not None:
             data["plugins"] = [p for p in data["plugins"] if p["name"] != name]
-            save_catalog(path, data)
             removed.append(path)
-    if table is not None and name in table[3]:
-        del table[3][name]
-        write_readme_table(table, table[3])
+    rows = table[3] if table is not None else {}
+    in_table = name in rows
+    if in_table:
+        del rows[name]
+
+    for path, data in catalogs:
+        if path in removed:
+            save_catalog(path, data)
+    if in_table:
+        write_readme_table(table, rows)
         removed.append(f"{README_FILE} plugin table")
 
     if not removed:
