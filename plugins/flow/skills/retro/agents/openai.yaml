@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow: Retro"
+  short_description: "Suggest environment fixes after a session"
+policy:
+  allow_implicit_invocation: false
