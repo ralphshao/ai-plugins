@@ -24,8 +24,8 @@ Arguments: `$ARGUMENTS`
 
 ## 2. Size the task
 
-Pick one and say which in one line, with the reason. The user can override
-("treat as large").
+Pick one and say it in one line, as `Size: <size> - <reason>`. The user
+can override ("treat as large").
 
 | Size    | Signal                                       |
 |---------|----------------------------------------------|

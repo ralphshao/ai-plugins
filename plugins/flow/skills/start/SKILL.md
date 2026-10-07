@@ -24,7 +24,7 @@ Arguments: `$ARGUMENTS`
    ```
    # <title>
    Source: <issue URL, or "prompt">
-   Size: <trivial | normal | large>
+   Size: <size from the flow skill>
 
    ## Request
    <the issue body or prompt, verbatim>
