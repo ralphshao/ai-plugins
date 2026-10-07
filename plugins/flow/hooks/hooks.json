@@ -1,0 +1,16 @@
+{
+  "description": "flow: subagent guards, format-on-edit, and the plan's test gate",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard.py\""
+          }
+        ]
+      }
+    ]
+  }
+}
