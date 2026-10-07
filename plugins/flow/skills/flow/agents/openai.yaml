@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow"
+  short_description: "Start or resume an engineering task"
+policy:
+  allow_implicit_invocation: false

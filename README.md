@@ -1,8 +1,8 @@
 # ai-plugins
 
 A personal Claude Code / Codex plugin marketplace. Every plugin except
-`ai-plugins` itself is fetched directly from its upstream git repo, pinned
-to a specific commit SHA — there's no vendored copy in this repo.
+`ai-plugins` and `flow` is fetched directly from its upstream git repo,
+pinned to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
 
@@ -29,6 +29,7 @@ codex plugin install <plugin-name>@ai-plugins
 | [avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) | Audit & rewrite content to remove AI writing patterns ("AI-isms") | 3.36.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
 | [context-mode](https://github.com/mksglu/context-mode) | MCP server for session continuity, sandboxed code execution, and an FTS5 knowledge base | 1.0.169 |
+| [`flow`](plugins/flow) | Engineering workflow: plan, build, review, and ship a change with two human gates | 0.1.0 |
 | [i-have-adhd](https://github.com/ayghri/i-have-adhd) | Shapes Claude Code output for an ADHD reader | 0.3.0 |
 | [ponytail](https://github.com/dietrichgebert/ponytail) | Lazy senior dev mode — YAGNI, stdlib first, shortest working diff | 4.10.0 |
 
@@ -37,11 +38,12 @@ codex plugin install <plugin-name>@ai-plugins
 ```
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
 .agents/plugins/marketplace.json  # Codex marketplace catalog
-plugins/ai-plugins/               # the one plugin whose source actually lives in this repo
-tests/                            # pytest suite for the ai-plugins scripts
+plugins/ai-plugins/               # marketplace maintenance plugin (source lives here)
+plugins/flow/                     # engineering workflow plugin (source lives here)
+tests/                            # pytest suite for both local plugins' scripts
 ```
 
-Every other plugin's `source` is a `url` or `git-subdir` object with a
+Every remote plugin's `source` is a `url` or `git-subdir` object with a
 pinned `sha`, not a relative path — see
 [Create the marketplace file](https://developers.openai.com/plugins/build/plugins)
 docs for the source schema. `caveman` and `avoid-ai-writing` each bundle a

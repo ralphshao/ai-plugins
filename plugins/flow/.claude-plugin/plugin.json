@@ -1,0 +1,8 @@
+{
+  "name": "flow",
+  "description": "Engineering workflow: plan, build, review, and ship a change with two human gates",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ralph Shao"
+  }
+}

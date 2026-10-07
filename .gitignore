@@ -5,3 +5,6 @@ __pycache__/
 
 # Local CodeGraph index
 .codegraph/
+
+# claude plugin eval output, wherever it was run from
+evals/results/

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow: Plan"
+  short_description: "Interview and write the plan, then GATE 1"
+policy:
+  allow_implicit_invocation: false

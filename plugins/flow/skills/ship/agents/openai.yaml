@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow: Ship"
+  short_description: "Verify, review, and ready the PR"
+policy:
+  allow_implicit_invocation: false
