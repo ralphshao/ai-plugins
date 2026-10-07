@@ -101,11 +101,15 @@ def test_readme_versions_match_claude_catalog(claude, table):
         assert table[plugin["name"]][0] == plugin.get("version", "—"), plugin["name"]
 
 
-def test_self_plugin_versions_agree(claude):
-    entry = next(p for p in claude["plugins"] if p["name"] == "ai-plugins")
+@pytest.mark.parametrize("name", ["ai-plugins", "flow"])
+def test_local_plugin_versions_agree(claude, codex, name):
+    entry = next(p for p in claude["plugins"] if p["name"] == name)
+    assert entry["source"] == f"./plugins/{name}"
+    codex_entry = next(p for p in codex["plugins"] if p["name"] == name)
+    assert codex_entry["source"] == {"source": "local", "path": f"./plugins/{name}"}
     for kind in ("claude", "codex"):
-        manifest = json.loads(
-            (PLUGIN_ROOT / f".{kind}-plugin" / "plugin.json").read_text(encoding="utf-8"))
-        assert manifest["name"] == "ai-plugins"
-        assert manifest["version"] == entry["version"], f".{kind}-plugin/plugin.json"
+        manifest = json.loads((PLUGIN_ROOT.parent / name / f".{kind}-plugin" / "plugin.json")
+                              .read_text(encoding="utf-8"))
+        assert manifest["name"] == name
+        assert manifest["version"] == entry["version"], f"{name} .{kind}-plugin/plugin.json"
 

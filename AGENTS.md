@@ -4,12 +4,12 @@ Instructions for coding agents working in this repo.
 
 ## What this repo is
 
-A Claude Code / Codex plugin marketplace. Every plugin except
-`ai-plugins` itself is a pinned remote git ref (`url` or `git-subdir` source,
-with a `sha`) — not a vendored copy, not a submodule. There's nothing to
-edit locally for those plugins; a fix belongs in the upstream repo.
-`ai-plugins` is the one exception: its source lives directly in this repo
-at `plugins/ai-plugins/`.
+A Claude Code / Codex plugin marketplace. Every plugin except `ai-plugins`
+and `flow` is a pinned remote git ref (`url` or `git-subdir` source, with a
+`sha`) — not a vendored copy, not a submodule. There's nothing to edit
+locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`
+and `flow` are the exceptions: their source lives directly in this repo at
+`plugins/ai-plugins/` and `plugins/flow/` (local `source` paths).
 
 ## Two marketplace files, kept in sync
 

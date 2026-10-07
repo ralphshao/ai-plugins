@@ -1,0 +1,15 @@
+{
+  "name": "flow",
+  "version": "0.1.0",
+  "description": "Engineering workflow: plan, build, review, and ship a change with two human gates",
+  "author": {
+    "name": "Ralph Shao"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Flow",
+    "shortDescription": "Engineering workflow: plan, build, review, and ship a change with two human gates",
+    "developerName": "Ralph Shao",
+    "category": "Productivity"
+  }
+}
