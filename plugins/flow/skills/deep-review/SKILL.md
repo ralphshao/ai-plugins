@@ -7,6 +7,8 @@ allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Ba
 
 Orchestrate a review with the `flow:code-reviewer` and `flow:review-validator` subagents. You coordinate; the subagents read the code. Don't review the code yourself, and don't edit anything.
 
+On Codex, use the agent names from the `flow` skill's "Agent names on Codex" section.
+
 ## 1. Pin the scope
 
 Arguments: `$ARGUMENTS`

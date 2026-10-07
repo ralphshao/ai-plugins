@@ -9,7 +9,7 @@ from conftest import REPO_ROOT
 
 FLOW = REPO_ROOT / "plugins" / "flow"
 # Orchestrators: only the user may start them, on Claude Code and Codex.
-USER_ONLY = {"flow", "start", "plan", "ship"}
+USER_ONLY = {"flow", "start", "plan", "ship", "setup-codex"}
 SKILLS = sorted(p.parent.name for p in (FLOW / "skills").glob("*/SKILL.md"))
 
 

@@ -84,6 +84,15 @@ To escalate, park and continue:
 5. On an answer, tick the question, record the outcome under
    `## Decisions`, and unblock its steps.
 
+## Agent names on Codex
+
+This plugin's agents are `flow:code-reviewer`, `flow:review-validator`, and
+`flow:tester` in Claude Code. In Codex they are `flow-code-reviewer`,
+`flow-review-validator`, and `flow-tester` once `setup-codex` has installed
+them. If they aren't installed, spawn the built-in `explorer` (reviewers) or
+`worker` (tester) and give it the matching `agents/<name>.md` body from this
+plugin as its instructions.
+
 ## State
 
 `.flow/<slug>/` holds `brief.md` and `plan.md`. Commit it on the feature
