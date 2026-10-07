@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow: Start"
+  short_description: "Branch and brief for a task"
+policy:
+  allow_implicit_invocation: false
