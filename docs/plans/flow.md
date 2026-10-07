@@ -48,7 +48,7 @@ plugins/flow/
   hooks/
     hooks.json
     guard.py       dispatches to the reviewer/tester guards by agent_type
-    test_gate.py   Stop hook
+    stop_gate.py   Stop hook
     format.py      PostToolUse format/lint
   scripts/
     codex_agents.py  generates ~/.codex/agents/*.toml from agents/*.md
@@ -193,7 +193,7 @@ Codex sets `CLAUDE_PLUGIN_ROOT` for compatibility). Commands reference
 |------|-----------------|----------|
 | `guard.py` | PreToolUse `Bash\|Write\|Edit` | Reads `agent_type`. `flow:code-reviewer` and `flow:review-validator` get the read-only Bash guard; `flow:tester` gets the tester guard; anything else exits 0. |
 | `format.py` | PostToolUse `Edit\|Write` | Runs the repo's formatter/linter on the edited file if one is detectable; no-op otherwise. |
-| `test_gate.py` | Stop | Active only when the branch has `.flow/<slug>/plan.md` with a test command. Runs it; on failure blocks the stop with the failing output. Allows the stop while `## Open questions` has unticked items (parked work). Honors `stop_hook_active` to avoid loops. |
+| `stop_gate.py` | Stop | Active only when `.flow/<slug>/plan.md` has Status `Approved...` and a test command. Runs it; on failure blocks the stop with the failing output. Allows the stop while `## Open questions` has unticked items (parked work). Honors `stop_hook_active` to avoid loops. |
 
 Why a dispatcher: Claude Code ignores `hooks:` frontmatter on plugin agents,
 so the guards the agents carry today would silently stop running after the
@@ -241,7 +241,7 @@ Known limits:
 2. Move agents, `deep-review`, guards; `guard.py` dispatcher; guard tests.
 3. `flow`, `start`, `plan`, `ship` + `interview`, `tdd`, `pr-body`. Normal path
    works end to end.
-4. `test_gate.py`, then `format.py`, with tests.
+4. `stop_gate.py`, then `format.py`, with tests.
 5. `setup-codex` + `codex_agents.py`, with a test.
 6. `retro`.
 7. `claude plugin eval` suite: `/flow` sizing and routing on a handful of
