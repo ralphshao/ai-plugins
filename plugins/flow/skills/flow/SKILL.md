@@ -29,11 +29,13 @@ can override ("treat as large").
 
 | Size    | Signal                                       |
 |---------|----------------------------------------------|
-| Trivial | typo, one-liner, obvious local fix           |
-| Normal  | a feature or bug touching a few files        |
-| Large   | crosses modules, new subsystem, schema or API change |
+| Trivial | no behavior change a caller could notice: typos, comments, docs, formatting, internal renames |
+| Normal  | changes behavior: a feature or bug fix touching a few files |
+| Large   | crosses modules, new subsystem, schema or API redesign |
 
-When unsure between two sizes, pick the larger.
+Size by what changes, not by how many lines. A one-line change to what a
+public function returns, raises, or accepts is Normal, not Trivial. When
+unsure between two sizes, pick the larger.
 
 ## 3. Run the path
 

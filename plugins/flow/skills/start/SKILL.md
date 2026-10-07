@@ -15,11 +15,7 @@ Arguments: `$ARGUMENTS`
 2. **Pick a slug:** 2-5 lowercase words joined by hyphens, from the request
    (`retry-webhook-failures`). Prefix the issue number when there is one
    (`123-retry-webhook-failures`).
-3. **Branch.** If the current branch is the default branch, create
-   `flow/<slug>` from it. If the session is already in a worktree or on a
-   feature branch made for this task, stay there. Never discard local
-   changes; if the tree is dirty and unrelated, stop and ask.
-4. **Write `.flow/<slug>/brief.md`:**
+3. **Write `.flow/<slug>/brief.md`:**
 
    ```
    # <title>
@@ -33,4 +29,12 @@ Arguments: `$ARGUMENTS`
    <anything the user stated: deadlines, files not to touch, compatibility>
    ```
 
-5. Commit it: `flow: start <slug>`.
+4. **Branch.** If the current branch is the default branch, create
+   `flow/<slug>` from it; the uncommitted brief comes along. If the session
+   is already in a worktree or on a feature branch made for this task, stay
+   there. Never discard local changes; if the tree has unrelated changes,
+   stop and ask.
+5. **Commit** the brief: `flow: start <slug>`.
+
+If git isn't available (no shell, or a command is denied), keep the brief,
+say which steps you couldn't run, and continue to the plan phase.

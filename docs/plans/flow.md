@@ -73,7 +73,7 @@ can override ("treat as large").
 
 | Size    | Signal                         | Path                                                                 |
 |---------|--------------------------------|----------------------------------------------------------------------|
-| Trivial | typo, one-liner, obvious fix   | do it, quick review, no branch ceremony, no gates                    |
+| Trivial | no caller-visible behavior change (typo, docs, internal rename) | do it, quick review, no branch ceremony, no gates |
 | Normal  | feature or bug, a few files    | start -> plan (at most one interview round) -> GATE 1 -> build -> ship -> GATE 2 |
 | Large   | cross-module, new subsystem    | Normal, plus a full interview, an ADR for one-way-door decisions, tester pass |
 
