@@ -142,9 +142,12 @@ def test_installed_agents_are_the_shipped_copies(home, tmp_path):
             shipped.read_text(encoding="utf-8")
 
 
-def test_effort_carries_over_to_codex():
+def test_codex_settings_come_from_codex_keys():
     for source in (FLOW / "agents").glob("*.md"):
-        effort = re.search(r"^effort:\s*(\S+)$", source.read_text(encoding="utf-8"), re.M)
+        text = source.read_text(encoding="utf-8")
         shipped = tomllib.loads((FLOW / "codex-agents" / f"flow-{source.stem}.toml")
                                .read_text(encoding="utf-8"))
-        assert shipped.get("model_reasoning_effort") == (effort and effort.group(1))
+        for src, key in (("codex-model", "model"),
+                         ("codex-effort", "model_reasoning_effort")):
+            value = re.search(rf"^{src}:\s*(\S+)$", text, re.M)
+            assert shipped.get(key) == (value and value.group(1)), (source.name, key)

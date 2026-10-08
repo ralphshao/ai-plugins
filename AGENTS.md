@@ -104,7 +104,9 @@ before committing.
 
 `plugins/flow/agents/*.md` (Claude Code format) is the only source for
 flow's agents. `plugins/flow/codex-agents/*.toml` is generated from it for
-Codex: after editing an agent, run `python3
+Codex: each agent sets its Codex model and effort separately, in
+`codex-model:` and `codex-effort:` frontmatter that Claude Code ignores.
+After editing an agent, run `python3
 plugins/flow/scripts/render_codex_agents.py` and commit both. A test fails
 while they disagree. flow's spawn hook copies the TOMLs into the user's
 Codex agents folder, because Codex plugins can't ship agents (ADR 3).

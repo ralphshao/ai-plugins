@@ -13,11 +13,14 @@ The conversion, per agents/<name>.md:
 - frontmatter `description` is copied as is.
 - the Markdown body becomes `developer_instructions`, after a preamble that
   maps Claude Code tool names to Codex ones.
-- `effort` becomes `model_reasoning_effort`, with the same level name.
-- `tools`, `model`, and other frontmatter are dropped. Codex roles can't
-  limit tools, and sandbox_mode is ignored in role files, so guard.py
-  enforces the limits on both hosts. Claude model names have no Codex
-  equivalent, so a Codex agent runs on the parent session's model.
+- `codex-model` and `codex-effort` become `model` and
+  `model_reasoning_effort`. They are flow's own keys, set per agent
+  separately from the Claude ones; Claude Code ignores them. Without them,
+  a Codex agent runs on the parent session's model and effort.
+- `tools`, `model`, `effort`, and other frontmatter are dropped. Codex
+  roles can't limit tools, and sandbox_mode is ignored in role files, so
+  guard.py enforces the limits on both hosts. Claude model names and
+  effort don't carry over: each host's settings are chosen separately.
 
 Usage: python3 plugins/flow/scripts/render_codex_agents.py
 """
@@ -62,8 +65,11 @@ def render(path):
     """(file name, TOML text) for one agents/<name>.md."""
     fields, body = parse(path)
     name = fields["name"]
-    effort = (f"model_reasoning_effort = {toml_string(fields['effort'])}\n"
-              if fields.get("effort") else "")
+    settings = "".join(
+        f"{key} = {toml_string(fields[src])}\n"
+        for src, key in (("codex-model", "model"),
+                         ("codex-effort", "model_reasoning_effort"))
+        if fields.get(src))
     # Codex ignores sandbox_mode in role files, so none is set; guard.py
     # enforces the reviewer and tester limits instead.
     return f"flow-{name}.toml", (
@@ -71,7 +77,7 @@ def render(path):
         "# flow's hooks overwrite this file when flow updates; edits here are lost.\n"
         f"name = {toml_string('flow-' + name)}\n"
         f"description = {toml_string(fields['description'])}\n"
-        f"{effort}"
+        f"{settings}"
         f"developer_instructions = {toml_string(PREAMBLE + body)}\n"
     )
 

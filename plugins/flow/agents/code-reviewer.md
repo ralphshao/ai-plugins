@@ -4,6 +4,8 @@ description: Read-only code reviewer. Scans files or a diff for correctness bugs
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
 model: claude-sonnet-5-5
 effort: medium
+codex-model: gpt-6.1-sol
+codex-effort: medium
 skills:
   - andrej-karpathy-skills:karpathy-guidelines
   - ponytail:ponytail-review
