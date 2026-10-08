@@ -141,18 +141,18 @@ def test_git_timeout_kills_the_remote_helper_too(ai_plugins, monkeypatch, tmp_pa
     # git's pipes, like git-remote-https on a hung connection. If only git
     # were killed, it would live on and write the marker.
     marker = tmp_path / "helper-survived"
-    code = (f"import time,pathlib;time.sleep(3);"
+    code = (f"import time,pathlib;time.sleep(1.5);"
             f"pathlib.Path({str(marker)!r}).write_text('x')")
     # ext:: splits on spaces; "% " is a literal one.
     url = "ext::" + " ".join(a.replace(" ", "% ") for a in (sys.executable, "-c", code))
     monkeypatch.setenv("GIT_ALLOW_PROTOCOL", "ext")
-    monkeypatch.setattr(ai_plugins, "GIT_TIMEOUT", 1)
+    monkeypatch.setattr(ai_plugins, "GIT_TIMEOUT", 0.5)
 
     start = time.monotonic()
-    with pytest.raises(RuntimeError, match="timed out after 1s"):
+    with pytest.raises(RuntimeError, match=r"timed out after 0\.5s"):
         ai_plugins.git("ls-remote", url)
     assert time.monotonic() - start < 10
-    time.sleep(4)
+    time.sleep(2)  # past the helper's 1.5s, had it survived
     assert not marker.exists()
 
 
