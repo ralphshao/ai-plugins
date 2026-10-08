@@ -55,9 +55,9 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 
 ## Steps
 - [x] Add vcs-git skill
-- [ ] Add vcs-perforce skill
+- [x] Add vcs-perforce skill
 - [x] Add host-github skill (all gh steps move here)
-- [ ] Add host-swarm skill
+- [x] Add host-swarm skill
 - [ ] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
 - [ ] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
 - [ ] Generalize agents' scope wording (code-reviewer, review-validator, tester)
@@ -87,6 +87,9 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - Perforce: CL workspace default, existing task/dev stream supported, streams created only on request, classic branches never created - stream/branch layout is a depot convention.
 
 - Committed-code review: sha and ranges, PR in any state, submitted/shelved CL, Swarm review in any state; prefixed target syntax with host-aware bare numbers; git temp detached worktree, p4 print at revision; no posting back - user wants reviews of already-committed code.
+- VCS contract also has find-state and drop-state - resume and plan-file cleanup differ per VCS (git branch files vs a p4 state changelist).
+- Perforce keeps .flow/ in its own never-submitted state changelist - stream-mode steps are submitted, and plan files must never reach the depot.
+- Swarm open-draft is a no-op; ready-for-review adds #review - Swarm has no drafts and a new review notifies reviewers.
 
 ## Open questions
 - [x] Q1-Q7 interview round 1 - accepted all
