@@ -1,4 +1,4 @@
-# 3. Flow's hooks serve Claude Code and Codex from one hooks.json
+# 8. Flow's hooks serve Claude Code and Codex from one hooks.json
 
 Status: accepted (#10, 2026-10-08)
 

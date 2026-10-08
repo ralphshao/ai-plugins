@@ -107,7 +107,7 @@ flow's agents. Each agent sets its Codex model and effort separately, in
 `codex-model:` and `codex-effort:` frontmatter that Claude Code ignores.
 flow's spawn hook (`plugins/flow/hooks/codex_agents.py`) converts the agents
 into Codex role files when Codex spawns one and copies them into the user's
-Codex agents folder, because Codex plugins can't ship agents (ADR 3). There
+Codex agents folder, because Codex plugins can't ship agents (ADR 8). There
 is no generated file to update.
 
 ## Versions
@@ -121,7 +121,11 @@ file: several plugins can share a version string.
 
 ## Design records
 
-`docs/plans/` holds design plans, which aren't maintained once implemented.
+Design plans don't live in `docs/` once implemented: nobody maintains
+them, and readers keep trusting them. A plan is working state (flow keeps
+it in `.flow/<slug>/` and removes it before merge). Any decision in it that
+still holds goes to `docs/adr/`.
+
 `docs/adr/` holds architecture decision records: one numbered file per
 hard-to-reverse decision, never edited after acceptance. A changed decision
 gets a new ADR that supersedes the old one.

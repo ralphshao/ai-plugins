@@ -10,7 +10,8 @@ codex_agents.py installs (flow-tester).
 - Reviewers (code-reviewer, correctness-reviewer, review-validator): read-only Bash (git, p4,
   file commands), no writes.
 - Tester: read-only Bash plus test/coverage runners; writes to test files
-  only.
+  only. A test file it writes can still edit source when a runner runs it;
+  that gap is accepted (ADR 4).
 
 Writes are Write and Edit (Claude Code) and apply_patch (Codex, which hooks
 match as Write|Edit). Every other caller (the main session, other agents)

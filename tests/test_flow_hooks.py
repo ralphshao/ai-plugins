@@ -1,6 +1,7 @@
 """Tests for flow's stop_gate.py and format.py hooks, run as the hooks run."""
 
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -137,20 +138,25 @@ def test_gate_always_runs_outside_git(tmp_path, tmp_path_factory):
     assert stop() == 2
 
 
+def fake_bin(tmp_path, name, script):
+    """A PATH with a `name` command that runs the Python script."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    path = bin_dir / f"{name}.py"
+    path.write_text(script)
+    if os.name == "nt":
+        (bin_dir / f"{name}.cmd").write_text(f'@"{sys.executable}" "{path}" %*\n')
+    else:
+        exe = bin_dir / name
+        exe.write_text(f"#!{sys.executable}\nexec(open({str(path)!r}).read())\n")
+        exe.chmod(0o755)
+    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+
+
 def fake_p4(tmp_path, client_root, code=0):
     """A PATH with a `p4` that reports client_root as the client and exits
     with code."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    script = bin_dir / "p4.py"
-    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
-    if os.name == "nt":
-        (bin_dir / "p4.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
-    else:
-        exe = bin_dir / "p4"
-        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
-        exe.chmod(0o755)
-    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+    return fake_bin(tmp_path, "p4", f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
 
 
 def test_gate_finds_plan_at_p4_client_root(tmp_path):
@@ -186,6 +192,43 @@ def test_gate_without_git_or_p4_uses_cwd(tmp_path):
     out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)},
                   env={**os.environ, "PATH": str(empty)})
     assert json.loads(out)["decision"] == "block"
+
+
+@pytest.mark.parametrize("make_bad", [
+    lambda p: p.write_bytes(b"caf\xe9\n"),  # not UTF-8
+    lambda p: p.mkdir(),  # reading it raises OSError
+], ids=["not-utf8", "unreadable"])
+def test_gate_skips_a_plan_it_cannot_read(repo, make_bad):
+    (repo / ".flow" / "a").mkdir(parents=True)
+    make_bad(repo / ".flow" / "a" / "plan.md")
+    gate(repo, plan())  # .flow/x/plan.md, a failing plan
+    out, _ = hook("stop_gate.py", {"cwd": str(repo)})
+    result = json.loads(out)
+    assert result["decision"] == "block"
+    assert ".flow/a/plan.md" in result["systemMessage"].replace(os.sep, "/")
+
+
+def test_gate_shows_a_skipped_plan_when_it_allows_the_stop(repo):
+    (repo / ".flow" / "a").mkdir(parents=True)
+    (repo / ".flow" / "a" / "plan.md").write_bytes(b"caf\xe9\n")
+    result = gate(repo)
+    assert "decision" not in result
+    assert ".flow/a/plan.md" in result["systemMessage"].replace(os.sep, "/")
+
+
+def fake_git(tmp_path, message):
+    return fake_bin(tmp_path, "git", f"import sys\nsys.stderr.write({message!r})\nraise SystemExit(128)\n")
+
+
+def test_gate_warns_when_git_fails(tmp_path):
+    env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    assert "dubious ownership" in json.loads(out)["systemMessage"]
+
+
+def test_gate_is_quiet_outside_a_git_repo(tmp_path):
+    env = fake_git(tmp_path, "fatal: not a git repository\n")
+    assert hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env) == ("", "")
 
 
 def test_gate_finds_plan_in_linked_worktree(repo):
@@ -278,17 +321,7 @@ def test_format_hook_is_quiet_when_nothing_to_do(payload, tmp_path):
 
 def fake_gofmt(tmp_path):
     """A PATH whose `gofmt` appends a marker line to the file it formats."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    script = bin_dir / "gofmt.py"
-    script.write_text("import sys\nopen(sys.argv[-1], 'a').write('// formatted\\n')\n")
-    if os.name == "nt":
-        (bin_dir / "gofmt.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
-    else:
-        exe = bin_dir / "gofmt"
-        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
-        exe.chmod(0o755)
-    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+    return fake_bin(tmp_path, "gofmt", "import sys\nopen(sys.argv[-1], 'a').write('// formatted\\n')\n")
 
 
 def test_format_formats_each_file_in_a_patch(repo, tmp_path):
@@ -310,3 +343,76 @@ def test_gate_runs_when_an_untracked_file_cannot_be_read(repo, tmp_path_factory)
     (repo / "dangling").symlink_to(repo / "missing")
     assert stop(text) == 1
     assert stop() == 2  # can't prove nothing changed
+
+
+@pytest.mark.skipif(os.name == "nt" or os.geteuid() == 0,
+                    reason="chmod 000 doesn't block reads on Windows or as root")
+@pytest.mark.parametrize("name, check", [
+    ("pyproject.toml", "has_ruff_config"),
+    ("package.json", "has_prettier_config"),
+])
+def test_format_treats_unreadable_config_as_none(fmt, tmp_path, name, check):
+    config = tmp_path / name
+    config.write_text("{}")
+    config.chmod(0)
+    try:
+        assert getattr(fmt, check)(tmp_path) is False
+    finally:
+        config.chmod(0o644)
+
+
+def test_format_keeps_going_after_a_file_fails(fmt, repo, monkeypatch, capsys):
+    for name in ("a.go", "b.go"):
+        (repo / name).write_text("package main\n")
+    done = []
+
+    def format_file(path):
+        if path.name == "a.go":
+            raise OSError("boom")
+        done.append(path.name)
+    monkeypatch.setattr(fmt, "format_file", format_file)
+    patch = ("*** Begin Patch\n*** Add File: a.go\n+package main\n"
+             "*** Add File: b.go\n+package main\n*** End Patch\n")
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(
+        {"cwd": str(repo), "tool_name": "apply_patch",
+         "tool_input": {"command": patch}})))
+    fmt.main()
+    assert done == ["b.go"]
+    assert "a.go" in capsys.readouterr().err
+
+
+def test_gate_names_the_exit_code_when_git_fails_silently(tmp_path):
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=fake_git(tmp_path, ""))
+    assert "exit 128" in json.loads(out)["systemMessage"]
+
+
+def test_gate_still_finds_a_plan_at_cwd_when_git_fails(tmp_path):
+    gate(tmp_path, plan())
+    env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    result = json.loads(out)
+    assert result["decision"] == "block"
+    assert "dubious ownership" in result["systemMessage"]
+
+
+@pytest.fixture(scope="module")
+def stop_gate():
+    spec = importlib.util.spec_from_file_location("flow_stop_gate", HOOKS / "stop_gate.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("error", [
+    subprocess.TimeoutExpired("git", 5),
+    PermissionError("git not executable"),
+], ids=["timeout", "oserror"])
+def test_git_toplevel_warns_and_returns_none_when_git_cannot_run(
+        stop_gate, tmp_path, monkeypatch, error):
+    def boom(*args, **kwargs):
+        raise error
+    monkeypatch.setattr(stop_gate.shutil, "which", lambda name: "/bin/git")
+    monkeypatch.setattr(stop_gate.subprocess, "run", boom)
+    monkeypatch.setattr(stop_gate, "warnings", [])
+    assert stop_gate.git_toplevel(tmp_path) is None
+    assert "`git rev-parse` failed" in stop_gate.warnings[0]

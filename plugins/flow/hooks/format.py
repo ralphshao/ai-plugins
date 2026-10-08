@@ -47,8 +47,11 @@ def has_ruff_config(d):
     if (d / "ruff.toml").is_file() or (d / ".ruff.toml").is_file():
         return True
     pyproject = d / "pyproject.toml"
-    return pyproject.is_file() and "[tool.ruff" in pyproject.read_text(
-        encoding="utf-8", errors="replace")
+    try:
+        return pyproject.is_file() and "[tool.ruff" in pyproject.read_text(
+            encoding="utf-8", errors="replace")
+    except OSError:
+        return False
 
 
 def has_prettier_config(d):
@@ -58,7 +61,7 @@ def has_prettier_config(d):
     if pkg.is_file():
         try:
             return "prettier" in json.loads(pkg.read_text(encoding="utf-8"))
-        except ValueError:
+        except (OSError, ValueError):
             return False
     return False
 
@@ -112,8 +115,11 @@ def main():
         path = Path(file_path)
         if not path.is_absolute():
             path = Path(data.get("cwd") or ".") / path
-        if path.is_file():
-            format_file(path.resolve())
+        try:
+            if path.is_file():
+                format_file(path.resolve())
+        except Exception as e:  # best-effort: still format the other files
+            print(f"flow format: {path}: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

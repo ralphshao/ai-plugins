@@ -1,4 +1,4 @@
-# 1. Flow runs VCS and review-host steps through two skill layers
+# 6. Flow runs VCS and review-host steps through two skill layers
 
 Status: accepted (#8, 2026-10-08)
 
