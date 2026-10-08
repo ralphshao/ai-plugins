@@ -63,7 +63,7 @@ def run(cmd, cwd):
         return None
     try:
         out = subprocess.run([exe, *cmd[1:]], cwd=cwd, capture_output=True,
-                             text=True, timeout=30)
+                             text=True, timeout=5)
     except (OSError, subprocess.TimeoutExpired):
         return None
     return out.stdout if out.returncode == 0 else None

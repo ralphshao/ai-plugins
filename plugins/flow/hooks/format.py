@@ -31,7 +31,8 @@ PRETTIER_CONFIGS = [".prettierrc", ".prettierrc.json", ".prettierrc.yaml",
 
 def ancestors(path):
     """The file's directory and its parents, nearest first, up to the repo:
-    a git work tree, or a Perforce workspace marked by its P4CONFIG file."""
+    a git work tree, or a Perforce workspace marked by its P4CONFIG file.
+    Only the environment's P4CONFIG is seen, not one set with `p4 set`."""
     markers = {".git", ".p4config", os.environ.get("P4CONFIG") or ".p4config"}
     for d in path.parents:
         yield d

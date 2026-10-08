@@ -84,12 +84,13 @@ def test_gate_reads_fenced_command(repo):
     assert gate(repo, text)["decision"] == "block"
 
 
-def fake_p4(tmp_path, client_root):
-    """A PATH with a `p4` whose `info` reports client_root as the client."""
+def fake_p4(tmp_path, client_root, code=0):
+    """A PATH with a `p4` that reports client_root as the client and exits
+    with code."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     script = bin_dir / "p4.py"
-    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\n")
+    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
     if os.name == "nt":
         (bin_dir / "p4.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
     else:
@@ -115,6 +116,23 @@ def test_gate_ignores_p4_client_root_outside_cwd(tmp_path):
     other.mkdir()
     out, _ = hook("stop_gate.py", {"cwd": str(ws)}, env=fake_p4(tmp_path, other))
     assert json.loads(out)["decision"] == "block"  # falls back to cwd
+
+
+def test_gate_ignores_failing_p4(tmp_path):
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    gate(ws, plan())
+    env = fake_p4(tmp_path, ws, code=1)
+    assert hook("stop_gate.py", {"cwd": str(ws / "src")}, env=env)[0] == ""
+
+
+def test_gate_without_git_or_p4_uses_cwd(tmp_path):
+    empty = tmp_path / "empty-bin"
+    empty.mkdir()
+    gate(tmp_path, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)},
+                  env={**os.environ, "PATH": str(empty)})
+    assert json.loads(out)["decision"] == "block"
 
 
 def test_gate_finds_plan_in_linked_worktree(repo):
