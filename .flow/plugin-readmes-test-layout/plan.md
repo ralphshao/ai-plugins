@@ -39,7 +39,7 @@ to users' plugin caches. Repo docs describe the new layout.
 - [x] Add `plugins/ai-plugins/README.md`
 - [x] Add `plugins/flow/README.md`
 - [x] Update root README "Repo structure" and AGENTS.md "Tests" section
-- [ ] Set versions: ai-plugins 1.4.0 -> 0.2.1, flow 0.2.3 -> 0.2.4
+- [x] Set versions: ai-plugins 1.4.0 -> 0.2.1, flow 0.2.3 -> 0.2.4
 
 ## Test command
 `python3 -m pytest`
