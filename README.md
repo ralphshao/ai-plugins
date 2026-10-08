@@ -40,6 +40,7 @@ codex plugin install <plugin-name>@ai-plugins
 .agents/plugins/marketplace.json  # Codex marketplace catalog
 plugins/ai-plugins/               # marketplace maintenance plugin (source lives here)
 plugins/flow/                     # engineering workflow plugin (source lives here)
+docs/adr/                         # architecture decision records
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
   flow/                           #   tests for plugins/flow
@@ -49,6 +50,8 @@ tests/                            # pytest suite: conftest.py, catalog checks
 
 Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills add,
 remove, and re-pin plugins in both catalogs and the table above.
+
+## License
 
 Each plugin keeps its own upstream license; this repo adds no license of its
 own for the marketplace glue.

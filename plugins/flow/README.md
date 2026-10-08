@@ -1,20 +1,24 @@
 # flow
 
-An engineering workflow for Claude Code and Codex. `/flow` takes one task
-from a prompt or issue to a review that's ready to land. You approve it
-twice: the plan (GATE 1) and landing it (GATE 2). Between the gates the agent
-works on its own, and parks questions it can't decide alone instead of
-guessing.
+An engineering workflow for Claude Code and Codex. The `flow` skill takes
+one task from a prompt or issue to a review that's ready to land. You
+approve it twice: the plan (GATE 1) and landing it (GATE 2). Between the
+gates the agent works on its own, and parks questions it can't decide
+alone instead of guessing.
 
 flow works in git repos (GitHub for reviews) and in Perforce workspaces
 (Helix Swarm for reviews).
 
 ## Usage
 
+In Claude Code:
+
 ```
-/flow <prompt | #issue | issue URL>   start a task
-/flow                                 resume the task in .flow/
+/flow:flow <prompt | #issue | issue URL>   start a task
+/flow:flow                                 resume the task in .flow/
 ```
+
+In Codex, invoke the `flow` skill the same way.
 
 flow sizes the task first:
 
@@ -44,9 +48,9 @@ before the review is marked ready.
 
 ## Agents
 
-`code-reviewer`, `correctness-reviewer` (same instructions, with a stronger
-model or higher effort), `review-validator`, and `tester`. They are `flow:<name>` in Claude
-Code and `flow-<name>` in Codex.
+`code-reviewer`, `correctness-reviewer` (same instructions, with a
+stronger model or higher effort), `review-validator`, and `tester`. They
+are `flow:<name>` in Claude Code and `flow-<name>` in Codex.
 
 ## Hooks
 

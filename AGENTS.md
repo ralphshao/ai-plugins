@@ -11,6 +11,13 @@ locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`
 and `flow` are the exceptions: their source lives directly in this repo at
 `plugins/ai-plugins/` and `plugins/flow/` (local `source` paths).
 
+## Docs
+
+Each local plugin's user docs live in its own `plugins/<name>/README.md`.
+The root `README.md` covers only the marketplace: install, the plugin
+table, and the repo layout. Don't add plugin details to the root README;
+link the plugin's folder instead.
+
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
@@ -71,12 +78,16 @@ directly in `tests/`. Run one plugin's suite with
 whole folder is copied into every user's plugin cache on install. Test
 file names must stay unique across the subfolders (no `__init__.py`).
 
-The ai-plugins tests run offline: upstream plugin repos are local git
-repos, and a private `GIT_CONFIG_GLOBAL` rewrites `https://github.com/` to
-point at them.
+flow's `claude plugin eval` cases are the exception: they stay in
+`plugins/flow/evals/`, because `claude plugin eval` reads its eval folder
+from below the plugin.
+
+All of `tests/` runs offline. For the ai-plugins tests, upstream plugin
+repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
+`https://github.com/` to point at them.
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
-When you change the script, add or update a test for the new behavior.
+When you change a script or hook, add or update a test for the new behavior.
 
 ## Maintenance script
 
@@ -101,7 +112,8 @@ time it runs.
 
 Use the `ai-plugins:add`, `ai-plugins:remove`, and `ai-plugins:update`
 skills, or run `python3 plugins/ai-plugins/scripts/ai-plugins.py
-<add|remove|update>` directly (see README.md), rather than hand-editing the
+<add|remove|update>` directly (see
+[its README](plugins/ai-plugins/README.md)), rather than hand-editing the
 marketplace files. `add` detects where each manifest lives, so it handles
 the path quirks above. `remove` does not edit prose, such as the path quirks
 above. It lists the lines that still mention the plugin, so update those by
@@ -115,7 +127,8 @@ flow's agents. Each agent sets its Codex model and effort separately, in
 `codex-model:` and `codex-effort:` frontmatter that Claude Code ignores.
 flow's spawn hook (`plugins/flow/hooks/codex_agents.py`) converts the agents
 into Codex role files when Codex spawns one and copies them into the user's
-Codex agents folder, because Codex plugins can't ship agents (ADR 8). There
+Codex agents folder, because Codex plugins can't ship agents
+([ADR 8](docs/adr/0008-flow-hooks-shared-by-claude-code-and-codex.md)). There
 is no generated file to update.
 
 ## Versions
