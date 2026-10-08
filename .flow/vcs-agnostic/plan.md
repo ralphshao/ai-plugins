@@ -54,9 +54,9 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - layout test over skill files - catches: missing operation (incl. resolve-target) in a VCS skill, gh/Swarm/VCS commands leaking outside their skill / misses: prose quality
 
 ## Steps
-- [ ] Add vcs-git skill
+- [x] Add vcs-git skill
 - [ ] Add vcs-perforce skill
-- [ ] Add host-github skill (all gh steps move here)
+- [x] Add host-github skill (all gh steps move here)
 - [ ] Add host-swarm skill
 - [ ] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
 - [ ] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
