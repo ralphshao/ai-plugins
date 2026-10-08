@@ -122,8 +122,8 @@ From context-mode:
       Microsoft Store stub, so every hook fails as a non-blocking error.
       Leave this out of this change, and fix it in a follow-up that is
       checked on a real Windows host? - recommended: yes - blocks: none
-- [ ] Q3 Bump flow from 0.2.1 to 0.2.2 in both manifests and both
-      marketplace files? - recommended: yes, as the last commit before ship -
+- [ ] Q3 Bump flow from 0.2.1 to 0.2.2 in both `plugin.json` files and
+      in the flow entry of `.claude-plugin/marketplace.json`? - recommended: yes, as the last commit before ship -
       blocks: ship
 
 ## Status
