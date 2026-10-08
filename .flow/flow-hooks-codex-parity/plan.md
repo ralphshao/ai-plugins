@@ -108,6 +108,15 @@ How context-mode handles subagents, and what applies to flow:
   check makes `guard.py` exit 2. Other callers keep exit 0 on a guard bug.
 - The main session and non-flow agents still pass through untouched.
 
+- When Codex spawns a `flow-*` role whose TOML differs from the current
+  plugin's agents, the hook rewrites the file before the spawn and allows
+  it. When the file is missing, the hook writes all three files to
+  `$CODEX_HOME/agents/` and denies the spawn with a restart message.
+- The `setup-codex` skill is gone. Nothing in the plugin tells the user to
+  run it.
+- Each hook in `hooks.json` has a `commandWindows` that starts it under
+  `cmd.exe`.
+
 ## Seams under test
 - `guard.py` as a process (stdin JSON in, exit code and stderr out), as in
   `tests/test_flow_guard.py`. Catches: wrong allow or deny per agent, tool,
@@ -115,6 +124,12 @@ How context-mode handles subagents, and what applies to flow:
 - `format.py` as a process, as in `tests/test_flow_hooks.py`. Catches: which
   files a patch causes to be formatted. Misses: real formatter behavior
   (tests use a stub formatter).
+- `hooks/codex_agents.py` as a process with `CODEX_HOME` set to a temp
+  folder. Catches: rewrite, install, deny, and pass-through for non-flow
+  spawns. Misses: whether Codex reloads the role (finding 7 says it does).
+- `hooks.json` structure in `tests/test_flow_layout.py`. Catches: a hook
+  without `commandWindows`, or one that points outside the plugin. Misses:
+  whether cmd.exe runs it.
 
 ## Steps
 - [ ] guard: add the Codex role names (`flow-code-reviewer`,
@@ -133,11 +148,23 @@ How context-mode handles subagents, and what applies to flow:
       (finding 6). Change its `PREAMBLE`, which says "your sandbox enforces
       the same limits", to say flow's hooks enforce them. Update
       `tests/test_flow_codex_agents.py`.
+- [ ] spawn hook (Q4): move `scripts/codex_agents.py` to
+      `hooks/codex_agents.py` and make it the PreToolUse hook for `Agent`
+      (Codex sends `spawn_agent`). Only `tool_input.agent_type` starting
+      with `flow-` acts. Refresh the role file where it already exists
+      (project `.codex/agents/`, else `$CODEX_HOME/agents/`). If it is
+      missing, write all three to `$CODEX_HOME/agents/` and deny. Drop the
+      CLI. Add tests.
+- [ ] remove the `setup-codex` skill. Update `skills/flow/SKILL.md` ("once
+      `setup-codex` has installed them") and `tests/test_flow_layout.py`.
+- [ ] Windows (Q2): add `commandWindows` to each hook,
+      `python "%PLUGIN_ROOT%\hooks\<name>.py"`. Add a layout test that every
+      hook has one.
 - [ ] docs: update the `guard.py` and `format.py` docstrings, and the
-      `setup-codex` note that "read-only isn't enforced". After this change,
-      the generated agents are guarded by the hook. The `explorer` and
-      `worker` fallback agents are still not guarded. Add one line telling
-      the user to accept the hook trust prompt on Codex.
+      flow skill's Codex section: the agents install themselves on the first
+      spawn, and the `explorer` and `worker` fallback agents are not
+      guarded. Add one line telling the user to accept the hook trust prompt
+      on Codex.
 - [ ] stop gate (Q1): in a git repo, after a passing run, save a
       fingerprint of `HEAD` plus `git status --porcelain` plus `git diff`.
       Skip the run when the current fingerprint matches. Store it in the
@@ -163,7 +190,13 @@ How context-mode handles subagents, and what applies to flow:
   folder that Python puts on `sys.path`.
 - No `SubagentStop` hook - nothing in flow needs to run when a subagent
   returns.
-- Spawn hook: superseded, see Q4.
+- The spawn hook replaces `setup-codex` (user, Q4) - after the first
+  install, the agent files stay current without a manual step.
+- One `hooks/codex_agents.py` that renders and syncs - the CLI had one
+  caller (`setup-codex`), and that caller is gone.
+- Refresh a role file where it already is, and install new files only to
+  `$CODEX_HOME/agents/` - this keeps a project-scoped install working
+  without guessing where a new one should go.
 - Stop-gate fingerprint goes in the system temp folder, not `.flow/` - a
   file under `.flow/` would change `git status` and so change the
   fingerprint. A lost temp file only costs one extra test run.
@@ -176,18 +209,18 @@ How context-mode handles subagents, and what applies to flow:
 ## Open questions
 - [x] Q1 Skip the stop-gate test run when nothing changed since the last
       passing run? - answered yes - step added
-- [ ] Q2 How should hooks start on Windows? Options are in the chat reply.
-      - recommended: B - blocks: a new step
+- [x] Q2 How should hooks start on Windows? - answered B: `commandWindows`
+      per hook
 - [x] Q3 Bump flow from 0.2.1 to 0.2.2 in both `plugin.json` files and
       in the flow entry of `.claude-plugin/marketplace.json`? - answered
       yes, but only when the user says so - blocks: the bump commit only
-- [ ] Q4 Add a PreToolUse hook on `Agent` (Codex `spawn_agent`). When Codex
+- [x] Q4 Add a PreToolUse hook on `Agent` (Codex `spawn_agent`). When Codex
       spawns a `flow-*` role, the hook rewrites that role's TOML file if it
       differs from what `codex_agents.py` renders from the current plugin.
       If the role file is missing, it writes all three files and denies the
       spawn with "flow agents installed; restart Codex, or use the
       explorer/worker fallback". OK to have a hook write to
-      `$CODEX_HOME/agents/`? - recommended: yes - blocks: a new step
+      `$CODEX_HOME/agents/`? - answered yes, and remove `setup-codex`
 
 ## Status
 Awaiting GATE 1
