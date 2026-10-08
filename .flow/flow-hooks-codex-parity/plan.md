@@ -145,20 +145,20 @@ How context-mode handles subagents, and what applies to flow:
 - [x] guard: fail closed. For a flow `agent_type`, catch a JSON or any other
       error, print it, and exit 2. If `agent_type` can't be read, exit 0 as
       today. Add tests.
-- [ ] codex agents: stop writing `sandbox_mode` in `codex_agents.py`
+- [x] codex agents: stop writing `sandbox_mode` in `codex_agents.py`
       (finding 6). Change its `PREAMBLE`, which says "your sandbox enforces
       the same limits", to say flow's hooks enforce them. Update
       `tests/test_flow_codex_agents.py`.
-- [ ] spawn hook (Q4): move `scripts/codex_agents.py` to
+- [x] spawn hook (Q4): move `scripts/codex_agents.py` to
       `hooks/codex_agents.py` and make it the PreToolUse hook for `Agent`
       (Codex sends `spawn_agent`). Only `tool_input.agent_type` starting
       with `flow-` acts. Refresh the role file where it already exists
       (project `.codex/agents/`, else `$CODEX_HOME/agents/`). If it is
       missing, write all three to `$CODEX_HOME/agents/` and deny. Drop the
       CLI. Add tests.
-- [ ] remove the `setup-codex` skill. Update `skills/flow/SKILL.md` ("once
+- [x] remove the `setup-codex` skill. Update `skills/flow/SKILL.md` ("once
       `setup-codex` has installed them") and `tests/test_flow_layout.py`.
-- [ ] Windows (Q2, option C): add `commandWindows` to each hook,
+- [x] Windows (Q2, option C): add `commandWindows` to each hook,
       `python "%PLUGIN_ROOT%\hooks\<name>.py"`. Change each `command` to
       pick `python3` and fall back to `python`:
       `"$(command -v python3 || command -v python)" "${CLAUDE_PLUGIN_ROOT}/hooks/<name>.py"`.

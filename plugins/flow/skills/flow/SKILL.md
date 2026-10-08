@@ -118,10 +118,17 @@ and continue where you can.
 
 This plugin's agents are `flow:code-reviewer`, `flow:review-validator`, and
 `flow:tester` in Claude Code. In Codex they are `flow-code-reviewer`,
-`flow-review-validator`, and `flow-tester` once `setup-codex` has installed
-them. If they aren't installed, spawn the built-in `explorer` (reviewers) or
-`worker` (tester) and give it the matching `agents/<name>.md` body from this
-plugin as its instructions.
+`flow-review-validator`, and `flow-tester`. flow's hooks install them on the
+first spawn and keep them current after that. Codex picks up a new install
+after a restart, and the first spawn is denied with a message saying so.
+Until then, spawn the built-in `explorer` (reviewers) or `worker` (tester)
+and give it the matching `agents/<name>.md` body from this plugin as its
+instructions. flow's hooks don't guard those built-in agents, so tell them
+to stay read-only (reviewers) or to write only test files (tester).
+
+The hooks run only after the user accepts Codex's hook trust prompt for this
+plugin. If a spawn of a `flow-*` agent fails with an unknown agent type and
+no hook message, the hooks aren't trusted yet: say so to the user.
 
 ## State
 
