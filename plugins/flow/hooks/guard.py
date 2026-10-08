@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """PreToolUse guard for flow's subagents.
 
-Claude Code ignores `hooks:` frontmatter on plugin agents, so the guards run
-from the plugin's hooks.json instead and pick a policy by `agent_type`:
+Claude Code ignores `hooks:` frontmatter on plugin agents, and Codex ignores
+`sandbox_mode` in agent role files, so the guards run from the plugin's
+hooks.json instead and pick a policy by `agent_type`. Claude Code sends the
+plugin agent name (flow:tester); Codex sends the role name that
+codex_agents.py installs (flow-tester).
 
-- flow:code-reviewer, flow:review-validator: read-only Bash (git, p4,
+- Reviewers (code-reviewer, review-validator): read-only Bash (git, p4,
   file commands), no writes.
-- flow:tester: read-only Bash plus test/coverage runners; writes to test
-  files only.
+- Tester: read-only Bash plus test/coverage runners; writes to test files
+  only.
 
-Every other caller (the main session, other agents, Codex, which sends no
-`agent_type`) passes through. Exit 2 blocks the call and shows stderr to the
-agent.
+Writes are Write and Edit (Claude Code) and apply_patch (Codex, which hooks
+match as Write|Edit). Every other caller (the main session, other agents)
+passes through. Exit 2 blocks the call and shows stderr to the agent.
+
+A guard bug fails closed for flow's agents (exit 2) and open for everyone
+else (exit 0), so it can't let a reviewer write or block the main session.
 """
 import json
 import re
@@ -20,8 +26,13 @@ import sys
 from pathlib import PurePath
 from typing import NoReturn
 
-REVIEWERS = {"flow:code-reviewer", "flow:review-validator"}
-TESTER = "flow:tester"
+from patch import patch_paths
+
+REVIEWERS = {"flow:code-reviewer", "flow:review-validator",
+             "flow-code-reviewer", "flow-review-validator"}
+TESTERS = {"flow:tester", "flow-tester"}
+FLOW_AGENTS = REVIEWERS | TESTERS
+WRITES = {"Write", "Edit", "apply_patch"}
 
 GIT_READ = {"diff", "log", "show", "status", "blame", "ls-files", "grep",
             "rev-parse", "merge-base"}
@@ -141,29 +152,45 @@ def check_test_path(path):
         raise Denied(f"only test files may be written: {path}")
 
 
+def written_paths(tool, inp):
+    if tool == "apply_patch":
+        paths = [p for _, p in patch_paths(inp)]
+        if not paths:
+            raise Denied("could not find the files this patch changes")
+        return paths
+    return [inp.get("file_path", "")]
+
+
 def check(data):
     agent = data.get("agent_type")
     tool, inp = data.get("tool_name"), data.get("tool_input") or {}
     if agent in REVIEWERS:
         if tool == "Bash":
             check_bash(inp.get("command", ""), runners=False)
-        elif tool in ("Write", "Edit"):
+        elif tool in WRITES:
             raise Denied("reviewers never write files")
-    elif agent == TESTER:
+    elif agent in TESTERS:
         if tool == "Bash":
             check_bash(inp.get("command", ""), runners=True)
-        elif tool in ("Write", "Edit"):
-            check_test_path(inp.get("file_path", ""))
+        elif tool in WRITES:
+            for path in written_paths(tool, inp):
+                check_test_path(path)
 
 
 def main() -> NoReturn:
-    data = json.load(sys.stdin)
+    raw = sys.stdin.read()
+    # Before parsing, so a payload that won't parse still fails closed.
+    flow_agent = any(f'"{a}"' in raw for a in FLOW_AGENTS)
+    who = "tester" if any(f'"{a}"' in raw for a in TESTERS) else "reviewer"
     try:
-        check(data)
+        check(json.loads(raw))
     except Denied as e:
-        who = "tester" if data.get("agent_type") == TESTER else "reviewer"
         print(f"flow {who} guard blocked this: {e}", file=sys.stderr)
         sys.exit(2)
+    except Exception as e:
+        if flow_agent:
+            print(f"flow {who} guard failed, blocking: {e!r}", file=sys.stderr)
+            sys.exit(2)
     sys.exit(0)
 
 

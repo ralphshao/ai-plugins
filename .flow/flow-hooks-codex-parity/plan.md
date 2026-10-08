@@ -133,16 +133,16 @@ How context-mode handles subagents, and what applies to flow:
   whether cmd.exe runs it.
 
 ## Steps
-- [ ] guard: add the Codex role names (`flow-code-reviewer`,
+- [x] guard: add the Codex role names (`flow-code-reviewer`,
       `flow-review-validator`, `flow-tester`) to the policy sets. Add tests.
-- [ ] guard: treat `apply_patch` as a write. Parse the `*** Add File:`,
+- [x] guard: treat `apply_patch` as a write. Parse the `*** Add File:`,
       `*** Update File:`, `*** Delete File:`, and `*** Move to:` headers from
       `tool_input.command`. Reviewers: deny. Tester: run `check_test_path` on
       each path. Deny a patch with no parseable header. Add tests.
 - [ ] format: for `apply_patch`, format each Add, Update, or Move-to path
       that exists after the edit. Put the header parser in one place that
       both hooks import (`hooks/patch.py`, next to the scripts). Add tests.
-- [ ] guard: fail closed. For a flow `agent_type`, catch a JSON or any other
+- [x] guard: fail closed. For a flow `agent_type`, catch a JSON or any other
       error, print it, and exit 2. If `agent_type` can't be read, exit 0 as
       today. Add tests.
 - [ ] codex agents: stop writing `sandbox_mode` in `codex_agents.py`
