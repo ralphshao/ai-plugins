@@ -39,6 +39,26 @@ Facts checked in the current openai/codex source (`codex-rs/`):
 5. If `guard.py` crashes (bad JSON, or an unexpected exception), it exits 1.
    Both hosts treat exit 1 as a non-blocking error, so the tool call runs. A
    bug in the guard turns the reviewer read-only rule off silently.
+6. Codex ignores `sandbox_mode` in an agent role file. A role can only set
+   instructions, model, reasoning, personality, service tier, and turn
+   features or skills off (`core/src/agent/role.rs`, `AgentRoleOverrides`).
+   The child agent takes the parent's sandbox and approval policy
+   (`core/src/agent/child_config.rs`). So the `sandbox_mode = "read-only"`
+   that `codex_agents.py` writes does nothing, and on Codex the guard hook
+   is the only read-only control for reviewers. This makes findings 2 and 3
+   more urgent.
+7. Codex reads the list of agent roles once, when the session loads its
+   config. It reads each role file's contents when it spawns that role
+   (`role.rs`, `load_role_layer_toml`). So an updated role file takes effect
+   on the next spawn. A newly added role file takes effect in the next
+   session.
+8. On Windows, Codex runs hook commands through `cmd.exe` (`COMSPEC`) and
+   only sets `PLUGIN_ROOT` as an env var. It does not substitute it into
+   the command text (`engine/discovery.rs`, `command_runner.rs`). cmd.exe
+   does not expand `${CLAUDE_PLUGIN_ROOT}`, so flow's hooks can't start on
+   Codex for Windows. Codex accepts a `commandWindows` key next to
+   `command` for this case (`config/src/hook_config.rs`). Claude Code's
+   `claude plugin validate` accepts the extra key.
 
 From context-mode:
 
@@ -109,14 +129,23 @@ How context-mode handles subagents, and what applies to flow:
 - [ ] guard: fail closed. For a flow `agent_type`, catch a JSON or any other
       error, print it, and exit 2. If `agent_type` can't be read, exit 0 as
       today. Add tests.
+- [ ] codex agents: stop writing `sandbox_mode` in `codex_agents.py`
+      (finding 6). Change its `PREAMBLE`, which says "your sandbox enforces
+      the same limits", to say flow's hooks enforce them. Update
+      `tests/test_flow_codex_agents.py`.
 - [ ] docs: update the `guard.py` and `format.py` docstrings, and the
       `setup-codex` note that "read-only isn't enforced". After this change,
-      the generated agents are also guarded by the hook. The `explorer` and
+      the generated agents are guarded by the hook. The `explorer` and
       `worker` fallback agents are still not guarded. Add one line telling
       the user to accept the hook trust prompt on Codex.
+- [ ] stop gate (Q1): in a git repo, after a passing run, save a
+      fingerprint of `HEAD` plus `git status --porcelain` plus `git diff`.
+      Skip the run when the current fingerprint matches. Store it in the
+      system temp folder, keyed by the repo root. Outside git, run every
+      time as today. Add tests.
 
 ## Test command
-`python3 -m pytest tests/test_flow_guard.py tests/test_flow_hooks.py tests/test_flow_layout.py -q`
+`python3 -m pytest tests/test_flow_guard.py tests/test_flow_hooks.py tests/test_flow_layout.py tests/test_flow_codex_agents.py -q`
 
 ## Out of scope
 - A separate Codex `hooks.json` or per-platform adapter scripts (see
@@ -132,27 +161,33 @@ How context-mode handles subagents, and what applies to flow:
 - Shared `hooks/patch.py` instead of copying the parser into two scripts -
   both hooks need the same header rules, and the scripts already sit in one
   folder that Python puts on `sys.path`.
-- No hook on subagent spawn (`Agent` / `spawn_agent`) and no
-  `SubagentStop` hook - flow's agents carry their own instructions, and
-  nothing in flow needs to run when a subagent returns.
+- No `SubagentStop` hook - nothing in flow needs to run when a subagent
+  returns.
+- Spawn hook: superseded, see Q4.
+- Stop-gate fingerprint goes in the system temp folder, not `.flow/` - a
+  file under `.flow/` would change `git status` and so change the
+  fingerprint. A lost temp file only costs one extra test run.
+- Stop-gate fingerprint is git-only - a Perforce fingerprint needs more
+  `p4` calls than it saves. Perforce keeps today's behavior.
 - Read the patch from `tool_input.command` only - the current Codex source
   sends only that key. context-mode also reads `patch`, but no current
   Codex build sends it.
 
 ## Open questions
-- [ ] Q1 The stop gate runs the full test command at the end of every turn
-      while the plan is Approved, including turns that only answer a
-      question. Skip the run when `HEAD` and `git status --porcelain` are the
-      same as at the last passing run (store a hash under `.flow/<slug>/`,
-      gitignored)? - recommended: yes, as an extra step in this change -
-      blocks: a new step 6
-- [ ] Q2 Hook commands call bare `python3`. On Windows, that is often the
-      Microsoft Store stub, so every hook fails as a non-blocking error.
-      Leave this out of this change, and fix it in a follow-up that is
-      checked on a real Windows host? - recommended: yes - blocks: none
-- [ ] Q3 Bump flow from 0.2.1 to 0.2.2 in both `plugin.json` files and
-      in the flow entry of `.claude-plugin/marketplace.json`? - recommended: yes, as the last commit before ship -
-      blocks: ship
+- [x] Q1 Skip the stop-gate test run when nothing changed since the last
+      passing run? - answered yes - step added
+- [ ] Q2 How should hooks start on Windows? Options are in the chat reply.
+      - recommended: B - blocks: a new step
+- [x] Q3 Bump flow from 0.2.1 to 0.2.2 in both `plugin.json` files and
+      in the flow entry of `.claude-plugin/marketplace.json`? - answered
+      yes, but only when the user says so - blocks: the bump commit only
+- [ ] Q4 Add a PreToolUse hook on `Agent` (Codex `spawn_agent`). When Codex
+      spawns a `flow-*` role, the hook rewrites that role's TOML file if it
+      differs from what `codex_agents.py` renders from the current plugin.
+      If the role file is missing, it writes all three files and denies the
+      spawn with "flow agents installed; restart Codex, or use the
+      explorer/worker fallback". OK to have a hook write to
+      `$CODEX_HOME/agents/`? - recommended: yes - blocks: a new step
 
 ## Status
 Awaiting GATE 1
