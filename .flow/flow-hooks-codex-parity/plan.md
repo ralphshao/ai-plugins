@@ -169,6 +169,9 @@ How context-mode handles subagents, and what applies to flow:
       spawn, and the `explorer` and `worker` fallback agents are not
       guarded. Add one line telling the user to accept the hook trust prompt
       on Codex.
+- [x] explicit approvals (user request): `flow`, `plan`, and `ship`
+      skills and AGENTS.md say gate approval and version bumps are given
+      only explicitly, never inferred from answers to other questions.
 - [x] stop gate (Q1): in a git repo, after a passing run, save a
       fingerprint of `HEAD`, `git status --porcelain`, `git diff`, and the
       contents of untracked files.
@@ -210,6 +213,9 @@ How context-mode handles subagents, and what applies to flow:
   otherwise skip the run.
 - Stop-gate fingerprint is git-only - a Perforce fingerprint needs more
   `p4` calls than it saves. Perforce keeps today's behavior.
+- AGENTS.md keeps `ai-plugins:update` mirroring upstream versions without a
+  separate ask - running the update is the user's go, and the skill's
+  documented behavior stays as it is.
 - Read the patch from `tool_input.command` only - the current Codex source
   sends only that key. context-mode also reads `patch`, but no current
   Codex build sends it.
@@ -236,7 +242,8 @@ How context-mode handles subagents, and what applies to flow:
       the bump 0.3.0 instead of 0.2.2, still only when you say so? -
       answered no: "do it now" meant the Windows python case (Q2, built).
       Version handled in Q8
-- [ ] Q8 Bump flow to 0.2.2 (user's choice) - waits for the user's
+- [ ] Q8 Bump flow to 0.2.2 (user's choice) in both `plugin.json` files,
+      the Claude marketplace entry, and the README table row - waits for the user's
       explicit go; never assumed - blocks: the bump commit only
 - [x] Q7 On approval, push `flow/flow-hooks-codex-parity` and open a draft
       PR (the flow plan phase does this)? - answered yes

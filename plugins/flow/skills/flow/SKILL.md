@@ -10,6 +10,16 @@ human approves twice: the plan (GATE 1) and landing it (GATE 2). Between
 gates you work unattended, except where "Decisions between gates" below says
 to ask.
 
+Two things only the user can give, and only explicitly:
+
+- **Gate approval.** A gate passes only when the user says so for that gate
+  ("approved", "build it", "go ahead"). Answers to open questions, a "yes"
+  to another question, or "do it now" about one item are not approval. If
+  you can't tell, ask.
+- **Version changes.** Never change a version number (package, plugin,
+  release) unless the user asks for that change, names the number, and
+  says when. A planned bump stays unticked until they give the go.
+
 Arguments: `$ARGUMENTS`
 
 ## 1. Resume or start
@@ -50,8 +60,8 @@ next to this skill's own), and do what it says.
 
 1. `start`: isolate the work and write the brief.
 2. `plan`: explore, interview, write `plan.md`, then **GATE 1**. Stop and
-   wait for approval.
-3. Build: once the plan is approved, work through its steps with the `tdd`
+   wait for explicit approval.
+3. Build: once the user has explicitly approved the plan, work through its steps with the `tdd`
    skill at the seams the plan lists, following the VCS skill's working
    rules if it has any. Tick each step in `plan.md` and `checkpoint` in
    small pieces.
@@ -73,6 +83,7 @@ Escalate (ask the user) when any of these hold:
 - Two or more plausible options differ in user-visible behavior.
 - A test or review result shows a requirement is ambiguous.
 - `flow:review-validator` returns UNSURE on a high-severity finding.
+- It changes a version number (see above: ask even when the plan lists it).
 
 Don't escalate because you feel unsure; use the list. Anything else: decide,
 and add a line to `## Decisions` in `plan.md` with a one-line reason.

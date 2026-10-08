@@ -102,8 +102,11 @@ before committing.
 
 ## Versions
 
-Ask the user before changing any plugin's version, including which number
-to use. Change it per plugin entry, never with a search-and-replace across a
+Change a plugin's version only when the user explicitly says to, with the
+number they give. A "yes" to a related question, or a bump listed in a
+plan, is not a go: ask, and wait. (`ai-plugins:update` copying an upstream
+plugin's new version into the catalog is the exception: running it is the
+go.) Change it per plugin entry, never with a search-and-replace across a
 file: several plugins can share a version string.
 
 ## Design records
