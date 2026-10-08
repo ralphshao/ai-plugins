@@ -41,3 +41,5 @@ same trust as running the tests by hand.
   nothing changed since the last pass (in git), and find the plan from a
   Perforce client root
   ([ADR 6](0006-flow-vcs-and-review-host-layers.md)).
+- [ADR 8](0008-flow-hooks-shared-by-claude-code-and-codex.md) runs the gate
+  on Codex too, where `Stop` fires for the root turn only.

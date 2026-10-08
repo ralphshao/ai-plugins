@@ -68,6 +68,8 @@ unreadable files.
 - No version change (user, Q7).
 - Plan's Layout, Migration, Marketplace, and Build order sections get no
   ADR - they record history or code layout, not decisions that still hold.
+- Review: stop-gate warnings stay on stderr, not a `systemMessage` - the
+  issue and Q3/Q4 ask for stderr; visibility is a possible follow-up.
 
 ## Open questions
 

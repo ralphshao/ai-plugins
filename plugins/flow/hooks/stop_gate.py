@@ -86,7 +86,7 @@ def git_toplevel(cwd):
     from cwd and, from a subdirectory, finds none."""
     exe = shutil.which("git")
     if not exe:
-        return None
+        return None  # no git: a Perforce-only or plain folder, not an error
     try:
         # LC_ALL=C: git translates "not a git repository".
         out = subprocess.run([exe, "rev-parse", "--show-toplevel"], cwd=cwd,
