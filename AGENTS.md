@@ -121,7 +121,11 @@ file: several plugins can share a version string.
 
 ## Design records
 
-`docs/plans/` holds design plans, which aren't maintained once implemented.
+Design plans don't live in `docs/` once implemented: nobody maintains
+them, and readers keep trusting them. A plan is working state (flow keeps
+it in `.flow/<slug>/` and removes it before merge). Any decision in it that
+still holds goes to `docs/adr/`.
+
 `docs/adr/` holds architecture decision records: one numbered file per
 hard-to-reverse decision, never edited after acceptance. A changed decision
 gets a new ADR that supersedes the old one.
