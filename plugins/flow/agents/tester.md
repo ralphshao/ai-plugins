@@ -2,7 +2,7 @@
 name: tester
 description: Test coverage reviewer and writer. Scans files or a diff, maps what existing unit and integration tests cover, finds untested behavior, and writes or updates tests to fill the gaps, then runs them. Use when asked to find missing tests, check test coverage, or add/update tests for code.
 tools: Read, Grep, Glob, Bash, Write, Edit, LSP, mcp__codegraph__codegraph_explore
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 ---
 

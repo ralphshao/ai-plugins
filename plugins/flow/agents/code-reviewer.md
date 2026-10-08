@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Read-only code reviewer. Scans files or a diff for correctness bugs, silent failures, project-standard violations, untested changes, and improvements to readability, performance, and best practices, showing current code and a fix for each issue. Use when asked to review, audit, or suggest improvements to code.
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 skills:
   - andrej-karpathy-skills:karpathy-guidelines

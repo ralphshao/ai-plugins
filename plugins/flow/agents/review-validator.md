@@ -2,7 +2,7 @@
 name: review-validator
 description: Read-only skeptic that checks code-review findings someone else reported. Tries to refute each one and returns a verdict line per finding (CONFIRMED, REFUTED, or UNSURE). Doesn't look for new issues. Use to validate review findings before reporting them.
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
-model: sonnet
+model: claude-sonnet-5-5
 effort: medium
 ---
 
