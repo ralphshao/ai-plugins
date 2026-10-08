@@ -35,7 +35,7 @@ unreadable files.
   prettier runs.
 
 ## Steps
-- [ ] Renumber ADRs 0001-0004 to 0006-0009 and fix their headings and
+- [x] Renumber ADRs 0001-0004 to 0006-0009 and fix their headings and
       references (AGENTS.md, ADR links).
 - [ ] Write ADRs 0001-0005 from `docs/plans/flow.md`.
 - [ ] Delete `docs/plans/flow.md`; update AGENTS.md "Design records".

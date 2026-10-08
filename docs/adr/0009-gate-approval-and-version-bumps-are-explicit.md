@@ -1,4 +1,4 @@
-# 4. Gate approval and version bumps are explicit
+# 9. Gate approval and version bumps are explicit
 
 Status: accepted (#10, 2026-10-08)
 

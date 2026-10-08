@@ -1,10 +1,10 @@
-# 2. Rename flow's `pr-body` skill to `change-body`
+# 7. Rename flow's `pr-body` skill to `change-body`
 
 Status: accepted (#8, #9, 2026-10-08)
 
 ## Context
 
-After [ADR 1](0001-flow-vcs-and-review-host-layers.md), the review-body
+After [ADR 6](0006-flow-vcs-and-review-host-layers.md), the review-body
 template serves GitHub pull requests, Swarm reviews, and Perforce changelist
 descriptions. The name `pr-body` described only the first.
 
