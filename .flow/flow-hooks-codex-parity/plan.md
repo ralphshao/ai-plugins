@@ -115,7 +115,8 @@ How context-mode handles subagents, and what applies to flow:
 - The `setup-codex` skill is gone. Nothing in the plugin tells the user to
   run it.
 - Each hook in `hooks.json` has a `commandWindows` that starts it under
-  `cmd.exe`.
+  `cmd.exe`, and a `command` that falls back to `python` when `python3`
+  is not on PATH.
 
 ## Seams under test
 - `guard.py` as a process (stdin JSON in, exit code and stderr out), as in
@@ -157,9 +158,12 @@ How context-mode handles subagents, and what applies to flow:
       CLI. Add tests.
 - [ ] remove the `setup-codex` skill. Update `skills/flow/SKILL.md` ("once
       `setup-codex` has installed them") and `tests/test_flow_layout.py`.
-- [ ] Windows (Q2): add `commandWindows` to each hook,
-      `python "%PLUGIN_ROOT%\hooks\<name>.py"`. Add a layout test that every
-      hook has one.
+- [ ] Windows (Q2, option C): add `commandWindows` to each hook,
+      `python "%PLUGIN_ROOT%\hooks\<name>.py"`. Change each `command` to
+      pick `python3` and fall back to `python`:
+      `"$(command -v python3 || command -v python)" "${CLAUDE_PLUGIN_ROOT}/hooks/<name>.py"`.
+      Add a layout test that every hook has both, and a test that runs one
+      `command` through `sh` with only `python` on PATH.
 - [ ] docs: update the `guard.py` and `format.py` docstrings, and the
       flow skill's Codex section: the agents install themselves on the first
       spawn, and the `explorer` and `worker` fallback agents are not
@@ -209,8 +213,8 @@ How context-mode handles subagents, and what applies to flow:
 ## Open questions
 - [x] Q1 Skip the stop-gate test run when nothing changed since the last
       passing run? - answered yes - step added
-- [x] Q2 How should hooks start on Windows? - answered B: `commandWindows`
-      per hook
+- [x] Q2 How should hooks start on Windows? - answered C: `commandWindows`
+      per hook, plus a `python3`-then-`python` fallback in `command`
 - [x] Q3 Bump flow from 0.2.1 to 0.2.2 in both `plugin.json` files and
       in the flow entry of `.claude-plugin/marketplace.json`? - answered
       yes, but only when the user says so - blocks: the bump commit only
