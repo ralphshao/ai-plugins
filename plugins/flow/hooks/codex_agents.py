@@ -69,11 +69,15 @@ def sync(folder, wanted):
     for role, text in wanted.items():
         out = folder / f"{role}.toml"
         if not out.is_file() or out.read_text(encoding="utf-8") != text:
-            out.write_bytes(text.encode("utf-8"))
+            # Parallel spawns may sync at once, and Codex may be reading the
+            # file: replace it whole, never truncate it in place.
+            tmp = folder / f".{role}.{os.getpid()}.tmp"
+            tmp.write_bytes(text.encode("utf-8"))
+            os.replace(tmp, out)
     for old in folder.glob("flow-*.toml"):
         if old.stem not in wanted and old.read_text(
                 encoding="utf-8", errors="replace").startswith(GENERATED):
-            old.unlink()
+            old.unlink(missing_ok=True)
 
 
 def home_agents():
@@ -83,8 +87,11 @@ def home_agents():
 def installed_folder(role, cwd):
     """The agents folder that already holds role's file, or None."""
     cwd = Path(cwd).resolve()
-    for folder in [d / ".codex" / "agents" for d in (cwd, *cwd.parents)] + [
-            home_agents()]:
+    # ~/.codex is the default CODEX_HOME, not a project: Codex ignores it
+    # when CODEX_HOME points elsewhere.
+    projects = [d / ".codex" / "agents" for d in (cwd, *cwd.parents)
+                if d != Path.home()]
+    for folder in projects + [home_agents()]:
         if (folder / f"{role}.toml").is_file():
             return folder
     return None

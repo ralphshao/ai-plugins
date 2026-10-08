@@ -302,3 +302,11 @@ def test_format_formats_each_file_in_a_patch(repo, tmp_path):
                        "tool_input": {"command": patch}}, env=fake_gofmt(tmp_path))
     formatted = {p.name for p in repo.glob("*.go") if "formatted" in p.read_text()}
     assert formatted == {"added.go", "updated.go", "moved.go"}
+
+
+@pytest.mark.skipif(os.name == "nt", reason="symlinks need privileges on Windows")
+def test_gate_runs_when_an_untracked_file_cannot_be_read(repo, tmp_path_factory):
+    stop, text = counting_gate(repo, tmp_path_factory.mktemp("out"))
+    (repo / "dangling").symlink_to(repo / "missing")
+    assert stop(text) == 1
+    assert stop() == 2  # can't prove nothing changed

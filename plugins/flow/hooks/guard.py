@@ -26,8 +26,6 @@ import sys
 from pathlib import PurePath
 from typing import NoReturn
 
-from patch import patch_paths
-
 REVIEWERS = {"flow:code-reviewer", "flow:review-validator",
              "flow-code-reviewer", "flow-review-validator"}
 TESTERS = {"flow:tester", "flow-tester"}
@@ -146,14 +144,25 @@ def check_p4(words):
         raise Denied("p4 print -o writes a file")
 
 
-def check_test_path(path):
+def check_test_path(path, cwd):
+    """Allow path only if it is a test file inside cwd. The test-folder check
+    sees only the part below cwd, so a repo under ~/tests/ doesn't count."""
     p = PurePath(path)
+    try:
+        p = p.relative_to(cwd)
+    except (TypeError, ValueError):
+        if p.anchor:
+            raise Denied(f"only files inside {cwd} may be written: {path}")
+    if ".." in p.parts:
+        raise Denied(f"no '..' in paths: {path}")
     if TEST_DIRS.isdisjoint(p.parts[:-1]) and not TEST_FILE.match(p.name):
         raise Denied(f"only test files may be written: {path}")
 
 
 def written_paths(tool, inp):
     if tool == "apply_patch":
+        # Imported here, inside main's try, so a missing patch.py fails closed.
+        from patch import patch_paths
         paths = [p for _, p in patch_paths(inp)]
         if not paths:
             raise Denied("could not find the files this patch changes")
@@ -174,7 +183,7 @@ def check(data):
             check_bash(inp.get("command", ""), runners=True)
         elif tool in WRITES:
             for path in written_paths(tool, inp):
-                check_test_path(path)
+                check_test_path(path, data.get("cwd"))
 
 
 def main() -> NoReturn:

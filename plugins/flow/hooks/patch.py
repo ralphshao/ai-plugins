@@ -7,7 +7,8 @@ and "*** Move to: p" after an Update header that renames the file.
 """
 import re
 
-HEADER = re.compile(r"^\*\*\* (Add File|Update File|Delete File|Move to): (.+)$",
+# Codex trims each line before matching, so allow leading blanks.
+HEADER = re.compile(r"^[ \t]*\*\*\* (Add File|Update File|Delete File|Move to): (.+)$",
                     re.M)
 
 

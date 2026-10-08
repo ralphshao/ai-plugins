@@ -108,7 +108,7 @@ def fingerprint(root):
         try:
             h.update((root / os.fsdecode(name)).read_bytes())
         except OSError:
-            pass
+            return None  # can't prove nothing changed: run the tests
     return h.hexdigest()
 
 

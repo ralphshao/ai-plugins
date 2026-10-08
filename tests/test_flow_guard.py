@@ -222,3 +222,37 @@ def test_guard_fails_closed_for_flow_agents(agent):
 def test_guard_fails_open_for_others():
     assert run({"tool_name": "Bash", "tool_input": "ls"})[0] == 0
     assert raw("not json")[0] == 0
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+@pytest.mark.parametrize("path", ["tests/../src/app.py", "/repo/tests/../src/app.py",
+                                  "/home/me/tests/repo/src/app.py"])
+def test_tester_cannot_escape_test_folders(agent, path):
+    payload = {"agent_type": agent, "tool_name": "Write", "cwd": "/home/me/tests/repo",
+               "tool_input": {"file_path": path}}
+    assert run(payload)[0] == 2
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_tester_absolute_test_path_inside_cwd(agent):
+    payload = {"agent_type": agent, "tool_name": "Write", "cwd": "/home/me/tests/repo",
+               "tool_input": {"file_path": "/home/me/tests/repo/tests/test_a.py"}}
+    assert run(payload)[0] == 0
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_tester_cannot_hide_an_indented_header(agent):
+    patch = ("*** Begin Patch\n*** Add File: tests/test_a.py\n+x\n"
+             " \t*** Update File: src/main.py\n@@\n-a\n+b\n*** End Patch\n")
+    assert run({"agent_type": agent, "tool_name": "apply_patch",
+                "tool_input": {"command": patch}})[0] == 2
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_patch_import_failure_fails_closed(agent, tmp_path):
+    lonely = tmp_path / "guard.py"  # no patch.py beside it
+    lonely.write_text(GUARD.read_text(encoding="utf-8"), encoding="utf-8")
+    p = subprocess.run([sys.executable, str(lonely)], capture_output=True, text=True,
+                       input=json.dumps({"agent_type": agent, "tool_name": "apply_patch",
+                                         "tool_input": {"command": "*** Add File: tests/a.py"}}))
+    assert p.returncode == 2

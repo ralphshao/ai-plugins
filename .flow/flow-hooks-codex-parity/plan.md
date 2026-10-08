@@ -224,6 +224,16 @@ How context-mode handles subagents, and what applies to flow:
 - AGENTS.md keeps `ai-plugins:update` mirroring upstream versions without a
   separate ask - running the update is the user's go, and the skill's
   documented behavior stays as it is.
+- Review fixes: the tester guard rejects `..` and paths outside `cwd`, and
+  only the part of the path below `cwd` counts toward the test-folder check.
+  The `..` and `~/tests/` holes predate this PR, but the PR routes Codex
+  patches through the same check, so they're fixed here.
+- A failed agent sync (`codex_agents.py` exit 1) lets the spawn go ahead -
+  the guard still applies by `agent_type`, so only freshness is lost, and
+  failing closed would block every flow spawn on a read-only home folder.
+- Not fixed: nested spawns by flow agents on Codex - Codex's default
+  `agents.max_depth` is 1, so a subagent can't spawn.
+- Pre-existing robustness gaps found in review go to #11, per the user.
 - Read the patch from `tool_input.command` only - the current Codex source
   sends only that key. context-mode also reads `patch`, but no current
   Codex build sends it.
