@@ -64,22 +64,24 @@ def has_prettier_config(d):
 
 
 def formatter(path):
-    """The command to format path, or None."""
+    """The command to format path, or None. Tools are named by the full path
+    shutil.which finds, so a .cmd or .bat shim runs on Windows too."""
     ext = path.suffix.lower()
     dirs = list(ancestors(path))
-    if ext == ".py" and shutil.which("ruff") and any(map(has_ruff_config, dirs)):
-        return ["ruff", "format", "--quiet", str(path)]
+    ruff, gofmt, rustfmt = map(shutil.which, ("ruff", "gofmt", "rustfmt"))
+    if ext == ".py" and ruff and any(map(has_ruff_config, dirs)):
+        return [ruff, "format", "--quiet", str(path)]
     if ext in PRETTIER_EXTS and any(map(has_prettier_config, dirs)):
         for d in dirs:
             for name in ("prettier", "prettier.cmd"):
                 exe = d / "node_modules" / ".bin" / name
                 if exe.is_file():
                     return [str(exe), "--write", "--log-level", "warn", str(path)]
-    if ext == ".go" and shutil.which("gofmt"):
-        return ["gofmt", "-w", str(path)]
-    if ext == ".rs" and shutil.which("rustfmt") and any(
+    if ext == ".go" and gofmt:
+        return [gofmt, "-w", str(path)]
+    if ext == ".rs" and rustfmt and any(
             (d / "Cargo.toml").is_file() for d in dirs):
-        return ["rustfmt", "--quiet", str(path)]
+        return [rustfmt, "--quiet", str(path)]
     return None
 
 

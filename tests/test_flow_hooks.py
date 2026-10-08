@@ -217,7 +217,7 @@ def test_format_needs_repo_opt_in(fmt, repo, monkeypatch):
     src.write_text("x=1\n")
     assert fmt.formatter(src) is None
     (repo / "pyproject.toml").write_text("[tool.ruff]\nline-length = 88\n")
-    assert fmt.formatter(src)[:2] == ["ruff", "format"]
+    assert fmt.formatter(src)[:2] == ["/bin/ruff", "format"]
 
 
 def test_format_uses_local_prettier_only(fmt, repo):
@@ -238,7 +238,7 @@ def test_format_go_needs_gofmt(fmt, repo, monkeypatch):
     monkeypatch.setattr(fmt.shutil, "which", lambda name: None)
     assert fmt.formatter(src) is None
     monkeypatch.setattr(fmt.shutil, "which", lambda name: f"/bin/{name}")
-    assert fmt.formatter(src)[0] == "gofmt"
+    assert fmt.formatter(src)[0] == "/bin/gofmt"
 
 
 def test_format_stops_at_repo_root(fmt, tmp_path, monkeypatch):
