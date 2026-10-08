@@ -14,7 +14,7 @@ A deep-review report never reads as complete when a lens or validator didn't run
 - None automatable: the change is skill prose. Verified by reading the diff against the acceptance criteria and by the deep-review pass in ship.
 
 ## Steps
-- [ ] Add References to step 2, the context block, and the validator inputs in step 5.
+- [x] Add References to step 2, the context block, and the validator inputs in step 5.
 - [ ] Add retry-once and not-run handling to steps 3 and 5, and to the report in step 6.
 
 ## Test command
