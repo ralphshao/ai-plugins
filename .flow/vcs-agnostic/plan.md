@@ -90,6 +90,10 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - VCS contract also has find-state and drop-state - resume and plan-file cleanup differ per VCS (git branch files vs a p4 state changelist).
 - Perforce keeps .flow/ in its own never-submitted state changelist - stream-mode steps are submitted, and plan files must never reach the depot.
 - Swarm open-draft is a no-op; ready-for-review adds #review - Swarm has no drafts and a new review notifies reviewers.
+- Merged PR review: two-parent merge commit -> `<merge>^1 <merge>`; squash/rebase -> base...head - those can't be told apart from gh output, and a rebase merge's commit is only the last one.
+- vcs-git isolate on the default branch still branches from HEAD - keeps unpushed local commits; diff-scope's merge-base keeps the diff right even if local is stale.
+- Stream-mode copy-up is prepared in `publish`, not `land` - Swarm's ready-for-review needs it before GATE 2.
+- Review: dropped stop_gate stderr logging (pre-existing for git, Stop-hook stderr isn't shown) and the fake_p4 stub rewrite (style only).
 
 ## Open questions
 - [x] Q1-Q7 interview round 1 - accepted all

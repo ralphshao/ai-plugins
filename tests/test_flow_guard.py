@@ -55,6 +55,8 @@ ALWAYS_DENIED = [
     "p4 edit a.py",
     "p4 shelve -c 12345",
     "p4 print -o out.py //depot/a.py",
+    "p4 print -o/tmp/x //depot/a.py",
+    "p4 client -o -d ws",
     "p4 change -d 12345",
     "p4 change",
     "p4 -c other-client opened",

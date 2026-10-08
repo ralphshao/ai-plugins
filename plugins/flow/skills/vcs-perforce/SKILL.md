@@ -36,8 +36,13 @@ branch the workspace maps.
 Files are read-only until opened. Before changing a file,
 `p4 edit -c <cl> <file>`; for a new file, `p4 add -c <cl> <file>`; to
 delete, `p4 delete -c <cl> <file>`. Before each checkpoint, run
-`p4 reconcile -c <cl> <paths you touched>` to catch anything missed. If a
-file you need is already open in another changelist, ask before moving it.
+`p4 reconcile -c <cl> <paths you touched>` to catch anything missed; never
+pass it `.flow/`, which belongs only to the state changelist. If a file you
+need is already open in another changelist, ask before moving it.
+
+Create every changelist with an empty file list, so files open in the
+default changelist stay there: `p4 --field "Description=<text>" --field
+"Files=" change -o | p4 change -i`.
 
 ## find-state
 
@@ -53,17 +58,20 @@ new machine or cloud session), find it with
 Return what the brief should record: the work changelist (changelist mode)
 or the stream (stream mode), plus the state changelist.
 
-1. Create the state changelist: `p4 --field "Description=flow: state
-   <slug>" change -o | p4 change -i`. Open `.flow/<slug>/` in it with
-   `p4 add -c <state cl>`. It is never submitted.
-2. Changelist mode: create the work changelist the same way, described
-   `flow: <slug>`. Other files already open in the workspace stay where they
-   are; flow only opens files into its own changelists.
+1. Create the state changelist (as in Working rules), described
+   `flow: state <slug>`, and open the plan files in it:
+   `p4 reconcile -a -e -c <state cl> .flow/<slug>/...`. It is never
+   submitted.
+2. Changelist mode: create the work changelist, described `flow: <slug>`.
+   Other files already open in the workspace stay where they are; flow only
+   opens files into its own changelists.
 3. Stream mode: stay on the stream. Each checkpoint gets its own changelist.
 
 ## checkpoint
 
-Shelve the state changelist: `p4 shelve -f -c <state cl>`. Then:
+Open new plan files and shelve the state changelist:
+`p4 reconcile -a -e -c <state cl> .flow/<slug>/...`, then
+`p4 shelve -f -c <state cl>`. Then:
 
 - Changelist mode: `p4 shelve -f -c <cl>`. The shelf is the checkpoint.
 - Stream mode: set the step's message as the changelist description and
@@ -74,19 +82,40 @@ Shelve the state changelist: `p4 shelve -f -c <state cl>`. Then:
 Changes to review or test, as a diff command, a change list, and a read
 root.
 
-- Changelist mode: checkpoint first, then `p4 describe -S -du <cl>`; its
-  files are listed by `p4 describe -S -s <cl>`. The description is the
-  intent.
+This is read-only; the caller checkpoints first when it wants the shelf
+current.
+
+- Changelist mode: `p4 describe -S -du <cl>`; its files are listed by
+  `p4 describe -S -s <cl>`. The description is the intent.
 - Stream mode: `p4 diff2 -du -S <stream>` (the stream against its parent),
-  with changes from `p4 changes -l //<stream>/...`. Open, unsubmitted work
+  with changes from `p4 changes -l <stream>/...`.
+- No flow changelist (deep-review outside flow): the open files,
+  `p4 opened` and `p4 diff -du`. Open, unsubmitted work
   adds `p4 diff -du` on the files of `p4 opened -c <cl>`.
 - Read root: the client root; local files match the shelf or head.
 
 ## publish
 
-Changelist mode: shelve (`p4 shelve -f -c <cl>`), which makes the work
-visible to others. Stream mode: steps are already submitted to the stream;
-nothing to do.
+Changelist mode: same as checkpoint; the shelf makes the work visible to
+others.
+
+Stream mode: prepare the copy-up changelist the review host reviews and the
+user submits.
+
+1. Merge down first if the parent has moved: in the stream,
+   `p4 merge -S <stream>`, `p4 resolve -am`, and submit. Ask the user about
+   conflicts `-am` can't settle.
+2. `p4 switch` refuses while files are open. Checkpoint, then set the state
+   changelist aside: `p4 revert -k -c <state cl> //...` (the files stay on
+   disk and on its shelf).
+3. `p4 switch <parent>`, create a changelist (as in Working rules),
+   described with the task title, then `p4 copy -S <stream> -c <copy cl>`
+   and `p4 shelve -c <copy cl>`.
+4. Switch back (`p4 switch <stream>`) and reopen the plan files with
+   `p4 reconcile -a -e -c <state cl> .flow/<slug>/...`.
+
+Run it again after later fixes to refresh the copy-up shelf
+(`p4 shelve -f`).
 
 ## drop-state
 
@@ -100,11 +129,8 @@ The user lands the work; never do it yourself.
 
 - Changelist mode: tell the user to submit it (`p4 submit -c <cl>`, or
   through the review host).
-- Stream mode: landing is a copy-up to the parent. When asked to prepare
-  it, switch the workspace to the parent (`p4 switch <parent>`; it refuses
-  with files open, so checkpoint first), then `p4 copy -S <stream> -c <new
-  cl>` and `p4 shelve -c <new cl>`. That shelved copy-up is what the review
-  host reviews and what the user submits.
+- Stream mode: tell the user to submit the copy-up changelist `publish`
+  prepared, from a workspace on the parent.
 
 ## resolve-target
 

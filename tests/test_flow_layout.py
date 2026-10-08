@@ -60,7 +60,7 @@ VCS_OPS = ["find-state", "isolate", "checkpoint", "diff-scope", "publish",
 HOST_OPS = ["fetch-issue", "fetch-review", "open-draft", "ready-for-review"]
 HOSTS = {"host-github": HOST_OPS,
          "host-swarm": [op for op in HOST_OPS if op != "fetch-issue"]}
-VCS_FREE = ["flow", "start", "plan", "ship", "deep-review", "pr-body"]
+VCS_FREE = [n for n in SKILLS if not n.startswith(("vcs-", "host-"))]
 
 
 def body(name):
@@ -93,6 +93,11 @@ def test_vcs_and_host_skills_are_model_only(name):
 @pytest.mark.parametrize("name", VCS_FREE)
 def test_phase_skills_run_no_vcs_commands(name):
     assert not re.search(r"`(git|gh|p4) ", body(name)), name
+
+
+def test_flow_skill_names_every_operation():
+    missing = [op for op in VCS_OPS + HOST_OPS if f"`{op}`" not in body("flow")]
+    assert not missing
 
 
 @pytest.mark.parametrize("name", SKILLS)

@@ -126,11 +126,12 @@ def check_p4(words):
         else:
             raise Denied(f"p4 global flag not allowed: {words[i]}")
     sub, rest = (words[i], words[i + 1:]) if i < len(words) else (None, [])
-    if sub in P4_SPEC and rest[:1] == ["-o"]:
+    if sub in P4_SPEC and rest[:1] == ["-o"] and not any(
+            w.startswith("-") for w in rest[1:]):
         return
     if sub not in P4_READ:
         raise Denied(f"p4 subcommand not allowed: {' '.join(words[:i + 1])}")
-    if sub == "print" and "-o" in rest:
+    if sub == "print" and any(w.startswith("-o") for w in rest):
         raise Denied("p4 print -o writes a file")
 
 

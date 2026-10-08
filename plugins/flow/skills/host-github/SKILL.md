@@ -22,9 +22,15 @@ with `Closes #<n>`.
 ## fetch-review
 
 `gh pr view <n> --json number,title,body,state,baseRefName,baseRefOid,headRefOid,mergeCommit,url`.
-Base is `baseRefOid`, head is `headRefOid`, for any state (open, merged,
-closed). If the head commit isn't local (`git cat-file -e <head>^{commit}`
-fails), `git fetch origin pull/<n>/head`; it only writes `FETCH_HEAD`.
+Base is `baseRefOid`, head is `headRefOid`. For a merged PR whose
+`mergeCommit` has two parents, diff `<mergeCommit>^1 <mergeCommit>` instead:
+that's what landed, including conflict resolutions. Squash and rebase merges
+leave one parent and can't be told apart, so use base and head for them.
+
+Check each commit is local with `git cat-file -e <sha>^{commit}`. Fetch a
+missing head with `git fetch origin pull/<n>/head` and a missing base or
+merge commit with `git fetch origin <baseRefName>`; both only write
+`FETCH_HEAD` and remote refs.
 
 ## open-draft
 

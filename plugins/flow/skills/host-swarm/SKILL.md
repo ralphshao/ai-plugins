@@ -16,9 +16,11 @@ is `<swarm>` below.
 ## API access
 
 Find the API version from `<swarm>/api/version` and use the newest it
-lists. Authenticate as the p4 user with their ticket: `p4 tickets` lists
-it. Pass credentials to `curl` through a config on stdin (`curl -K -`), not
-on the command line, and never print the ticket. If the user isn't logged
+lists. Authenticate as the p4 user with their ticket for this server.
+Never run `p4 tickets` on its own: it prints every ticket. Instead build
+the curl config inside one pipeline, from `p4 tickets` through a filter to
+`curl -K -`, so the ticket reaches curl's stdin and never your output or
+the command line. If the user isn't logged
 in (`p4 login -s` fails), ask them to run `p4 login`; never ask for a
 password.
 
@@ -44,7 +46,7 @@ work as a shelved changelist and report its number. Don't add `#review` yet.
 
 Add `#review` (or the repo's own keyword, if its docs name one) to the work
 changelist's description. In stream mode that's the shelved copy-up
-changelist from `vcs-perforce`'s `land`. Then shelve it again
+changelist from `vcs-perforce`'s `publish`. Then shelve it again
 (`p4 shelve -f -c <cl>`); Swarm opens the review. Later shelves update it.
 Find its ID with `GET <swarm>/api/<version>/reviews?change[]=<cl>` and
 report `<swarm>/reviews/<id>`.

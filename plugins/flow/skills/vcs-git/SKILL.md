@@ -101,10 +101,15 @@ root.
 | any other ref (a base) | `git diff <base>...HEAD` | `git log <base>..HEAD --oneline` |
 | `pr:<n>`, `#<n>`, or a bare number | host `fetch-review` gives base and head SHAs; `git diff <base>...<head>` | the review's title and body, plus commit subjects |
 
+Prefixes always win. Without one, a string with a letter a-f is a SHA; an
+all-digit string of 7 or more characters is a SHA if it resolves as a
+commit, otherwise a review number; shorter all-digit strings are review
+numbers.
+
 Confirm each rev resolves (`git rev-parse --verify <rev>^{commit}`). When a
 review's head isn't local, the host's `fetch-review` says how to fetch it.
-Using base and head works the same for open, merged (any merge style), and
-closed reviews.
+The host's `fetch-review` says which base and head to diff for each review
+state.
 
 **Read root.** When the target's head is `HEAD` and the tree is clean, the
 read root is the repo root. Otherwise check the head out where reviewers
