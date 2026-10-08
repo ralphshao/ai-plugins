@@ -49,8 +49,8 @@ tests/                            # pytest suite: conftest.py, catalog checks
 
 ## Maintaining this marketplace
 
-Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills add,
-remove, and re-pin plugins in both catalogs and the table above.
+Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills
+`add`, `remove`, and `update` plugins in both catalogs and the table above.
 
 ## License
 
