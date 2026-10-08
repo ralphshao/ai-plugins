@@ -61,7 +61,7 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - [x] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
 - [x] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
 - [x] Generalize agents' scope wording (code-reviewer, review-validator, tester)
-- [ ] guard.py: p4 read-only allowlist + tests
+- [x] guard.py: p4 read-only allowlist + tests
 - [ ] stop_gate.py: p4 clientRoot fallback + tests (p4, linked worktree)
 - [ ] format.py: stop at P4CONFIG + test
 - [ ] Bump version to 0.2.0 (both manifests, README)
