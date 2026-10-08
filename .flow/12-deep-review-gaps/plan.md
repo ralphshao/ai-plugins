@@ -34,4 +34,4 @@ A deep-review report never reads as complete when a lens or validator didn't run
 ## Open questions
 
 ## Status
-Awaiting GATE 1
+Approved - building
