@@ -1,8 +1,8 @@
 ---
 name: deep-review
-description: Multi-pass review of a branch, PR, or working-tree diff. Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, and silent failures when the diff touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
-argument-hint: "[base-ref | PR number] [spec path] [correctness|standards|errors|all]"
-allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git rev-parse:*), Bash(git merge-base:*), Bash(git symbolic-ref:*), Bash(gh pr view:*), Bash(gh issue view:*)
+description: Multi-pass review of uncommitted work, a branch, or committed code (git SHA or range, PR, Perforce changelist, Swarm review). Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, and silent failures when the diff touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
+argument-hint: "[target: sha:<rev> | <a>..<b> | pr:<n> | cl:<n> | review:<n> | #<n> | base-ref] [spec path] [correctness|standards|errors|all]"
+allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*), Bash(git merge-base:*), Bash(git symbolic-ref:*), Bash(git cat-file:*), Bash(git fetch origin pull/*), Bash(git worktree add --detach:*), Bash(git worktree remove:*), Bash(gh pr view:*), Bash(gh issue view:*), Bash(p4 -ztag:*), Bash(p4 info:*), Bash(p4 describe:*), Bash(p4 diff:*), Bash(p4 diff2:*), Bash(p4 opened:*), Bash(p4 changes:*), Bash(p4 print:*), Bash(p4 property:*)
 ---
 
 Orchestrate a review with the `flow:code-reviewer` and `flow:review-validator` subagents. You coordinate; the subagents read the code. Don't review the code yourself, and don't edit anything.
@@ -13,21 +13,20 @@ On Codex, use the agent names from the `flow` skill's "Agent names on Codex" sec
 
 Arguments: `$ARGUMENTS`
 
-Lens words (`correctness`, `standards`, `errors`, `all`) pick the lenses; the default is `all`. The other arguments set the scope:
+Lens words (`correctness`, `standards`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
 
-- **PR number**: run `gh pr view <n> --json title,body,baseRefName,headRefOid`. If `headRefOid` doesn't match `git rev-parse HEAD`, stop and tell the user to check out the PR branch first; the subagents read local files. Base is `origin/<baseRefName>`.
-- **Base ref**: use it.
-- **Nothing**: if the working tree has changes (`git status --porcelain`), the scope is `git diff HEAD`. Otherwise the base is the remote default branch: `git symbolic-ref --short refs/remotes/origin/HEAD`, else the first of `origin/main` and `origin/master` that resolves. Fall back to local `main` or `master` only when there's no remote. Local default branches go stale, and a stale one makes already-merged commits look new.
+- **Target** (`sha:<rev>`, `<a>..<b>`, `pr:<n>`, `cl:<n>`, `review:<n>`, `#<n>`, a bare number, bare hex, or a base ref): run the VCS skill's `resolve-target`. It may call the host's `fetch-review`.
+- **Nothing**: run `diff-scope`. Uncommitted work wins over the branch or changelist.
 
-For a base, confirm it resolves (`git rev-parse <base>`). If `git rev-parse HEAD` equals the base's commit, stop: the branch has no commits of its own. Otherwise capture `git diff --stat <base>...HEAD` and `git log <base>..HEAD --oneline`. If the ref doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
+Either way you get a diff command, the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
 
 ## 2. Gather context
 
 Collect these once, so each subagent doesn't repeat the work:
 
-- **Intent**: the PR title and body, and the commit subjects.
-- **Spec**: a spec path given in the arguments; otherwise issues referenced in the PR body or commit messages (`#123`, `Closes #45`), fetched with `gh issue view <n> --json title,body`. If there's none, note "no spec" and drop the Spec checks.
-- **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the repo root and in each parent directory of a changed file (`git diff --name-only`).
+- **Intent**: the review title and body, and the commit or changelist descriptions.
+- **Spec**: a spec path given in the arguments; otherwise issues referenced in the review body or descriptions (`#123`, `Closes #45`, a tracker key), fetched with `fetch-issue` or its no-host fallback. If there's none, note "no spec" and drop the Spec checks.
+- **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the read root and in each parent directory of a changed file (from the diff's file list).
 - **Error handling touched?** Grep the added lines of the diff (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `?.`, `?? `, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Note yes or no.
 
 ## 3. Review in parallel
@@ -35,9 +34,10 @@ Collect these once, so each subagent doesn't repeat the work:
 In one message, launch one `flow:code-reviewer` subagent per selected lens. Give each the same context block:
 
 ```
-Scope: <the diff command, e.g. git diff main...HEAD>
-Commits: <git log output>
-Intent: <PR title/body, or "commit messages only">
+Scope: <the diff command>
+Read files: <read root path, or the print command>
+Commits: <commits or changelists in range>
+Intent: <review title/body, or "descriptions only">
 Spec: <spec text, or "none">
 Standards files: <paths>
 ```
@@ -95,3 +95,5 @@ Within each section, group by file and put the most severe first. Then add `## P
 - how many findings validation dropped
 
 If nothing survived, say: "No issues found. Checked <lenses run>, spec (or: no spec), and standards."
+
+If `resolve-target` made a temporary checkout, remove it as the VCS skill says, even when the review stopped early. Never post the findings to the review host; the report stays here.

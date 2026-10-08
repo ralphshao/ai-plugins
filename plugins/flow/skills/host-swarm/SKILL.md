@@ -42,9 +42,9 @@ work as a shelved changelist and report its number. Don't add `#review` yet.
 
 ## ready-for-review
 
-Add `#review` to the work changelist's description (in stream mode, the
-shelved copy-up changelist from `vcs-perforce`'s `land`) (or the repo's own
-keyword, if its docs name one), then shelve it again
+Add `#review` (or the repo's own keyword, if its docs name one) to the work
+changelist's description. In stream mode that's the shelved copy-up
+changelist from `vcs-perforce`'s `land`. Then shelve it again
 (`p4 shelve -f -c <cl>`); Swarm opens the review. Later shelves update it.
 Find its ID with `GET <swarm>/api/<version>/reviews?change[]=<cl>` and
 report `<swarm>/reviews/<id>`.

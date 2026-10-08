@@ -98,6 +98,7 @@ root.
 |--------|------|------------------|
 | `sha:<rev>`, or bare hex of 7-40 chars | `git diff <rev>^1 <rev>` (root commit: `git show <rev>`) | `git log -1 --format=%B <rev>` |
 | `<a>..<b>` or `<a>...<b>` | `git diff <a>...<b>` | `git log <a>..<b> --oneline` |
+| any other ref (a base) | `git diff <base>...HEAD` | `git log <base>..HEAD --oneline` |
 | `pr:<n>`, `#<n>`, or a bare number | host `fetch-review` gives base and head SHAs; `git diff <base>...<head>` | the review's title and body, plus commit subjects |
 
 Confirm each rev resolves (`git rev-parse --verify <rev>^{commit}`). When a

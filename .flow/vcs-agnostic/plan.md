@@ -58,8 +58,8 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - [x] Add vcs-perforce skill
 - [x] Add host-github skill (all gh steps move here)
 - [x] Add host-swarm skill
-- [ ] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
-- [ ] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
+- [x] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
+- [x] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
 - [ ] Generalize agents' scope wording (code-reviewer, review-validator, tester)
 - [ ] guard.py: p4 read-only allowlist + tests
 - [ ] stop_gate.py: p4 clientRoot fallback + tests (p4, linked worktree)

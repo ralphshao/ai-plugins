@@ -37,7 +37,7 @@ Write `.flow/<slug>/plan.md`:
 - <public interface> - catches: <what> / misses: <what>
 
 ## Steps
-- [ ] <small, committable step>
+- [ ] <small step, one checkpoint>
 
 ## Test command
 `<one shell command that runs the relevant tests>`
@@ -59,13 +59,13 @@ Rules:
 - Seams are public interfaces where tests observe behavior. Prefer existing
   seams and the highest one that works; fewer is better. Each gets one line
   on what a test there catches and misses.
-- Steps are vertical slices, each small enough for one commit.
+- Steps are vertical slices, each small enough for one checkpoint.
 - The test command must exist in the repo already. If there isn't one, say
   so under Status and leave the section empty: the stop-time test gate then
   stays off.
 - Record interview answers under Decisions.
 
-Commit: `flow: plan <slug>`.
+Checkpoint: `flow: plan <slug>`.
 
 ## 4. GATE 1
 
@@ -74,9 +74,9 @@ approval. Stop and wait. Don't write code before approval.
 
 On approval:
 
-1. Set Status to `Approved - building`, commit.
-2. Push the branch and open a draft PR: title from the plan, body linking
-   `.flow/<slug>/plan.md` and the issue (`Closes #n` when there is one).
-   If push or `gh` fails, say so and continue locally.
+1. Set Status to `Approved - building`, `checkpoint`.
+2. `publish`, then `open-draft`: title from the plan, body linking
+   `.flow/<slug>/plan.md` and the issue. If either fails, say so and
+   continue locally.
 
-On changes requested: revise the plan, commit, and ask again.
+On changes requested: revise the plan, `checkpoint`, and ask again.
