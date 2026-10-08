@@ -45,14 +45,6 @@ tests/                            # pytest suite: conftest.py, catalog checks
   flow/                           #   tests for plugins/flow
 ```
 
-Every remote plugin's `source` is a `url` or `git-subdir` object with a
-pinned `sha`, not a relative path — see
-[Create the marketplace file](https://developers.openai.com/plugins/build/plugins)
-docs for the source schema. `caveman` and `avoid-ai-writing` each bundle a
-Claude variant and a Codex variant at *different* subdirectory depths within
-their own repo — see [AGENTS.md](AGENTS.md) for exactly which `path` each
-marketplace file uses.
-
 ## Maintaining this marketplace
 
 Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills add,

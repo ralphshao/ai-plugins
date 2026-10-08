@@ -18,6 +18,19 @@ first, in both marketplace files and the README table. They leave their
 edits uncommitted, so review them with `git diff` before committing. Run
 `claude plugin validate .` to check the Claude manifest.
 
+## How plugins are pinned
+
+Every remote plugin's `source` is a `url` or `git-subdir` object with a
+pinned `sha` (and the `ref` it came from), not a relative path. See
+[Create the marketplace file](https://developers.openai.com/plugins/build/plugins)
+for the source schema.
+
+A repo's Claude and Codex manifests can sit at different depths. `caveman`
+and `avoid-ai-writing` each bundle both variants at *different*
+subdirectories, so the two marketplace files use different `path`s for the
+same plugin. `add` detects this; [AGENTS.md](../../AGENTS.md#path-quirks)
+lists which `path` each file uses.
+
 ## Requirements
 
 - Python 3.9+ on PATH (stdlib only).
