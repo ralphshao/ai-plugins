@@ -10,7 +10,7 @@ What the script does:
 - Uses `git ls-remote` to find each plugin's target commit. When the entry's `ref` is some other branch or tag, that is the ref's latest commit. When it has no `ref`, or its `ref` is a release tag or the default branch, it is the latest release (the highest `vX.Y.Z` tag, skipping pre-releases like `v2.0.0-beta`), or the default branch's latest commit when the repo has no release tags. A plugin pinned to a branch commit newer than its latest release moves back to the release.
 - Prints one result per plugin: `up to date` with its SHA, `updated` with the before/after SHA and commit subject, or `could not resolve latest ref` with git's error when there is one. Each line ends with where the commit came from: `(release vX.Y.Z)`, `(default branch)`, or `(ref <name>)`.
 - When a plugin has a newer commit, rewrites its `source.sha` and `source.ref` in `.claude-plugin/marketplace.json`, and in `.agents/plugins/marketplace.json` too if a matching entry exists. An up-to-date plugin whose `ref` is missing or stale gets only its `ref` rewritten. It also reads the plugin's `version` at the new commit. If the version changed, it updates the `version` field in `.claude-plugin/marketplace.json` and the plugin's row in `README.md`'s plugin table.
-- Keeps plugins sorted alphabetically, with `ai-plugins` first, in both marketplace files and the README table.
+- Keeps plugins sorted (`ai-plugins` first, then other local plugins, then remote ones, each group alphabetical) in both marketplace files and the README table.
 - Leaves the edits uncommitted. The user reviews them with `git diff` and commits when ready.
 
 After running, summarize which plugins changed, which commit or release each moved to, and any version bumps.

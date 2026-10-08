@@ -11,6 +11,13 @@ locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`
 and `flow` are the exceptions: their source lives directly in this repo at
 `plugins/ai-plugins/` and `plugins/flow/` (local `source` paths).
 
+## Docs
+
+Each local plugin's user docs live in its own `plugins/<name>/README.md`.
+The root `README.md` covers only the marketplace: install, the plugin
+table, and the repo layout. Don't add plugin details to the root README;
+link the plugin's folder instead.
+
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
@@ -59,16 +66,38 @@ reachable from `source.url` (+ `path`, for `git-subdir`).
 
 ## Tests
 
+From the repo root, with [uv](https://docs.astral.sh/uv/):
+
 ```bash
-python3 -m pip install pytest   # once
-python3 -m pytest               # from the repo root
+uv run --with pytest pytest                 # Python from .python-version (CI's main one)
+uv run --python 3.9 --with pytest pytest    # the oldest Python the plugins support
 ```
 
-`tests/` runs offline: upstream plugin repos are local git repos, and a
-private `GIT_CONFIG_GLOBAL` rewrites `https://github.com/` to point at them.
+Without uv: `python3 -m pip install pytest`, then `python3 -m pytest`.
+
+`.python-version` only picks the Python for development. The plugins
+themselves run on whatever `python3` the user has, using only the stdlib,
+which is why CI also runs the suite on 3.9. Don't add a `pyproject.toml`
+or dependencies.
+
+Tests are grouped by plugin: `tests/ai_plugins/` and `tests/flow/`, with
+the shared `conftest.py` and the catalog checks (`test_marketplace.py`)
+directly in `tests/`. Run one plugin's suite by naming its folder, e.g.
+`uv run --with pytest pytest tests/flow`. Keep tests out of `plugins/`: a plugin's
+whole folder is copied into every user's plugin cache on install. Test
+file names must stay unique across the subfolders (no `__init__.py`).
+
+flow's `claude plugin eval` cases are the exception: they stay in
+`plugins/flow/evals/`, because `claude plugin eval` reads its eval folder
+from below the plugin.
+
+All of `tests/` runs offline. For the ai-plugins tests, upstream plugin
+repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
+`https://github.com/` to point at them.
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
-When you change the script, add or update a test for the new behavior.
+Keep `.python-version` on the same version as CI's main matrix entry.
+When you change a script or hook, add or update a test for the new behavior.
 
 ## Maintenance script
 
@@ -84,8 +113,8 @@ paths with an unanchored regex and false-matched `andrej-**karpath**y-skills`.
 The README plugin table is matched by the link text in each row's first
 cell, parsed exactly.
 
-Plugin order is alphabetical (case-insensitive), with `ai-plugins` always
-first. It's the same in both marketplace files and in the README table.
+Plugin order is `ai-plugins` first, then the other local plugins, then
+the remote ones, each group alphabetical (case-insensitive). It's the same in both marketplace files and in the README table.
 The script re-sorts on every write, so hand edits get normalized the next
 time it runs.
 
@@ -93,7 +122,8 @@ time it runs.
 
 Use the `ai-plugins:add`, `ai-plugins:remove`, and `ai-plugins:update`
 skills, or run `python3 plugins/ai-plugins/scripts/ai-plugins.py
-<add|remove|update>` directly (see README.md), rather than hand-editing the
+<add|remove|update>` directly (see
+[its README](plugins/ai-plugins/README.md)), rather than hand-editing the
 marketplace files. `add` detects where each manifest lives, so it handles
 the path quirks above. `remove` does not edit prose, such as the path quirks
 above. It lists the lines that still mention the plugin, so update those by
@@ -107,7 +137,8 @@ flow's agents. Each agent sets its Codex model and effort separately, in
 `codex-model:` and `codex-effort:` frontmatter that Claude Code ignores.
 flow's spawn hook (`plugins/flow/hooks/codex_agents.py`) converts the agents
 into Codex role files when Codex spawns one and copies them into the user's
-Codex agents folder, because Codex plugins can't ship agents (ADR 8). There
+Codex agents folder, because Codex plugins can't ship agents
+([ADR 8](docs/adr/0008-flow-hooks-shared-by-claude-code-and-codex.md)). There
 is no generated file to update.
 
 ## Versions

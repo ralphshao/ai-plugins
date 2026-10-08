@@ -25,6 +25,8 @@ def hook(name, payload, env=None):
     return p.stdout.strip(), p.stderr
 
 
+# --- stop_gate.py ------------------------------------------------------------
+
 def plan(status="Approved - building", command=FAIL, questions=""):
     return (f"# t\n\n## Steps\n- [x] a\n\n## Test command\n`{command}`\n\n"
             f"## Open questions\n{questions}\n## Status\n{status}\n")
@@ -138,6 +140,14 @@ def test_gate_always_runs_outside_git(tmp_path, tmp_path_factory):
     assert stop() == 2
 
 
+@pytest.mark.skipif(os.name == "nt", reason="symlinks need privileges on Windows")
+def test_gate_runs_when_an_untracked_file_cannot_be_read(repo, tmp_path_factory):
+    stop, text = counting_gate(repo, tmp_path_factory.mktemp("out"))
+    (repo / "dangling").symlink_to(repo / "missing")
+    assert stop(text) == 1
+    assert stop() == 2  # can't prove nothing changed
+
+
 def fake_bin(tmp_path, name, script):
     """A PATH with a `name` command that runs the Python script."""
     bin_dir = tmp_path / "bin"
@@ -229,6 +239,43 @@ def test_gate_warns_when_git_fails(tmp_path):
 def test_gate_is_quiet_outside_a_git_repo(tmp_path):
     env = fake_git(tmp_path, "fatal: not a git repository\n")
     assert hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env) == ("", "")
+
+
+def test_gate_names_the_exit_code_when_git_fails_silently(tmp_path):
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=fake_git(tmp_path, ""))
+    assert "exit 128" in json.loads(out)["systemMessage"]
+
+
+def test_gate_still_finds_a_plan_at_cwd_when_git_fails(tmp_path):
+    gate(tmp_path, plan())
+    env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    result = json.loads(out)
+    assert result["decision"] == "block"
+    assert "dubious ownership" in result["systemMessage"]
+
+
+@pytest.fixture(scope="module")
+def stop_gate():
+    spec = importlib.util.spec_from_file_location("flow_stop_gate", HOOKS / "stop_gate.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("error", [
+    subprocess.TimeoutExpired("git", 5),
+    PermissionError("git not executable"),
+], ids=["timeout", "oserror"])
+def test_git_toplevel_warns_and_returns_none_when_git_cannot_run(
+        stop_gate, tmp_path, monkeypatch, error):
+    def boom(*args, **kwargs):
+        raise error
+    monkeypatch.setattr(stop_gate.shutil, "which", lambda name: "/bin/git")
+    monkeypatch.setattr(stop_gate.subprocess, "run", boom)
+    monkeypatch.setattr(stop_gate, "warnings", [])
+    assert stop_gate.git_toplevel(tmp_path) is None
+    assert "`git rev-parse` failed" in stop_gate.warnings[0]
 
 
 def test_gate_finds_plan_in_linked_worktree(repo):
@@ -337,14 +384,6 @@ def test_format_formats_each_file_in_a_patch(repo, tmp_path):
     assert formatted == {"added.go", "updated.go", "moved.go"}
 
 
-@pytest.mark.skipif(os.name == "nt", reason="symlinks need privileges on Windows")
-def test_gate_runs_when_an_untracked_file_cannot_be_read(repo, tmp_path_factory):
-    stop, text = counting_gate(repo, tmp_path_factory.mktemp("out"))
-    (repo / "dangling").symlink_to(repo / "missing")
-    assert stop(text) == 1
-    assert stop() == 2  # can't prove nothing changed
-
-
 @pytest.mark.skipif(os.name == "nt" or os.geteuid() == 0,
                     reason="chmod 000 doesn't block reads on Windows or as root")
 @pytest.mark.parametrize("name, check", [
@@ -379,40 +418,3 @@ def test_format_keeps_going_after_a_file_fails(fmt, repo, monkeypatch, capsys):
     fmt.main()
     assert done == ["b.go"]
     assert "a.go" in capsys.readouterr().err
-
-
-def test_gate_names_the_exit_code_when_git_fails_silently(tmp_path):
-    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=fake_git(tmp_path, ""))
-    assert "exit 128" in json.loads(out)["systemMessage"]
-
-
-def test_gate_still_finds_a_plan_at_cwd_when_git_fails(tmp_path):
-    gate(tmp_path, plan())
-    env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
-    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
-    result = json.loads(out)
-    assert result["decision"] == "block"
-    assert "dubious ownership" in result["systemMessage"]
-
-
-@pytest.fixture(scope="module")
-def stop_gate():
-    spec = importlib.util.spec_from_file_location("flow_stop_gate", HOOKS / "stop_gate.py")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-@pytest.mark.parametrize("error", [
-    subprocess.TimeoutExpired("git", 5),
-    PermissionError("git not executable"),
-], ids=["timeout", "oserror"])
-def test_git_toplevel_warns_and_returns_none_when_git_cannot_run(
-        stop_gate, tmp_path, monkeypatch, error):
-    def boom(*args, **kwargs):
-        raise error
-    monkeypatch.setattr(stop_gate.shutil, "which", lambda name: "/bin/git")
-    monkeypatch.setattr(stop_gate.subprocess, "run", boom)
-    monkeypatch.setattr(stop_gate, "warnings", [])
-    assert stop_gate.git_toplevel(tmp_path) is None
-    assert "`git rev-parse` failed" in stop_gate.warnings[0]
