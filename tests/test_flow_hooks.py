@@ -150,6 +150,7 @@ def test_gate_finds_plan_in_linked_worktree(repo):
 
 @pytest.fixture(scope="module")
 def fmt():
+    sys.path.insert(0, str(HOOKS))  # format.py imports its sibling patch.py
     spec = importlib.util.spec_from_file_location("flow_format", HOOKS / "format.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -220,3 +221,31 @@ def test_format_stops_at_p4_workspace_root(fmt, tmp_path, monkeypatch, marker):
 def test_format_hook_is_quiet_when_nothing_to_do(payload, tmp_path):
     payload["cwd"] = str(tmp_path)
     assert hook("format.py", payload) == ("", "")
+
+
+def fake_gofmt(tmp_path):
+    """A PATH whose `gofmt` appends a marker line to the file it formats."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "gofmt.py"
+    script.write_text("import sys\nopen(sys.argv[-1], 'a').write('// formatted\\n')\n")
+    if os.name == "nt":
+        (bin_dir / "gofmt.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
+    else:
+        exe = bin_dir / "gofmt"
+        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
+        exe.chmod(0o755)
+    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+
+
+def test_format_formats_each_file_in_a_patch(repo, tmp_path):
+    for name in ("added.go", "updated.go", "moved.go", "untouched.go"):
+        (repo / name).write_text("package main\n")
+    patch = ("*** Begin Patch\n*** Add File: added.go\n+package main\n"
+             "*** Update File: updated.go\n@@\n"
+             "*** Update File: old.go\n*** Move to: moved.go\n@@\n"
+             "*** Delete File: gone.go\n*** End Patch\n")
+    hook("format.py", {"cwd": str(repo), "tool_name": "apply_patch",
+                       "tool_input": {"command": patch}}, env=fake_gofmt(tmp_path))
+    formatted = {p.name for p in repo.glob("*.go") if "formatted" in p.read_text()}
+    assert formatted == {"added.go", "updated.go", "moved.go"}

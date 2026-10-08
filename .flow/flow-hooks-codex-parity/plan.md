@@ -139,7 +139,7 @@ How context-mode handles subagents, and what applies to flow:
       `*** Update File:`, `*** Delete File:`, and `*** Move to:` headers from
       `tool_input.command`. Reviewers: deny. Tester: run `check_test_path` on
       each path. Deny a patch with no parseable header. Add tests.
-- [ ] format: for `apply_patch`, format each Add, Update, or Move-to path
+- [x] format: for `apply_patch`, format each Add, Update, or Move-to path
       that exists after the edit. Put the header parser in one place that
       both hooks import (`hooks/patch.py`, next to the scripts). Add tests.
 - [x] guard: fail closed. For a flow `agent_type`, catch a JSON or any other
