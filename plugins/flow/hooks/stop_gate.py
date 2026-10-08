@@ -17,6 +17,10 @@ It allows the stop when:
 The root is the git work tree, else the Perforce client root containing the
 current directory, else the current directory.
 
+Problems that keep the gate from checking (an unreadable plan, git failing,
+a timeout) are shown to the user as a systemMessage: both Claude Code and
+Codex drop stderr from a hook that exits 0.
+
 The command comes from the repo's own plan file, so this runs the repo's
 tests with the same trust as running them by hand.
 """
@@ -32,6 +36,11 @@ from pathlib import Path
 
 TIMEOUT = 600
 TAIL = 40
+warnings = []  # shown to the user as one systemMessage
+
+
+def warn(message):
+    warnings.append(f"flow test gate: {message}")
 
 
 def section(text, heading):
@@ -55,7 +64,7 @@ def active_plans(root):
         try:
             text = path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError) as e:
-            print(f"flow test gate: skipping {path}: {e}", file=sys.stderr)
+            warn(f"skipping {path}: {e}")
             continue
         if not section(text, "Status").strip().startswith("Approved"):
             continue
@@ -100,8 +109,7 @@ def git_toplevel(cwd):
         if "not a git repository" in out.stderr:
             return None
         error = out.stderr.strip() or f"exit {out.returncode}"
-    print(f"flow test gate: `git rev-parse` failed ({error}); looking for "
-          f"plans from {cwd}.", file=sys.stderr)
+    warn(f"`git rev-parse` failed ({error}); looking for plans from {cwd}.")
     return None
 
 
@@ -146,10 +154,10 @@ def pass_file(root, cmd):
     return Path(tempfile.gettempdir()) / f"flow-stop-gate-{key}"
 
 
-def main():
-    data = json.load(sys.stdin)
+def check(data):
+    """The hook's output for this stop: a block decision, or {} to allow."""
     if data.get("stop_hook_active"):
-        return
+        return {}
     root = repo_root(data.get("cwd") or ".")
     plans = active_plans(root)
     fp = fingerprint(root) if plans else None
@@ -164,24 +172,31 @@ def main():
             run = subprocess.run(cmd, shell=True, cwd=root, capture_output=True,
                                  text=True, timeout=TIMEOUT)
         except subprocess.TimeoutExpired:
-            print(f"flow test gate: `{cmd}` timed out after {TIMEOUT}s; "
-                  "not blocking.", file=sys.stderr)
+            warn(f"`{cmd}` timed out after {TIMEOUT}s; not blocking.")
             continue
         if run.returncode != 0:
             tail = "\n".join((run.stdout + run.stderr).splitlines()[-TAIL:])
             rel = path.relative_to(root).as_posix()
-            print(json.dumps({
+            return {
                 "decision": "block",
                 "reason": (f"Tests fail for {rel} (`{cmd}`, exit "
                            f"{run.returncode}). Fix them before stopping, or "
                            "park the blocker as an open question.\n\n" + tail),
-            }))
-            return
+            }
         if fp:
             try:
                 passed.write_text(fp, encoding="utf-8")
             except OSError:
                 pass
+    return {}
+
+
+def main():
+    out = check(json.load(sys.stdin))
+    if warnings:
+        out["systemMessage"] = "\n".join(warnings)
+    if out:
+        print(json.dumps(out))
 
 
 if __name__ == "__main__":

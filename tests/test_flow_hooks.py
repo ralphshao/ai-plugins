@@ -202,9 +202,18 @@ def test_gate_skips_a_plan_it_cannot_read(repo, make_bad):
     (repo / ".flow" / "a").mkdir(parents=True)
     make_bad(repo / ".flow" / "a" / "plan.md")
     gate(repo, plan())  # .flow/x/plan.md, a failing plan
-    out, err = hook("stop_gate.py", {"cwd": str(repo)})
-    assert json.loads(out)["decision"] == "block"
-    assert ".flow/a/plan.md" in err.replace(os.sep, "/")
+    out, _ = hook("stop_gate.py", {"cwd": str(repo)})
+    result = json.loads(out)
+    assert result["decision"] == "block"
+    assert ".flow/a/plan.md" in result["systemMessage"].replace(os.sep, "/")
+
+
+def test_gate_shows_a_skipped_plan_when_it_allows_the_stop(repo):
+    (repo / ".flow" / "a").mkdir(parents=True)
+    (repo / ".flow" / "a" / "plan.md").write_bytes(b"caf\xe9\n")
+    result = gate(repo)
+    assert "decision" not in result
+    assert ".flow/a/plan.md" in result["systemMessage"].replace(os.sep, "/")
 
 
 def fake_git(tmp_path, message):
@@ -213,8 +222,8 @@ def fake_git(tmp_path, message):
 
 def test_gate_warns_when_git_fails(tmp_path):
     env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
-    _, err = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
-    assert "dubious ownership" in err
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    assert "dubious ownership" in json.loads(out)["systemMessage"]
 
 
 def test_gate_is_quiet_outside_a_git_repo(tmp_path):
@@ -373,16 +382,17 @@ def test_format_keeps_going_after_a_file_fails(fmt, repo, monkeypatch, capsys):
 
 
 def test_gate_names_the_exit_code_when_git_fails_silently(tmp_path):
-    _, err = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=fake_git(tmp_path, ""))
-    assert "exit 128" in err
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=fake_git(tmp_path, ""))
+    assert "exit 128" in json.loads(out)["systemMessage"]
 
 
 def test_gate_still_finds_a_plan_at_cwd_when_git_fails(tmp_path):
     gate(tmp_path, plan())
     env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
-    out, err = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
-    assert json.loads(out)["decision"] == "block"
-    assert "dubious ownership" in err
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    result = json.loads(out)
+    assert result["decision"] == "block"
+    assert "dubious ownership" in result["systemMessage"]
 
 
 @pytest.fixture(scope="module")
@@ -398,10 +408,11 @@ def stop_gate():
     PermissionError("git not executable"),
 ], ids=["timeout", "oserror"])
 def test_git_toplevel_warns_and_returns_none_when_git_cannot_run(
-        stop_gate, tmp_path, monkeypatch, capsys, error):
+        stop_gate, tmp_path, monkeypatch, error):
     def boom(*args, **kwargs):
         raise error
     monkeypatch.setattr(stop_gate.shutil, "which", lambda name: "/bin/git")
     monkeypatch.setattr(stop_gate.subprocess, "run", boom)
+    monkeypatch.setattr(stop_gate, "warnings", [])
     assert stop_gate.git_toplevel(tmp_path) is None
-    assert "`git rev-parse` failed" in capsys.readouterr().err
+    assert "`git rev-parse` failed" in stop_gate.warnings[0]
