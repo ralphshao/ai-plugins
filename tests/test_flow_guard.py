@@ -9,8 +9,11 @@ import pytest
 from conftest import REPO_ROOT
 
 GUARD = REPO_ROOT / "plugins" / "flow" / "hooks" / "guard.py"
-REVIEWERS = ["flow:code-reviewer", "flow:review-validator"]
-TESTER = "flow:tester"
+# Claude Code names, then the Codex role names codex_agents.py installs.
+REVIEWERS = ["flow:code-reviewer", "flow:correctness-reviewer", "flow:review-validator",
+             "flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator"]
+TESTERS = ["flow:tester", "flow-tester"]
+TESTER = TESTERS[0]
 R = "/repo"
 
 READ_ONLY = [
@@ -100,21 +103,22 @@ def write(agent, path, tool="Write"):
     return run(payload)[0]
 
 
-@pytest.mark.parametrize("agent", REVIEWERS + [TESTER])
+@pytest.mark.parametrize("agent", REVIEWERS + TESTERS)
 @pytest.mark.parametrize("cmd", READ_ONLY)
 def test_read_only_commands_allowed(agent, cmd):
     assert bash(agent, cmd) == 0
 
 
-@pytest.mark.parametrize("agent", REVIEWERS + [TESTER])
+@pytest.mark.parametrize("agent", REVIEWERS + TESTERS)
 @pytest.mark.parametrize("cmd", ALWAYS_DENIED)
 def test_unsafe_commands_denied(agent, cmd):
     assert bash(agent, cmd) == 2
 
 
+@pytest.mark.parametrize("agent", TESTERS)
 @pytest.mark.parametrize("cmd", RUNNERS)
-def test_tester_may_run_tests(cmd):
-    assert bash(TESTER, cmd) == 0
+def test_tester_may_run_tests(agent, cmd):
+    assert bash(agent, cmd) == 0
 
 
 @pytest.mark.parametrize("agent", REVIEWERS)
@@ -134,19 +138,22 @@ def test_reviewers_never_write(agent, tool):
     assert write(agent, "tests/test_x.py", tool) == 2
 
 
+@pytest.mark.parametrize("agent", TESTERS)
 @pytest.mark.parametrize("path", ["tests/test_x.py", "src/foo_test.go",
                                   "web/a.spec.ts", "pkg/__tests__/a.js",
                                   "conftest.py", "src/FooTest.java"])
-def test_tester_writes_test_files(path):
-    assert write(TESTER, path) == 0
+def test_tester_writes_test_files(agent, path):
+    assert write(agent, path) == 0
 
 
+@pytest.mark.parametrize("agent", TESTERS)
 @pytest.mark.parametrize("path", ["src/app.py", "README.md", "tests.py"])
-def test_tester_cannot_write_source(path):
-    assert write(TESTER, path, "Edit") == 2
+def test_tester_cannot_write_source(agent, path):
+    assert write(agent, path, "Edit") == 2
 
 
-@pytest.mark.parametrize("agent", [None, "Explore", "code-reviewer", "other:tester"])
+@pytest.mark.parametrize("agent", [None, "Explore", "code-reviewer", "other:tester",
+                                   "default", "explorer", "worker"])
 def test_other_callers_pass_through(agent):
     assert bash(agent, "rm -rf x") == 0
     assert write(agent, "src/app.py") == 0
@@ -157,3 +164,95 @@ def test_denial_explains_itself():
                      "tool_input": {"file_path": "src/app.py"}})
     assert code == 2
     assert "only test files" in err
+
+
+def apply_patch(agent, *headers):
+    body = "".join(f"*** {h}\n+x\n" for h in headers)
+    return run({"agent_type": agent, "tool_name": "apply_patch",
+                "tool_input": {"command": f"*** Begin Patch\n{body}*** End Patch\n"}})[0]
+
+
+@pytest.mark.parametrize("agent", REVIEWERS)
+def test_reviewers_never_patch(agent):
+    assert apply_patch(agent, "Update File: tests/test_x.py") == 2
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+@pytest.mark.parametrize("headers", [
+    ["Add File: tests/test_new.py"],
+    ["Update File: tests/test_x.py", "Delete File: tests/test_old.py"],
+    ["Update File: tests/a.py", "Move to: tests/b.py"],
+])
+def test_tester_patches_test_files(agent, headers):
+    assert apply_patch(agent, *headers) == 0
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+@pytest.mark.parametrize("headers", [
+    ["Add File: src/app.py"],
+    ["Update File: tests/test_x.py", "Update File: src/app.py"],
+    ["Delete File: src/app.py"],
+    ["Update File: tests/test_x.py", "Move to: src/app.py"],
+    [],
+])
+def test_tester_cannot_patch_source(agent, headers):
+    assert apply_patch(agent, *headers) == 2
+
+
+@pytest.mark.parametrize("agent", [None, "explorer"])
+def test_other_callers_patch_freely(agent):
+    assert apply_patch(agent, "Update File: src/app.py") == 0
+
+
+def raw(stdin):
+    p = subprocess.run([sys.executable, str(GUARD)], input=stdin,
+                       capture_output=True, text=True)
+    return p.returncode, p.stderr
+
+
+@pytest.mark.parametrize("agent", REVIEWERS + TESTERS)
+def test_guard_fails_closed_for_flow_agents(agent):
+    # tool_input of the wrong type makes check() raise.
+    code, err = run({"agent_type": agent, "tool_name": "Bash", "tool_input": "ls"})
+    assert code == 2 and "guard failed" in err
+    code, _ = raw('{"agent_type": "%s", "tool_name": ' % agent)
+    assert code == 2
+
+
+def test_guard_fails_open_for_others():
+    assert run({"tool_name": "Bash", "tool_input": "ls"})[0] == 0
+    assert raw("not json")[0] == 0
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+@pytest.mark.parametrize("path", ["tests/../src/app.py", "/repo/tests/../src/app.py",
+                                  "/home/me/tests/repo/src/app.py"])
+def test_tester_cannot_escape_test_folders(agent, path):
+    payload = {"agent_type": agent, "tool_name": "Write", "cwd": "/home/me/tests/repo",
+               "tool_input": {"file_path": path}}
+    assert run(payload)[0] == 2
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_tester_absolute_test_path_inside_cwd(agent):
+    payload = {"agent_type": agent, "tool_name": "Write", "cwd": "/home/me/tests/repo",
+               "tool_input": {"file_path": "/home/me/tests/repo/tests/test_a.py"}}
+    assert run(payload)[0] == 0
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_tester_cannot_hide_an_indented_header(agent):
+    patch = ("*** Begin Patch\n*** Add File: tests/test_a.py\n+x\n"
+             " \t*** Update File: src/main.py\n@@\n-a\n+b\n*** End Patch\n")
+    assert run({"agent_type": agent, "tool_name": "apply_patch",
+                "tool_input": {"command": patch}})[0] == 2
+
+
+@pytest.mark.parametrize("agent", TESTERS)
+def test_patch_import_failure_fails_closed(agent, tmp_path):
+    lonely = tmp_path / "guard.py"  # no patch.py beside it
+    lonely.write_text(GUARD.read_text(encoding="utf-8"), encoding="utf-8")
+    p = subprocess.run([sys.executable, str(lonely)], capture_output=True, text=True,
+                       input=json.dumps({"agent_type": agent, "tool_name": "apply_patch",
+                                         "tool_input": {"command": "*** Add File: tests/a.py"}}))
+    assert p.returncode == 2

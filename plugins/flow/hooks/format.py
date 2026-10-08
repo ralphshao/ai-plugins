@@ -11,7 +11,8 @@ codebase that doesn't use one:
 - .rs: rustfmt, when on PATH and the file sits in a Cargo project.
 
 Never blocks: a formatter failure is reported on stderr and the edit stands.
-Codex's apply_patch sends no file_path, so this does nothing there.
+On Codex, an apply_patch call formats each file the patch adds, updates, or
+moves a file to.
 """
 import json
 import os
@@ -19,6 +20,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+from patch import patch_paths
 
 PRETTIER_EXTS = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".css",
                  ".scss", ".json", ".md", ".yaml", ".yml", ".html", ".vue"}
@@ -61,36 +64,36 @@ def has_prettier_config(d):
 
 
 def formatter(path):
-    """The command to format path, or None."""
+    """The command to format path, or None. Tools are named by the full path
+    shutil.which finds, so a .cmd or .bat shim runs on Windows too."""
     ext = path.suffix.lower()
     dirs = list(ancestors(path))
-    if ext == ".py" and shutil.which("ruff") and any(map(has_ruff_config, dirs)):
-        return ["ruff", "format", "--quiet", str(path)]
+    ruff, gofmt, rustfmt = map(shutil.which, ("ruff", "gofmt", "rustfmt"))
+    if ext == ".py" and ruff and any(map(has_ruff_config, dirs)):
+        return [ruff, "format", "--quiet", str(path)]
     if ext in PRETTIER_EXTS and any(map(has_prettier_config, dirs)):
         for d in dirs:
             for name in ("prettier", "prettier.cmd"):
                 exe = d / "node_modules" / ".bin" / name
                 if exe.is_file():
                     return [str(exe), "--write", "--log-level", "warn", str(path)]
-    if ext == ".go" and shutil.which("gofmt"):
-        return ["gofmt", "-w", str(path)]
-    if ext == ".rs" and shutil.which("rustfmt") and any(
+    if ext == ".go" and gofmt:
+        return [gofmt, "-w", str(path)]
+    if ext == ".rs" and rustfmt and any(
             (d / "Cargo.toml").is_file() for d in dirs):
-        return ["rustfmt", "--quiet", str(path)]
+        return [rustfmt, "--quiet", str(path)]
     return None
 
 
-def main():
-    data = json.load(sys.stdin)
-    file_path = (data.get("tool_input") or {}).get("file_path")
-    if not file_path:
-        return
-    path = Path(file_path)
-    if not path.is_absolute():
-        path = Path(data.get("cwd") or ".") / path
-    if not path.is_file():
-        return
-    cmd = formatter(path.resolve())
+def edited_files(data):
+    inp = data.get("tool_input") or {}
+    if data.get("tool_name") == "apply_patch":
+        return [p for action, p in patch_paths(inp) if action != "Delete File"]
+    return [inp["file_path"]] if inp.get("file_path") else []
+
+
+def format_file(path):
+    cmd = formatter(path)
     if not cmd:
         return
     try:
@@ -101,6 +104,16 @@ def main():
     if run.returncode != 0:
         print(f"flow format: {' '.join(cmd)} exited {run.returncode}\n"
               f"{run.stderr.strip()}", file=sys.stderr)
+
+
+def main():
+    data = json.load(sys.stdin)
+    for file_path in edited_files(data):
+        path = Path(file_path)
+        if not path.is_absolute():
+            path = Path(data.get("cwd") or ".") / path
+        if path.is_file():
+            format_file(path.resolve())
 
 
 if __name__ == "__main__":

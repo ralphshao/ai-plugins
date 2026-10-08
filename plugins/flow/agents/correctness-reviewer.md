@@ -1,11 +1,11 @@
 ---
-name: code-reviewer
-description: Read-only code reviewer. Scans files or a diff for correctness bugs, silent failures, project-standard violations, untested changes, and improvements to readability, performance, and best practices, showing current code and a fix for each issue. Use when asked to review, audit, or suggest improvements to code.
+name: correctness-reviewer
+description: The code-reviewer on a stronger model, for deep-review's correctness lens. Same instructions and limits as code-reviewer. Use only when deep-review asks for it.
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
-model: claude-sonnet-5-5
-effort: medium
+model: claude-opus-5-5
+effort: high
 codex-model: gpt-6.1-sol
-codex-effort: medium
+codex-effort: high
 skills:
   - andrej-karpathy-skills:karpathy-guidelines
   - ponytail:ponytail-review

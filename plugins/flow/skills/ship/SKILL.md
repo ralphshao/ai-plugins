@@ -10,7 +10,8 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
 
 - Every step in `## Steps` is ticked. If not, go back to building.
 - `## Open questions` has no unticked item. If one does, stop: it is still
-  waiting on the user.
+  waiting on the user. A version bump waiting for the user's go counts as
+  open: ask for it, and don't bump without it.
 - Run the plan's test command. It must pass.
 - Large tasks: spawn `flow:tester` on the `diff-scope` diff for coverage
   gaps; `checkpoint` the tests it adds.

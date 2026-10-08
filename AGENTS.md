@@ -100,10 +100,23 @@ above. It lists the lines that still mention the plugin, so update those by
 hand. All three leave their edits uncommitted. Review them with `git diff`
 before committing.
 
+## flow's Codex agents
+
+`plugins/flow/agents/*.md` (Claude Code format) is the only source for
+flow's agents. Each agent sets its Codex model and effort separately, in
+`codex-model:` and `codex-effort:` frontmatter that Claude Code ignores.
+flow's spawn hook (`plugins/flow/hooks/codex_agents.py`) converts the agents
+into Codex role files when Codex spawns one and copies them into the user's
+Codex agents folder, because Codex plugins can't ship agents (ADR 3). There
+is no generated file to update.
+
 ## Versions
 
-Ask the user before changing any plugin's version, including which number
-to use. Change it per plugin entry, never with a search-and-replace across a
+Change a plugin's version only when the user explicitly says to, with the
+number they give. A "yes" to a related question, or a bump listed in a
+plan, is not a go: ask, and wait. (`ai-plugins:update` copying an upstream
+plugin's new version into the catalog is the exception: running it is the
+go.) Change it per plugin entry, never with a search-and-replace across a
 file: several plugins can share a version string.
 
 ## Design records

@@ -72,6 +72,11 @@ Checkpoint: `flow: plan <slug>`.
 Show the plan (Goal, Acceptance criteria, Seams, Steps) and ask for
 approval. Stop and wait. Don't write code before approval.
 
+Approval must be explicit: the user says the plan is approved, or to build
+it. Answering open questions, saying "yes" to one of them, or "do it now"
+about one item is not approval, even when every question is answered. If
+it's unclear, ask whether the plan is approved; never assume it.
+
 On approval:
 
 1. Set Status to `Approved - building`, `checkpoint`.

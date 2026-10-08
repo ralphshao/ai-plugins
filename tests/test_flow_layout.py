@@ -1,7 +1,11 @@
 """Structural checks on the flow plugin's skills, agents, and hooks."""
 
 import json
+import os
 import re
+import shutil
+import subprocess
+import sys
 
 import pytest
 
@@ -9,7 +13,7 @@ from conftest import REPO_ROOT
 
 FLOW = REPO_ROOT / "plugins" / "flow"
 # Orchestrators: only the user may start them, on Claude Code and Codex.
-USER_ONLY = {"flow", "start", "plan", "ship", "retro", "setup-codex"}
+USER_ONLY = {"flow", "start", "plan", "ship", "retro"}
 SKILLS = sorted(p.parent.name for p in (FLOW / "skills").glob("*/SKILL.md"))
 
 
@@ -43,15 +47,30 @@ def test_agents_have_no_hooks_frontmatter(path):
     assert "hooks" not in fm
 
 
-def test_hook_commands_resolve_inside_plugin():
+def hooks():
     config = json.loads((FLOW / "hooks" / "hooks.json").read_text(encoding="utf-8"))
-    commands = [h["command"] for groups in config["hooks"].values()
-                for g in groups for h in g["hooks"]]
-    assert commands
-    for cmd in commands:
-        script = re.search(r'\$\{CLAUDE_PLUGIN_ROOT\}/([^"\s]+)', cmd)
-        assert script, cmd
-        assert (FLOW / script.group(1)).is_file(), cmd
+    return [h for groups in config["hooks"].values() for g in groups for h in g["hooks"]]
+
+
+def test_hook_commands_resolve_inside_plugin():
+    assert hooks()
+    for hook in hooks():
+        script = re.search(r'\$\{CLAUDE_PLUGIN_ROOT\}/([^"\s]+)', hook["command"])
+        assert script, hook["command"]
+        assert (FLOW / script.group(1)).is_file(), hook["command"]
+        # Codex on Windows runs hooks in cmd.exe, which can't expand ${...}.
+        win = re.fullmatch(r'python "%PLUGIN_ROOT%\\(.+)"', hook["commandWindows"])
+        assert win and win.group(1) == script.group(1).replace("/", "\\"), hook
+
+
+@pytest.mark.skipif(os.name == "nt" or not shutil.which("sh"), reason="needs POSIX sh")
+def test_hook_command_falls_back_to_python(tmp_path):
+    (tmp_path / "python").symlink_to(sys.executable)  # no python3 on PATH
+    command = hooks()[0]["command"]
+    p = subprocess.run([shutil.which("sh"), "-c", command], input='{"tool_name": "Bash"}',
+                       capture_output=True, text=True,
+                       env={"PATH": str(tmp_path), "CLAUDE_PLUGIN_ROOT": str(FLOW)})
+    assert p.returncode == 0, p.stderr
 
 
 # VCS and review-host skills: phases name operations, these skills run them.

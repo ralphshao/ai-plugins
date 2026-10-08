@@ -1,5 +1,0 @@
-interface:
-  display_name: "Flow: Setup Codex"
-  short_description: "Install flow agents into ~/.codex/agents"
-policy:
-  allow_implicit_invocation: false
