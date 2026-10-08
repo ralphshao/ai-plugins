@@ -14,7 +14,10 @@ FLOW = REPO_ROOT / "plugins" / "flow"
 HOOK = FLOW / "hooks" / "codex_agents.py"
 NAMES = {"flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator",
          "flow-tester"}
-tomllib = pytest.importorskip("tomllib")  # Python 3.11+
+try:
+    import tomllib  # Python 3.11+: also proves the output is valid TOML.
+except ImportError:
+    tomllib = None
 
 
 @pytest.fixture
@@ -31,8 +34,17 @@ def spawn(home, cwd, tool_input, tool="spawn_agent"):
     return p.returncode, p.stderr
 
 
+def load_role(text):
+    if tomllib:
+        return tomllib.loads(text)
+    # The hook writes one `key = <JSON string>` per line, which json reads.
+    pairs = (line.split(" = ", 1) for line in text.splitlines()
+             if line and not line.startswith("#"))
+    return {key: json.loads(value) for key, value in pairs}
+
+
 def agents(folder):
-    return {f.stem: tomllib.loads(f.read_text(encoding="utf-8"))
+    return {f.stem: load_role(f.read_text(encoding="utf-8"))
             for f in folder.glob("*.toml")}
 
 
