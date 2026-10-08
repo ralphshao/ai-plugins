@@ -100,6 +100,13 @@ above. It lists the lines that still mention the plugin, so update those by
 hand. All three leave their edits uncommitted. Review them with `git diff`
 before committing.
 
+## Design records
+
+`docs/plans/` holds design plans, which aren't maintained once implemented.
+`docs/adr/` holds architecture decision records: one numbered file per
+hard-to-reverse decision, never edited after acceptance. A changed decision
+gets a new ADR that supersedes the old one.
+
 ## Commit convention
 
 This repo pushes real commits per change (not squashed), with a body
