@@ -104,7 +104,6 @@ def format_file(path):
               f"{run.stderr.strip()}", file=sys.stderr)
 
 
-
 def main():
     data = json.load(sys.stdin)
     for file_path in edited_files(data):
