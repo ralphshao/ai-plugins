@@ -27,6 +27,7 @@ Collect these once, so each subagent doesn't repeat the work:
 - **Intent**: the review title and body, and the commit or changelist descriptions.
 - **Spec**: a spec path given in the arguments; otherwise issues referenced in the review body or descriptions (`#123`, `Closes #45`, a tracker key), fetched with `fetch-issue` or its no-host fallback. If there's none, note "no spec" and drop the Spec checks.
 - **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the read root and in each parent directory of a changed file (from the diff's file list).
+- **References**: sources reviewers can check findings against. List paths (not contents) of ADRs in the repo's ADR folder (`docs/adr/`, or wherever the repo keeps them) that mention a changed file or module, plus any local clones or docs of external systems the change depends on that the arguments, intent, spec, or standards files name. Don't search the disk for clones. If there are none, note "none".
 - **Error handling touched?** Grep the added lines of the diff (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `?.`, `?? `, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Note yes or no.
 
 ## 3. Review in parallel
@@ -40,6 +41,7 @@ Commits: <commits or changelists in range>
 Intent: <review title/body, or "descriptions only">
 Spec: <spec text, or "none">
 Standards files: <paths>
+References: <paths, or "none">
 ```
 
 Then the lens brief:
@@ -63,15 +65,17 @@ Then the lens brief:
   - Refused Bequest: a subclass that ignores or overrides most of what it inherits.
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
+If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.
+
 ## 4. Merge
 
 Pool the findings. Two findings are duplicates when they name the same `file:line` and the same problem; keep the one with the stronger evidence. Keep each pre-existing issue once.
 
-If no reviewer reported any findings, skip to step 6.
+If no reviewer that ran reported any findings, skip to step 6.
 
 ## 5. Validate
 
-Group the merged findings by file. In one message, launch one `flow:review-validator` subagent per file, in parallel. Give it the scope, the intent, the spec (if any), and that file's findings verbatim, each with its title, category, cited lines, current code, and proposed fix.
+Group the merged findings by file. In one message, launch one `flow:review-validator` subagent per file, in parallel. Give it the scope, the intent, the spec (if any), the `Read files:` and `References:` lines, and that file's findings verbatim, each with its title, category, cited lines, current code, and proposed fix.
 
 Apply its verdicts:
 
@@ -81,9 +85,11 @@ Apply its verdicts:
 
 Add anything listed under `Noticed:` to the report as Likely; it hasn't been validated.
 
+If a validator can't start or returns no verdicts, retry it once. If it still fails, keep that file's findings, marked Likely and "not validated", and record the file as not validated. Treat a finding the validator returned no verdict for the same way.
+
 ## 6. Report
 
-Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, and the standards files used. Then give the findings in two sections, so one axis can't bury the other:
+Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
 - `## Correctness & spec`: Correctness, Spec, and silent-failure findings.
 - `## Standards & quality`: everything else.
@@ -94,6 +100,6 @@ Within each section, group by file and put the most severe first. Then add `## P
 - the worst issue in each section
 - how many findings validation dropped
 
-If nothing survived, say: "No issues found. Checked <lenses run>, spec (or: no spec), and standards."
+If nothing survived and every selected lens and validator ran, say: "No issues found. Checked <lenses run>, spec (or: no spec), and standards." If something didn't run, say instead: "No issues found in what ran", followed by the `Not checked:` line.
 
 If `resolve-target` made a temporary checkout, remove it as the VCS skill says, even when the review stopped early. Never post the findings to the review host; the report stays here.
