@@ -1,6 +1,7 @@
 """Tests for flow's stop_gate.py and format.py hooks, run as the hooks run."""
 
 import importlib.util
+import io
 import json
 import os
 import subprocess
@@ -333,3 +334,39 @@ def test_gate_runs_when_an_untracked_file_cannot_be_read(repo, tmp_path_factory)
     (repo / "dangling").symlink_to(repo / "missing")
     assert stop(text) == 1
     assert stop() == 2  # can't prove nothing changed
+
+
+@pytest.mark.skipif(os.name == "nt" or os.geteuid() == 0,
+                    reason="chmod 000 doesn't block reads on Windows or as root")
+@pytest.mark.parametrize("name, check", [
+    ("pyproject.toml", "has_ruff_config"),
+    ("package.json", "has_prettier_config"),
+])
+def test_format_treats_unreadable_config_as_none(fmt, tmp_path, name, check):
+    config = tmp_path / name
+    config.write_text("{}")
+    config.chmod(0)
+    try:
+        assert getattr(fmt, check)(tmp_path) is False
+    finally:
+        config.chmod(0o644)
+
+
+def test_format_keeps_going_after_a_file_fails(fmt, repo, monkeypatch, capsys):
+    for name in ("a.go", "b.go"):
+        (repo / name).write_text("package main\n")
+    done = []
+
+    def format_file(path):
+        if path.name == "a.go":
+            raise OSError("boom")
+        done.append(path.name)
+    monkeypatch.setattr(fmt, "format_file", format_file)
+    patch = ("*** Begin Patch\n*** Add File: a.go\n+package main\n"
+             "*** Add File: b.go\n+package main\n*** End Patch\n")
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(
+        {"cwd": str(repo), "tool_name": "apply_patch",
+         "tool_input": {"command": patch}})))
+    fmt.main()
+    assert done == ["b.go"]
+    assert "a.go" in capsys.readouterr().err

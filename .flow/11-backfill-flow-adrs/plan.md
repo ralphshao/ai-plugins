@@ -42,7 +42,7 @@ unreadable files.
 - [x] `stop_gate.py`: skip an unreadable plan with a warning (test first).
 - [x] `stop_gate.py`: warn when git fails other than "not a repository"
       (test first).
-- [ ] `format.py`: OSError in config checks counts as no config; catch
+- [x] `format.py`: OSError in config checks counts as no config; catch
       errors per file (tests first).
 - [ ] `guard.py` docstring: note the accepted tester gap.
 
