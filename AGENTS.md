@@ -64,8 +64,16 @@ python3 -m pip install pytest   # once
 python3 -m pytest               # from the repo root
 ```
 
-`tests/` runs offline: upstream plugin repos are local git repos, and a
-private `GIT_CONFIG_GLOBAL` rewrites `https://github.com/` to point at them.
+Tests are grouped by plugin: `tests/ai_plugins/` and `tests/flow/`, with
+the shared `conftest.py` and the catalog checks (`test_marketplace.py`)
+directly in `tests/`. Run one plugin's suite with
+`python3 -m pytest tests/flow`. Keep tests out of `plugins/`: a plugin's
+whole folder is copied into every user's plugin cache on install. Test
+file names must stay unique across the subfolders (no `__init__.py`).
+
+The ai-plugins tests run offline: upstream plugin repos are local git
+repos, and a private `GIT_CONFIG_GLOBAL` rewrites `https://github.com/` to
+point at them.
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
 When you change the script, add or update a test for the new behavior.

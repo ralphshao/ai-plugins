@@ -40,7 +40,9 @@ codex plugin install <plugin-name>@ai-plugins
 .agents/plugins/marketplace.json  # Codex marketplace catalog
 plugins/ai-plugins/               # marketplace maintenance plugin (source lives here)
 plugins/flow/                     # engineering workflow plugin (source lives here)
-tests/                            # pytest suite for both local plugins' scripts
+tests/                            # pytest suite: conftest.py, catalog checks
+  ai_plugins/                     #   tests for plugins/ai-plugins
+  flow/                           #   tests for plugins/flow
 ```
 
 Every remote plugin's `source` is a `url` or `git-subdir` object with a
