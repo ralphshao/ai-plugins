@@ -53,32 +53,10 @@ Claude variant and a Codex variant at *different* subdirectory depths within
 their own repo — see [AGENTS.md](AGENTS.md) for exactly which `path` each
 marketplace file uses.
 
-## Managing plugins
+## Maintaining this marketplace
 
-Install the `ai-plugins` plugin from this marketplace. It has three skills:
-
-| Skill | Does |
-| --- | --- |
-| `ai-plugins:add <github-url-or-owner/repo>` | Pins the repo's latest release (highest `vX.Y.Z` tag), or its latest commit if it has no release tags. Detects where its `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live, and adds entries to both marketplace files, with `ref` set to the release tag or branch next to `sha`. The repo needs at least one of the two; each catalog uses its own manifest's folder as the plugin root, falling back to the other. It also adds a row to the table above. Optional flags: `--path <subdir>` when the repo holds several plugins, `--description <text>` to override the upstream description. |
-| `ai-plugins:remove <name>` | Removes the plugin from both marketplace files and the table above, then lists any other lines in README.md and AGENTS.md that still mention it. |
-| `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest release (or latest commit on its default branch if it has no release tags, or on its `ref` if that is some other branch), and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` and `source.ref` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the table above. |
-
-Each skill calls a thin wrapper, `scripts/run.sh` or `scripts/run.ps1`,
-which runs the shared
-[`plugins/ai-plugins/scripts/ai-plugins.py`](plugins/ai-plugins/scripts/ai-plugins.py).
-That script needs Python 3.9+ and `git`, and nothing else. You can also run it
-directly from anywhere inside the repo:
-
-```bash
-python3 plugins/ai-plugins/scripts/ai-plugins.py add owner/repo
-python3 plugins/ai-plugins/scripts/ai-plugins.py remove <name>
-python3 plugins/ai-plugins/scripts/ai-plugins.py update
-```
-
-All three commands keep the plugin lists sorted alphabetically, with
-`ai-plugins` first, in both marketplace files and the table above. They
-leave their edits uncommitted, so review them with `git diff` before
-committing. Run `claude plugin validate .` to check the Claude manifest.
+Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills add,
+remove, and re-pin plugins in both catalogs and the table above.
 
 Each plugin keeps its own upstream license; this repo adds no license of its
 own for the marketplace glue.
