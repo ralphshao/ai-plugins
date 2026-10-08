@@ -33,7 +33,7 @@ to users' plugin caches. Repo docs describe the new layout.
   tests / misses: nothing about README content.
 
 ## Steps
-- [ ] Move ai-plugins tests to `tests/ai_plugins/`, flow tests to
+- [x] Move ai-plugins tests to `tests/ai_plugins/`, flow tests to
       `tests/flow/` (drop `flow_` prefix), add `pytest.ini`; full suite green
       with same count
 - [ ] Add `plugins/ai-plugins/README.md`
