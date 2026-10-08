@@ -31,7 +31,7 @@ Collect these once, so each subagent doesn't repeat the work:
 
 ## 3. Review in parallel
 
-In one message, launch one `flow:code-reviewer` subagent per selected lens. Give each the same context block:
+In one message, launch one `flow:code-reviewer` subagent per selected lens (the correctness lens uses `flow:correctness-reviewer`). Give each the same context block:
 
 ```
 Scope: <the diff command>
@@ -44,7 +44,7 @@ Standards files: <paths>
 
 Then the lens brief:
 
-- **correctness** (pass `model: opus` and `effort: high`; otherwise the agent file's `claude-sonnet-5-5` at `medium` applies. The Agent tool takes only model aliases, so `opus` means the current Opus. On Codex, pass `model: gpt-6-astra` and `reasoning_effort: high` to `spawn_agent` instead): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
+- **correctness** (launch `flow:correctness-reviewer` instead, the same reviewer pinned to a stronger model; Codex: `flow-correctness-reviewer`): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
 - **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline below; report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
   Paste this smell baseline (from Fowler's *Refactoring*, ch. 3; list adapted from mattpocock/skills, MIT) into the standards brief:

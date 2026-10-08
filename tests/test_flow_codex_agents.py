@@ -14,7 +14,8 @@ from conftest import REPO_ROOT
 FLOW = REPO_ROOT / "plugins" / "flow"
 HOOK = FLOW / "hooks" / "codex_agents.py"
 RENDER = FLOW / "scripts" / "render_codex_agents.py"
-NAMES = {"flow-code-reviewer", "flow-review-validator", "flow-tester"}
+NAMES = {"flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator",
+         "flow-tester"}
 tomllib = pytest.importorskip("tomllib")  # Python 3.11+
 
 
@@ -151,3 +152,11 @@ def test_codex_settings_come_from_codex_keys():
                          ("codex-effort", "model_reasoning_effort")):
             value = re.search(rf"^{src}:\s*(\S+)$", text, re.M)
             assert shipped.get(key) == (value and value.group(1)), (source.name, key)
+
+
+def test_correctness_reviewer_is_code_reviewer_on_another_model():
+    # Only the frontmatter may differ: the instructions are code-reviewer's.
+    def body(name):
+        return (FLOW / "agents" / f"{name}.md").read_text(encoding="utf-8").split("\n---\n", 1)[1]
+    assert body("correctness-reviewer") == body("code-reviewer"), \
+        "copy agents/code-reviewer.md's body into agents/correctness-reviewer.md"
