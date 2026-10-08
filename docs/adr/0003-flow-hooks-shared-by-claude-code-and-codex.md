@@ -36,6 +36,12 @@ Codex behavior this decision relies on, as of openai/codex
   policy (`core/src/agent/role.rs`, `core/src/agent/child_config.rs`). The
   list of roles is read when the session loads its config. Each role file
   is read again at every spawn.
+- **No agents in plugins.** The plugin manifest accepts `skills`,
+  `mcpServers`, `apps`, and `hooks`, but no agents
+  (`plugin/src/manifest.rs`). Roles load only from config layers (user,
+  project, system, managed, session flags): `<config folder>/agents/*.toml`
+  and `[agents.<name>]` in a layer's `config.toml`
+  (`agent-roles/src/loader.rs`). A plugin is not a config layer.
 - **Windows.** Hooks run through `cmd.exe` (`COMSPEC`), which doesn't
   expand `${...}`. A hook entry can give a `commandWindows`, used instead
   of `command` on Windows (`config/src/hook_config.rs`). Claude Code's
@@ -50,9 +56,12 @@ Codex behavior this decision relies on, as of openai/codex
   `sandbox_mode`, so the generated role files no longer set it. A crash in
   the guard blocks the call for flow's agents and allows it for every other
   caller.
-- **A PreToolUse hook on `Agent` keeps the Codex agents current**
-  (`hooks/codex_agents.py`). On a `flow-*` spawn it rewrites out-of-date
-  role files and deletes generated ones that no agent matches. If the
+- **flow ships its Codex agents ready-made, and a PreToolUse hook on
+  `Agent` copies them** (`hooks/codex_agents.py`). The role files live in
+  `codex-agents/`, rendered from `agents/*.md` by
+  `scripts/render_codex_agents.py`, and a test fails when they drift. On a
+  `flow-*` spawn the hook rewrites out-of-date copies and deletes generated
+  ones that no agent matches. If the
   files are missing, it installs them and blocks that spawn, because Codex
   reads the list of roles only at session start. This replaces the
   `setup-codex` skill.
@@ -70,6 +79,13 @@ Codex behavior this decision relies on, as of openai/codex
 - **Keep `sandbox_mode` and `setup-codex`.** Rejected. The setting does
   nothing in Codex now. The skill had to be re-run by hand after every
   flow update.
+- **Ship the agents inside the plugin, with no copy.** Not possible: Codex
+  plugins can't declare agents (see Context).
+- **Point `[agents.<name>] config_file` in the user's `config.toml` at the
+  plugin's files.** Rejected. It still writes to the user's Codex config,
+  and the plugin cache path changes with every flow version.
+- **Render the role files in the hook at spawn time.** Rejected. The
+  shipped files are reviewable in diffs, and the hook only has to copy.
 - **Use the spawn hook to add instructions to subagent prompts, as
   context-mode does.** Rejected. Each flow agent carries its own
   instructions.
