@@ -234,12 +234,15 @@ How context-mode handles subagents, and what applies to flow:
       example, after an agent is renamed)? - answered yes
 - [x] Q6 Removing the `setup-codex` skill is a user-visible removal. Make
       the bump 0.3.0 instead of 0.2.2, still only when you say so? -
-      answered "No do it now": bump now, number still open (Q8)
-- [ ] Q8 Bump flow to 0.3.0 (recommended, a skill is removed) or 0.2.2? -
-      recommended: 0.3.0 - blocks: the bump commit only
+      answered no: "do it now" meant the Windows python case (Q2, built).
+      Version handled in Q8
+- [ ] Q8 Bump flow to 0.2.2 (user's choice) - waits for the user's
+      explicit go; never assumed - blocks: the bump commit only
 - [x] Q7 On approval, push `flow/flow-hooks-codex-parity` and open a draft
       PR (the flow plan phase does this)? - answered yes
 
 ## Status
-Awaiting GATE 1. Steps were built and pushed before approval by mistake;
-the user decides whether to keep or revert them.
+Awaiting GATE 1. Steps were built and pushed before approval by mistake.
+The user chose to keep them for review against this plan (option A).
+GATE 1 needs the user's explicit approval; answers to questions are not
+approval.
