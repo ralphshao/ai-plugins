@@ -17,7 +17,7 @@ claude plugin install <plugin-name>@ai-plugins
 
 ```bash
 codex plugin marketplace add ralphshao/ai-plugins
-codex plugin install <plugin-name>@ai-plugins
+codex plugin add <plugin-name>@ai-plugins
 ```
 
 ## Plugins
