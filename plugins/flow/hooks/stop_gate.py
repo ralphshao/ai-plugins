@@ -52,7 +52,11 @@ def active_plans(root):
     """(plan path, test command) for each plan the gate applies to."""
     plans = []
     for path in sorted(root.glob(".flow/*/plan.md")):
-        text = path.read_text(encoding="utf-8")
+        try:
+            text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            print(f"flow test gate: skipping {path}: {e}", file=sys.stderr)
+            continue
         if not section(text, "Status").strip().startswith("Approved"):
             continue
         if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.M):
@@ -76,12 +80,37 @@ def run(cmd, cwd, text=True):
     return out.stdout if out.returncode == 0 else None
 
 
+def git_toplevel(cwd):
+    """The git work tree containing cwd, or None. Warns when git fails for a
+    reason other than cwd not being in a repo: the gate then looks for plans
+    from cwd and, from a subdirectory, finds none."""
+    exe = shutil.which("git")
+    if not exe:
+        return None
+    try:
+        # LC_ALL=C: git translates "not a git repository".
+        out = subprocess.run([exe, "rev-parse", "--show-toplevel"], cwd=cwd,
+                             capture_output=True, text=True, timeout=5,
+                             env={**os.environ, "LC_ALL": "C"})
+    except (OSError, subprocess.TimeoutExpired) as e:
+        error = str(e)
+    else:
+        if out.returncode == 0 and out.stdout.strip():
+            return Path(out.stdout.strip())
+        if "not a git repository" in out.stderr:
+            return None
+        error = out.stderr.strip() or f"exit {out.returncode}"
+    print(f"flow test gate: `git rev-parse` failed ({error}); looking for "
+          f"plans from {cwd}.", file=sys.stderr)
+    return None
+
+
 def repo_root(cwd):
     """The git work tree, else the p4 client root containing cwd, else cwd."""
     cwd = Path(cwd).resolve()
-    top = run(["git", "rev-parse", "--show-toplevel"], cwd)
-    if top and top.strip():
-        return Path(top.strip())
+    top = git_toplevel(cwd)
+    if top:
+        return top
     info = run(["p4", "-ztag", "info"], cwd) or ""
     m = re.search(r"^\.\.\. clientRoot (.+)$", info, re.M)
     if m:

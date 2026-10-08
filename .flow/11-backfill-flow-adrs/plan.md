@@ -39,8 +39,8 @@ unreadable files.
       references (AGENTS.md, ADR links).
 - [x] Write ADRs 0001-0005 from `docs/plans/flow.md`.
 - [x] Delete `docs/plans/flow.md`; update AGENTS.md "Design records".
-- [ ] `stop_gate.py`: skip an unreadable plan with a warning (test first).
-- [ ] `stop_gate.py`: warn when git fails other than "not a repository"
+- [x] `stop_gate.py`: skip an unreadable plan with a warning (test first).
+- [x] `stop_gate.py`: warn when git fails other than "not a repository"
       (test first).
 - [ ] `format.py`: OSError in config checks counts as no config; catch
       errors per file (tests first).

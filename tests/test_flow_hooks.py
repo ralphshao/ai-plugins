@@ -137,20 +137,25 @@ def test_gate_always_runs_outside_git(tmp_path, tmp_path_factory):
     assert stop() == 2
 
 
+def fake_bin(tmp_path, name, script):
+    """A PATH with a `name` command that runs the Python script."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    path = bin_dir / f"{name}.py"
+    path.write_text(script)
+    if os.name == "nt":
+        (bin_dir / f"{name}.cmd").write_text(f'@"{sys.executable}" "{path}" %*\n')
+    else:
+        exe = bin_dir / name
+        exe.write_text(f"#!{sys.executable}\nexec(open({str(path)!r}).read())\n")
+        exe.chmod(0o755)
+    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+
+
 def fake_p4(tmp_path, client_root, code=0):
     """A PATH with a `p4` that reports client_root as the client and exits
     with code."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    script = bin_dir / "p4.py"
-    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
-    if os.name == "nt":
-        (bin_dir / "p4.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
-    else:
-        exe = bin_dir / "p4"
-        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
-        exe.chmod(0o755)
-    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+    return fake_bin(tmp_path, "p4", f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
 
 
 def test_gate_finds_plan_at_p4_client_root(tmp_path):
@@ -186,6 +191,34 @@ def test_gate_without_git_or_p4_uses_cwd(tmp_path):
     out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)},
                   env={**os.environ, "PATH": str(empty)})
     assert json.loads(out)["decision"] == "block"
+
+
+@pytest.mark.parametrize("make_bad", [
+    lambda p: p.write_bytes(b"caf\xe9\n"),  # not UTF-8
+    lambda p: p.mkdir(),  # reading it raises OSError
+], ids=["not-utf8", "unreadable"])
+def test_gate_skips_a_plan_it_cannot_read(repo, make_bad):
+    (repo / ".flow" / "a").mkdir(parents=True)
+    make_bad(repo / ".flow" / "a" / "plan.md")
+    gate(repo, plan())  # .flow/x/plan.md, a failing plan
+    out, err = hook("stop_gate.py", {"cwd": str(repo)})
+    assert json.loads(out)["decision"] == "block"
+    assert ".flow/a/plan.md" in err.replace(os.sep, "/")
+
+
+def fake_git(tmp_path, message):
+    return fake_bin(tmp_path, "git", f"import sys\nsys.stderr.write({message!r})\nraise SystemExit(128)\n")
+
+
+def test_gate_warns_when_git_fails(tmp_path):
+    env = fake_git(tmp_path, "fatal: detected dubious ownership\n")
+    _, err = hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env)
+    assert "dubious ownership" in err
+
+
+def test_gate_is_quiet_outside_a_git_repo(tmp_path):
+    env = fake_git(tmp_path, "fatal: not a git repository\n")
+    assert hook("stop_gate.py", {"cwd": str(tmp_path)}, env=env) == ("", "")
 
 
 def test_gate_finds_plan_in_linked_worktree(repo):
@@ -278,17 +311,7 @@ def test_format_hook_is_quiet_when_nothing_to_do(payload, tmp_path):
 
 def fake_gofmt(tmp_path):
     """A PATH whose `gofmt` appends a marker line to the file it formats."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    script = bin_dir / "gofmt.py"
-    script.write_text("import sys\nopen(sys.argv[-1], 'a').write('// formatted\\n')\n")
-    if os.name == "nt":
-        (bin_dir / "gofmt.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
-    else:
-        exe = bin_dir / "gofmt"
-        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
-        exe.chmod(0o755)
-    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+    return fake_bin(tmp_path, "gofmt", "import sys\nopen(sys.argv[-1], 'a').write('// formatted\\n')\n")
 
 
 def test_format_formats_each_file_in_a_patch(repo, tmp_path):
