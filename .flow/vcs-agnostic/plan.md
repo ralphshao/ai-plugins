@@ -8,7 +8,18 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 
 ## Acceptance criteria
 - VCS skills `vcs-git` and `vcs-perforce` each define: isolate, checkpoint,
-  diff-scope, publish, land.
+  diff-scope, publish, land, resolve-target.
+- deep-review reviews committed code: git `<sha>` (vs first parent) and
+  `a..b`; PR in any state (open: fetch `pull/<n>/head` if missing; merged:
+  merge commit vs base; closed: last head); submitted CL (`p4 describe
+  -du`); pending/shelved CL (`p4 describe -S -du`); Swarm review (completed:
+  committed CLs combined; open: latest shelved version).
+- Targets parse as `pr:<n>`, `cl:<n>`, `review:<n>`, `sha:<rev>`, bare
+  `a..b`, bare hex = sha; bare number/`#n` = PR in git, Swarm review if it
+  exists else CL in p4.
+- Git targets not matching the working copy are reviewed in a temporary
+  detached worktree (removed after); p4 targets are read with
+  `p4 print -q <file>@=<cl>`. Nothing is posted back.
 - Host skills `host-github` and `host-swarm` define any of the optional
   host operations: fetch-issue, fetch-review, open-draft, ready-for-review.
   host-github defines all four; host-swarm defines all but fetch-issue.
@@ -40,7 +51,7 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - `guard.check_bash` via the hook - catches: p4 allow/deny list / misses: real p4 behavior
 - `stop_gate.py` run as a hook with a fake `p4` on PATH, and in a linked git worktree - catches: root fallback order, worktree root / misses: real p4 info output variants
 - `format.ancestors` - catches: walk stops at P4CONFIG / misses: nothing relevant
-- layout test over skill files - catches: missing operation in a VCS skill, gh/Swarm/VCS commands leaking outside their skill / misses: prose quality
+- layout test over skill files - catches: missing operation (incl. resolve-target) in a VCS skill, gh/Swarm/VCS commands leaking outside their skill / misses: prose quality
 
 ## Steps
 - [ ] Add vcs-git skill
@@ -48,6 +59,7 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - [ ] Add host-github skill (all gh steps move here)
 - [ ] Add host-swarm skill
 - [ ] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
+- [ ] deep-review: committed targets (resolve-target in both VCS skills, fetch-review for merged/completed reviews, temp worktree, p4 print reads)
 - [ ] Generalize agents' scope wording (code-reviewer, review-validator, tester)
 - [ ] guard.py: p4 read-only allowlist + tests
 - [ ] stop_gate.py: p4 clientRoot fallback + tests (p4, linked worktree)
@@ -74,11 +86,14 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - Git: regular branches and worktrees both supported; branch in place is the default, worktree offered only when the default branch has unrelated changes; never check out the default branch; resume across worktrees - user wants both modes.
 - Perforce: CL workspace default, existing task/dev stream supported, streams created only on request, classic branches never created - stream/branch layout is a depot convention.
 
+- Committed-code review: sha and ranges, PR in any state, submitted/shelved CL, Swarm review in any state; prefixed target syntax with host-aware bare numbers; git temp detached worktree, p4 print at revision; no posting back - user wants reviews of already-committed code.
+
 ## Open questions
 - [x] Q1-Q7 interview round 1 - accepted all
 - [x] Q8 split VCS and review-host layers, Swarm in host-swarm - yes
 - [x] Q9 git worktrees and regular branches - yes, both
 - [x] Q10 Perforce CL workspaces and streams - yes
+- [x] Q11-Q16 committed-code review targets, reads, syntax, no posting - yes
 
 ## Status
 Awaiting GATE 1
