@@ -14,6 +14,7 @@ Never blocks: a formatter failure is reported on stderr and the edit stands.
 Codex's apply_patch sends no file_path, so this does nothing there.
 """
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -29,10 +30,12 @@ PRETTIER_CONFIGS = [".prettierrc", ".prettierrc.json", ".prettierrc.yaml",
 
 
 def ancestors(path):
-    """The file's directory and its parents, nearest first, up to the repo."""
+    """The file's directory and its parents, nearest first, up to the repo:
+    a git work tree, or a Perforce workspace marked by its P4CONFIG file."""
+    markers = {".git", ".p4config", os.environ.get("P4CONFIG") or ".p4config"}
     for d in path.parents:
         yield d
-        if (d / ".git").exists():
+        if any((d / m).exists() for m in markers):
             return
 
 

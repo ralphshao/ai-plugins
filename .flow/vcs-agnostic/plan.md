@@ -63,7 +63,7 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - [x] Generalize agents' scope wording (code-reviewer, review-validator, tester)
 - [x] guard.py: p4 read-only allowlist + tests
 - [x] stop_gate.py: p4 clientRoot fallback + tests (p4, linked worktree)
-- [ ] format.py: stop at P4CONFIG + test
+- [x] format.py: stop at P4CONFIG + test
 - [ ] Bump version to 0.2.0 (both manifests, README)
 
 ## Test command

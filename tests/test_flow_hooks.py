@@ -181,6 +181,19 @@ def test_format_stops_at_repo_root(fmt, tmp_path, monkeypatch):
     assert fmt.formatter(src) is None
 
 
+@pytest.mark.parametrize("marker", [".p4config", "p4env"])
+def test_format_stops_at_p4_workspace_root(fmt, tmp_path, monkeypatch, marker):
+    monkeypatch.setattr(fmt.shutil, "which", lambda name: f"/bin/{name}")
+    monkeypatch.setenv("P4CONFIG", "p4env")
+    (tmp_path / "ruff.toml").write_text("")
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    (ws / marker).write_text("P4CLIENT=ws\n")
+    src = ws / "src" / "a.py"
+    src.write_text("")
+    assert fmt.formatter(src) is None
+
+
 @pytest.mark.parametrize("payload", [
     {"tool_name": "Write", "tool_input": {"file_path": "does/not/exist.py"}},
     {"tool_name": "apply_patch", "tool_input": {"command": "*** Begin Patch"}},
