@@ -257,7 +257,5 @@ How context-mode handles subagents, and what applies to flow:
       PR (the flow plan phase does this)? - answered yes
 
 ## Status
-Awaiting GATE 1. Steps were built and pushed before approval by mistake.
-The user chose to keep them for review against this plan (option A).
-GATE 1 needs the user's explicit approval; answers to questions are not
-approval.
+Approved - building. GATE 1 approved explicitly by the user on 2026-10-08,
+after the steps were already built (kept for review, option A).
