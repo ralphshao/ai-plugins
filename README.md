@@ -36,12 +36,12 @@ codex plugin install <plugin-name>@ai-plugins
 ## Repo structure
 
 ```
-.claude-plugin/marketplace.json   # Claude Code marketplace catalog
 .agents/plugins/marketplace.json  # Codex marketplace catalog
+.claude-plugin/marketplace.json   # Claude Code marketplace catalog
+docs/adr/                         # architecture decision records
 plugins/                          # source for the local plugins
   ai-plugins/                     #   marketplace maintenance plugin
   flow/                           #   engineering workflow plugin
-docs/adr/                         # architecture decision records
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
   flow/                           #   tests for plugins/flow
