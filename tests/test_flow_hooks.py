@@ -84,6 +84,59 @@ def test_gate_reads_fenced_command(repo):
     assert gate(repo, text)["decision"] == "block"
 
 
+def counting_gate(repo, out):
+    """Run the gate with a passing command that counts its runs, and a
+    private temp folder for the gate's fingerprint, both in out (outside
+    the repo, where they'd change what git sees)."""
+    counter = out / "runs"
+    cmd = f'{PY} -c "open(r\'{counter}\', \'a\').write(\'x\')"'
+    tmp = out / "tmp"
+    tmp.mkdir()
+    env = {**os.environ, "TMPDIR": str(tmp), "TEMP": str(tmp), "TMP": str(tmp)}
+
+    def stop(text=None):
+        if text is not None:
+            (repo / ".flow" / "x").mkdir(parents=True, exist_ok=True)
+            (repo / ".flow" / "x" / "plan.md").write_text(text, encoding="utf-8")
+        assert hook("stop_gate.py", {"cwd": str(repo)}, env=env)[0] == ""
+        return len(counter.read_text()) if counter.exists() else 0
+    return stop, plan(command=cmd)
+
+
+def test_gate_skips_when_nothing_changed_since_a_pass(repo, tmp_path_factory):
+    stop, text = counting_gate(repo, tmp_path_factory.mktemp("out"))
+    (repo / "a.py").write_text("1\n")
+    assert stop(text) == 1
+    assert stop() == 1  # unchanged: skipped
+    (repo / ".flow" / "x" / "plan.md").write_text(text + "\n", encoding="utf-8")
+    assert stop() == 1  # plan edits don't count
+    (repo / "a.py").write_text("2\n")  # untracked file contents count
+    assert stop() == 2
+    git("add", "a.py", cwd=repo)
+    git("-c", "user.name=t", "-c", "user.email=t@example.com",
+        "commit", "-q", "-m", "a", cwd=repo)
+    assert stop() == 3  # new HEAD
+    assert stop() == 3
+    (repo / "a.py").write_text("3\n")  # tracked edit
+    assert stop() == 4
+    (repo / "a.py").write_bytes(b"caf\xe9\n")  # not UTF-8
+    assert stop() == 5
+    assert stop() == 5
+
+
+def test_gate_reruns_after_a_failure(repo):
+    assert gate(repo, plan())["decision"] == "block"
+    assert gate(repo)["decision"] == "block"  # a failure is never remembered
+
+
+def test_gate_always_runs_outside_git(tmp_path, tmp_path_factory):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    stop, text = counting_gate(ws, tmp_path_factory.mktemp("out"))
+    assert stop(text) == 1
+    assert stop() == 2
+
+
 def fake_p4(tmp_path, client_root, code=0):
     """A PATH with a `p4` that reports client_root as the client and exits
     with code."""

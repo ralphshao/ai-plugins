@@ -164,12 +164,12 @@ How context-mode handles subagents, and what applies to flow:
       `"$(command -v python3 || command -v python)" "${CLAUDE_PLUGIN_ROOT}/hooks/<name>.py"`.
       Add a layout test that every hook has both, and a test that runs one
       `command` through `sh` with only `python` on PATH.
-- [ ] docs: update the `guard.py` and `format.py` docstrings, and the
+- [x] docs: update the `guard.py` and `format.py` docstrings, and the
       flow skill's Codex section: the agents install themselves on the first
       spawn, and the `explorer` and `worker` fallback agents are not
       guarded. Add one line telling the user to accept the hook trust prompt
       on Codex.
-- [ ] stop gate (Q1): in a git repo, after a passing run, save a
+- [x] stop gate (Q1): in a git repo, after a passing run, save a
       fingerprint of `HEAD`, `git status --porcelain`, `git diff`, and the
       contents of untracked files.
       Skip the run when the current fingerprint matches. Store it in the

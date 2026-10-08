@@ -8,7 +8,11 @@ that command and, if it fails, blocks the stop with the tail of its output.
 It allows the stop when:
 - the plan has an unticked item under "## Open questions" (parked work
   waiting on the user), or
-- stop_hook_active is set (the agent already got one block this turn).
+- stop_hook_active is set (the agent already got one block this turn), or
+- in a git repo, nothing changed since the command last passed: same HEAD,
+  same staged and unstaged diff, same untracked files and contents. Files
+  under .flow/ don't count. The fingerprint lives in the system temp
+  folder, so losing it costs one extra run.
 
 The root is the git work tree, else the Perforce client root containing the
 current directory, else the current directory.
@@ -16,11 +20,14 @@ current directory, else the current directory.
 The command comes from the repo's own plan file, so this runs the repo's
 tests with the same trust as running them by hand.
 """
+import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 TIMEOUT = 600
@@ -56,14 +63,14 @@ def active_plans(root):
     return plans
 
 
-def run(cmd, cwd):
-    """stdout of cmd, or None if it's missing or fails."""
+def run(cmd, cwd, text=True):
+    """stdout of cmd (bytes unless text), or None if it's missing or fails."""
     exe = shutil.which(cmd[0])  # finds p4.bat/.cmd on Windows too
     if not exe:
         return None
     try:
         out = subprocess.run([exe, *cmd[1:]], cwd=cwd, capture_output=True,
-                             text=True, timeout=5)
+                             text=text, timeout=5)
     except (OSError, subprocess.TimeoutExpired):
         return None
     return out.stdout if out.returncode == 0 else None
@@ -84,12 +91,46 @@ def repo_root(cwd):
     return cwd
 
 
+def fingerprint(root):
+    """A hash of everything git sees outside .flow/, or None outside git."""
+    outside_flow = ["--", ".", ":(exclude).flow"]
+    # Bytes, not text: a diff of a non-UTF-8 file must not crash the gate.
+    parts = [run(["git", "rev-parse", "-q", "--verify", "HEAD"], root, False) or b""]
+    for cmd in (["git", "diff", "--binary"],
+                ["git", "diff", "--binary", "--cached"],
+                ["git", "ls-files", "-o", "--exclude-standard", "-z"]):
+        out = run(cmd + outside_flow, root, False)
+        if out is None:
+            return None
+        parts.append(out)
+    h = hashlib.sha256(b"\0".join(parts))
+    for name in filter(None, parts[-1].split(b"\0")):
+        try:
+            h.update((root / os.fsdecode(name)).read_bytes())
+        except OSError:
+            pass
+    return h.hexdigest()
+
+
+def pass_file(root, cmd):
+    key = hashlib.sha256(f"{root}\0{cmd}".encode("utf-8")).hexdigest()[:16]
+    return Path(tempfile.gettempdir()) / f"flow-stop-gate-{key}"
+
+
 def main():
     data = json.load(sys.stdin)
     if data.get("stop_hook_active"):
         return
     root = repo_root(data.get("cwd") or ".")
-    for path, cmd in active_plans(root):
+    plans = active_plans(root)
+    fp = fingerprint(root) if plans else None
+    for path, cmd in plans:
+        passed = pass_file(root, cmd)
+        try:
+            if fp and passed.read_text(encoding="utf-8") == fp:
+                continue
+        except OSError:
+            pass
         try:
             run = subprocess.run(cmd, shell=True, cwd=root, capture_output=True,
                                  text=True, timeout=TIMEOUT)
@@ -107,6 +148,11 @@ def main():
                            "park the blocker as an open question.\n\n" + tail),
             }))
             return
+        if fp:
+            try:
+                passed.write_text(fp, encoding="utf-8")
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":
