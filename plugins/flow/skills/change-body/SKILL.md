@@ -1,5 +1,5 @@
 ---
-name: change-description
+name: change-body
 description: The shape of a code review description (pull request, Swarm review, or changelist description) - a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating one.
 ---
 
