@@ -69,7 +69,7 @@ How context-mode handles subagents, and what applies to flow:
   already does the equivalent ("use the closest tool you do have").
 - It records subagent launches and results for its post-compaction resume
   snapshot. Not needed: flow keeps its task state in `plan.md`.
-- It sends no hook output to a subagent stop. Both hosts fire `Stop` only for
+- It registers no `SubagentStop` hook. Both hosts fire `Stop` only for
   the root turn and `SubagentStop` for a child turn (codex
   `core/src/hook_runtime.rs:400`). So `stop_gate.py` never runs the test
   command when a reviewer or tester returns. That is correct as it is.
