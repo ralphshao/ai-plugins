@@ -3,6 +3,7 @@
 import importlib.util
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -139,3 +140,11 @@ def test_installed_agents_are_the_shipped_copies(home, tmp_path):
     for shipped in (FLOW / "codex-agents").glob("*.toml"):
         assert (home / "agents" / shipped.name).read_text(encoding="utf-8") == \
             shipped.read_text(encoding="utf-8")
+
+
+def test_effort_carries_over_to_codex():
+    for source in (FLOW / "agents").glob("*.md"):
+        effort = re.search(r"^effort:\s*(\S+)$", source.read_text(encoding="utf-8"), re.M)
+        shipped = tomllib.loads((FLOW / "codex-agents" / f"flow-{source.stem}.toml")
+                               .read_text(encoding="utf-8"))
+        assert shipped.get("model_reasoning_effort") == (effort and effort.group(1))

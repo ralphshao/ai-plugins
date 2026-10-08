@@ -13,9 +13,11 @@ The conversion, per agents/<name>.md:
 - frontmatter `description` is copied as is.
 - the Markdown body becomes `developer_instructions`, after a preamble that
   maps Claude Code tool names to Codex ones.
-- `tools`, `model`, and other frontmatter are dropped: Codex roles can't
+- `effort` becomes `model_reasoning_effort`, with the same level name.
+- `tools`, `model`, and other frontmatter are dropped. Codex roles can't
   limit tools, and sandbox_mode is ignored in role files, so guard.py
-  enforces the limits on both hosts.
+  enforces the limits on both hosts. Claude model names have no Codex
+  equivalent, so a Codex agent runs on the parent session's model.
 
 Usage: python3 plugins/flow/scripts/render_codex_agents.py
 """
@@ -48,7 +50,7 @@ def parse(path):
     for key in ("name", "description"):
         if not fields.get(key):
             sys.exit(f"{path}: frontmatter has no {key}")
-    return fields["name"], fields["description"], m.group(2).strip()
+    return fields, m.group(2).strip()
 
 
 def toml_string(s):
@@ -58,14 +60,18 @@ def toml_string(s):
 
 def render(path):
     """(file name, TOML text) for one agents/<name>.md."""
-    name, description, body = parse(path)
+    fields, body = parse(path)
+    name = fields["name"]
+    effort = (f"model_reasoning_effort = {toml_string(fields['effort'])}\n"
+              if fields.get("effort") else "")
     # Codex ignores sandbox_mode in role files, so none is set; guard.py
     # enforces the reviewer and tester limits instead.
     return f"flow-{name}.toml", (
         f"{GENERATED}scripts/render_codex_agents.py from the flow plugin's agents/.\n"
         "# flow's hooks overwrite this file when flow updates; edits here are lost.\n"
         f"name = {toml_string('flow-' + name)}\n"
-        f"description = {toml_string(description)}\n"
+        f"description = {toml_string(fields['description'])}\n"
+        f"{effort}"
         f"developer_instructions = {toml_string(PREAMBLE + body)}\n"
     )
 

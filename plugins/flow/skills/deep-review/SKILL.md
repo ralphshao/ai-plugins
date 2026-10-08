@@ -44,7 +44,7 @@ Standards files: <paths>
 
 Then the lens brief:
 
-- **correctness** (pass `model: opus`): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
+- **correctness** (pass `model: opus` and `effort: high`; the agent's own `sonnet` and `medium` apply otherwise): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
 - **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline below; report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
   Paste this smell baseline (from Fowler's *Refactoring*, ch. 3; list adapted from mattpocock/skills, MIT) into the standards brief:
