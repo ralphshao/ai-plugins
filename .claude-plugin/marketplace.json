@@ -78,7 +78,7 @@
       "name": "flow",
       "source": "./plugins/flow",
       "description": "Engineering workflow: plan, build, review, and ship a change with two human gates",
-      "version": "0.3.0",
+      "version": "0.2.1",
       "author": {
         "name": "Ralph Shao"
       }
@@ -92,7 +92,7 @@
         "ref": "main"
       },
       "description": "Shape Claude Code output for an ADHD reader: lead with the next action, number steps, suppress tangents, restate state, make wins visible.",
-      "version": "0.3.0",
+      "version": "0.2.1",
       "author": {
         "name": "Ayoub G.",
         "url": "https://github.com/ayghri"

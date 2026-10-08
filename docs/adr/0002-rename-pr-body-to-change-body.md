@@ -13,7 +13,7 @@ descriptions. The name `pr-body` described only the first.
 Rename the skill to `change-body`: the body of a change, whatever the host
 calls it (PR body, review description, changelist description). #8 first
 shipped it as `change-description` in flow 0.2.0; #9 shortened it to
-`change-body` in 0.3.0.
+`change-body` in 0.2.1.
 
 ## Alternatives
 
@@ -29,4 +29,4 @@ shipped it as `change-description` in flow 0.2.0; #9 shortened it to
 ## Consequences
 
 `/flow:pr-body` (0.1.0) and `/flow:change-description` (0.2.0) no longer
-exist; invoke `/flow:change-body`. Flow moved to 0.3.0 for the second rename.
+exist; invoke `/flow:change-body`. Flow moved to 0.2.1 for the second rename.
