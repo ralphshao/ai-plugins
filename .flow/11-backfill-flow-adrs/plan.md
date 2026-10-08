@@ -44,7 +44,7 @@ unreadable files.
       (test first).
 - [x] `format.py`: OSError in config checks counts as no config; catch
       errors per file (tests first).
-- [ ] `guard.py` docstring: note the accepted tester gap.
+- [x] `guard.py` docstring: note the accepted tester gap.
 
 ## Test command
 `python3 -m pytest`
