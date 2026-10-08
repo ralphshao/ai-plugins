@@ -5,6 +5,7 @@
   "author": {
     "name": "Ralph Shao"
   },
+  "license": "MIT",
   "skills": "./skills/",
   "interface": {
     "displayName": "Flow",

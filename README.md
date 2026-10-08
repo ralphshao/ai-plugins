@@ -54,5 +54,6 @@ Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills
 
 ## License
 
-Each plugin keeps its own upstream license; this repo adds no license of its
-own for the marketplace glue.
+[MIT](LICENSE) covers this repo: the marketplace files and the local
+`ai-plugins` and `flow` plugins. Each remote plugin keeps its own upstream
+license.
