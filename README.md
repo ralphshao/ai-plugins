@@ -38,8 +38,9 @@ codex plugin install <plugin-name>@ai-plugins
 ```
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
 .agents/plugins/marketplace.json  # Codex marketplace catalog
-plugins/ai-plugins/               # marketplace maintenance plugin (source lives here)
-plugins/flow/                     # engineering workflow plugin (source lives here)
+plugins/                          # source for the two local plugins
+  ai-plugins/                     #   marketplace maintenance plugin
+  flow/                           #   engineering workflow plugin
 docs/adr/                         # architecture decision records
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
