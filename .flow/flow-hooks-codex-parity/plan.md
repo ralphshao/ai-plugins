@@ -187,6 +187,8 @@ How context-mode handles subagents, and what applies to flow:
   Findings).
 - Changing the plugin version (AGENTS.md says to ask; see Q3).
 - Editing `docs/plans/flow.md`: plans aren't maintained once implemented.
+- An ADR for this hook design and a Codex reference note: tracked in #11,
+  with the `docs/plans/flow.md` clean-up.
 
 ## Decisions
 - One shared `hooks/hooks.json` for both hosts - Codex reads the same path,
