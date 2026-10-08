@@ -40,37 +40,43 @@ def test_sh_wrapper_is_executable():
     assert os.access(RUN_SH, os.X_OK)
 
 
-# --- bash --------------------------------------------------------------------
+# --- both wrappers -----------------------------------------------------------
 
-@needs_bash
-def test_sh_update_runs_from_another_directory(market):
+WRAPPERS = [pytest.param(run_sh, id="sh", marks=needs_bash),
+            pytest.param(run_ps1, id="ps1", marks=needs_pwsh)]
+
+
+@pytest.mark.parametrize("run", WRAPPERS)
+def test_update_runs_from_another_directory(market, run):
     # The wrapper finds the script relative to itself, not the cwd.
     sub = market.path / "nested"
     sub.mkdir()
-    result = run_sh("update", cwd=sub)
+    result = run("update", cwd=sub)
     assert result.returncode == 0, result.stderr
     assert "No remote-ref plugins found" in result.stdout
 
 
-@needs_bash
-def test_sh_add_forwards_all_arguments(market, make_remote):
+@pytest.mark.parametrize("run", WRAPPERS)
+def test_add_forwards_all_arguments(market, make_remote, run):
     remote = make_remote("multi")
     remote.commit({
         "one/.claude-plugin/plugin.json": manifest("one"),
         "two/.claude-plugin/plugin.json": manifest("two"),
     })
-    result = run_sh("add", remote.slug, "--path", "two",
-                    "--description", "Two words", cwd=market.path)
+    result = run("add", remote.slug, "--path", "two",
+                 "--description", "Two words", cwd=market.path)
     assert result.returncode == 0, result.stderr
     assert market.plugin("two")["description"] == "Two words"
 
 
-@needs_bash
-def test_sh_remove_passes_exit_code_through(market):
-    result = run_sh("remove", "does-not-exist", cwd=market.path)
+@pytest.mark.parametrize("run", WRAPPERS)
+def test_remove_passes_exit_code_through(market, run):
+    result = run("remove", "does-not-exist", cwd=market.path)
     assert result.returncode == 1
     assert "No plugin named does-not-exist" in result.stderr
 
+
+# --- bash only ---------------------------------------------------------------
 
 @needs_bash
 def test_sh_without_python_3_9(market, tmp_path):
@@ -84,32 +90,3 @@ def test_sh_without_python_3_9(market, tmp_path):
                     env={**os.environ, "PATH": str(bin_dir)})
     assert result.returncode == 1
     assert "Python 3.9+ is required" in result.stderr
-
-
-# --- PowerShell --------------------------------------------------------------
-
-@needs_pwsh
-def test_ps1_update_runs(market):
-    result = run_ps1("update", cwd=market.path)
-    assert result.returncode == 0, result.stderr
-    assert "No remote-ref plugins found" in result.stdout
-
-
-@needs_pwsh
-def test_ps1_add_forwards_all_arguments(market, make_remote):
-    remote = make_remote("multi")
-    remote.commit({
-        "one/.claude-plugin/plugin.json": manifest("one"),
-        "two/.claude-plugin/plugin.json": manifest("two"),
-    })
-    result = run_ps1("add", remote.slug, "--path", "two",
-                     "--description", "Two words", cwd=market.path)
-    assert result.returncode == 0, result.stderr
-    assert market.plugin("two")["description"] == "Two words"
-
-
-@needs_pwsh
-def test_ps1_remove_passes_exit_code_through(market):
-    result = run_ps1("remove", "does-not-exist", cwd=market.path)
-    assert result.returncode == 1
-    assert "No plugin named does-not-exist" in result.stderr

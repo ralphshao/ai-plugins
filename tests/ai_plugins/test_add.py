@@ -105,20 +105,13 @@ def test_add_claude_only(market, make_remote):
     assert "using Claude plugin root" in result.stdout
 
 
-def test_add_claude_only_nested(market, make_remote):
+@pytest.mark.parametrize("only", [CLAUDE, CODEX])
+def test_add_one_nested_manifest_roots_both_catalogs(market, make_remote, only):
     remote = make_remote("nest")
-    remote.commit({f"plugins/nest/{CLAUDE}": manifest("nest")})
+    remote.commit({f"plugins/nest/{only}": manifest("nest")})
     market.run("add", remote.slug, check=True)
-    assert market.plugin("nest", "codex")["source"]["path"] == "./plugins/nest"
     assert market.plugin("nest")["source"]["path"] == "plugins/nest"
-
-
-def test_add_codex_only_nested(market, make_remote):
-    remote = make_remote("cnest")
-    remote.commit({f"plugins/cnest/{CODEX}": manifest("cnest")})
-    market.run("add", remote.slug, check=True)
-    assert market.plugin("cnest")["source"]["path"] == "plugins/cnest"
-    assert market.plugin("cnest", "codex")["source"]["path"] == "./plugins/cnest"
+    assert market.plugin("nest", "codex")["source"]["path"] == "./plugins/nest"
 
 
 def test_add_codex_only(market, make_remote):

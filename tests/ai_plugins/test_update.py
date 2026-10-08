@@ -1,5 +1,7 @@
 """End-to-end tests for `ai-plugins.py update`, against local fake upstreams."""
 
+import pytest
+
 from conftest import codex_entry, manifest, pin
 
 CLAUDE = ".claude-plugin/plugin.json"
@@ -86,7 +88,8 @@ def test_update_git_subdir_reads_version_from_path(market, make_remote):
     assert market.plugin("inner", "codex")["source"]["path"] == "./plugins/inner"
 
 
-def test_update_follows_pinned_ref_not_default_branch(market, make_remote):
+@pytest.mark.parametrize("ref", ["stable", "refs/heads/stable"])
+def test_update_follows_pinned_ref_not_default_branch(market, make_remote, ref):
     remote = make_remote("tracked")
     base = remote.commit({CLAUDE: manifest("tracked")})
     remote.checkout("stable", create=True)
@@ -94,12 +97,12 @@ def test_update_follows_pinned_ref_not_default_branch(market, make_remote):
     remote.checkout("main")
     remote.commit({"m": "1"}, "Main work")
     remote.tag("v9.0.0")  # an explicit ref beats the latest release
-    pin(market, remote, base, ref="stable")
+    pin(market, remote, base, ref=ref)
 
     market.run("update", check=True)
     source = market.plugin("tracked")["source"]
     assert source["sha"] == stable
-    assert source["ref"] == "stable"
+    assert source["ref"] == ref
 
 
 def test_update_without_readme_row_or_codex_catalog(market, make_remote):
@@ -310,13 +313,14 @@ def test_update_pinned_ref_matches_branch_name_exactly(market, make_remote):
     assert market.plugin("suffix")["source"]["sha"] == stable
 
 
-def test_update_annotated_tag_ref_pins_the_commit(market, make_remote):
+@pytest.mark.parametrize("ref", ["pinned-here", "refs/tags/pinned-here"])
+def test_update_annotated_tag_ref_pins_the_commit(market, make_remote, ref):
     remote = make_remote("tagged")
     base = remote.commit({CLAUDE: manifest("tagged")})
     target = remote.commit({"t": "1"}, "Tagged")
     remote.tag("pinned-here", annotated=True)  # not a release tag, so followed as-is
     remote.commit({"m": "1"}, "Later")
-    pin(market, remote, base, ref="pinned-here")
+    pin(market, remote, base, ref=ref)
 
     market.run("update", check=True)
     assert market.plugin("tagged")["source"]["sha"] == target
@@ -335,18 +339,6 @@ def test_update_tag_beats_branch_of_the_same_name(market, make_remote):
 
     market.run("update", check=True)
     assert market.plugin("dual")["source"]["sha"] == tagged
-
-
-def test_update_fully_qualified_annotated_tag_pins_the_commit(market, make_remote):
-    remote = make_remote("fqtag")
-    base = remote.commit({CLAUDE: manifest("fqtag")})
-    target = remote.commit({"t": "1"}, "Tagged")
-    remote.tag("pinned-here", annotated=True)
-    remote.commit({"m": "1"}, "Later")
-    pin(market, remote, base, ref="refs/tags/pinned-here")
-
-    market.run("update", check=True)
-    assert market.plugin("fqtag")["source"]["sha"] == target
 
 
 def test_update_head_ref_follows_remote_head(market, make_remote):
@@ -413,20 +405,6 @@ def test_update_repairs_codex_sha_drift_when_claude_is_current(market, make_remo
     assert f"sha: {old[:12]} -> {new[:12]}" in result.stdout
     assert market.plugin("drifty", "codex")["source"]["sha"] == new
     assert market.plugin("drifty")["source"]["sha"] == new
-
-
-def test_update_follows_fully_qualified_ref(market, make_remote):
-    remote = make_remote("qualified")
-    base = remote.commit({CLAUDE: manifest("qualified")})
-    remote.checkout("stable", create=True)
-    stable = remote.commit({"s": "1"}, "Stable fix")
-    remote.checkout("main")
-    pin(market, remote, base, ref="refs/heads/stable")
-
-    market.run("update", check=True)
-    source = market.plugin("qualified")["source"]
-    assert source["sha"] == stable
-    assert source["ref"] == "refs/heads/stable"
 
 
 def test_update_names_the_file_whose_ref_is_stale(market, make_remote):
