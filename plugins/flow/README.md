@@ -81,8 +81,10 @@ The tests live outside this folder, so they don't ship with the plugin. From
 the repo root:
 
 ```bash
-python3 -m pytest tests/flow
+uv run --with pytest pytest tests/flow
 ```
+
+Without uv: `python3 -m pytest tests/flow`.
 
 `evals/` holds `claude plugin eval` cases. They stay inside the plugin
 because `claude plugin eval` reads its eval folder from below the plugin.

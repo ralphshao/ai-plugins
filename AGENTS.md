@@ -66,15 +66,24 @@ reachable from `source.url` (+ `path`, for `git-subdir`).
 
 ## Tests
 
+From the repo root, with [uv](https://docs.astral.sh/uv/):
+
 ```bash
-python3 -m pip install pytest   # once
-python3 -m pytest               # from the repo root
+uv run --with pytest pytest                 # Python from .python-version (CI's main one)
+uv run --python 3.9 --with pytest pytest    # the oldest Python the plugins support
 ```
+
+Without uv: `python3 -m pip install pytest`, then `python3 -m pytest`.
+
+`.python-version` only picks the Python for development. The plugins
+themselves run on whatever `python3` the user has, using only the stdlib,
+which is why CI also runs the suite on 3.9. Don't add a `pyproject.toml`
+or dependencies.
 
 Tests are grouped by plugin: `tests/ai_plugins/` and `tests/flow/`, with
 the shared `conftest.py` and the catalog checks (`test_marketplace.py`)
-directly in `tests/`. Run one plugin's suite with
-`python3 -m pytest tests/flow`. Keep tests out of `plugins/`: a plugin's
+directly in `tests/`. Run one plugin's suite by naming its folder, e.g.
+`uv run --with pytest pytest tests/flow`. Keep tests out of `plugins/`: a plugin's
 whole folder is copied into every user's plugin cache on install. Test
 file names must stay unique across the subfolders (no `__init__.py`).
 
@@ -87,6 +96,7 @@ repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
 `https://github.com/` to point at them.
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
+Keep `.python-version` on the same version as CI's main matrix entry.
 When you change a script or hook, add or update a test for the new behavior.
 
 ## Maintenance script

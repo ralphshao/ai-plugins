@@ -55,8 +55,10 @@ The tests live outside this folder, so they don't ship with the plugin. From
 the repo root:
 
 ```bash
-python3 -m pytest tests/ai_plugins
+uv run --with pytest pytest tests/ai_plugins
 ```
+
+Without uv: `python3 -m pytest tests/ai_plugins`.
 
 They run offline against throwaway local git repos. `tests/test_marketplace.py`
 checks the catalogs themselves.
