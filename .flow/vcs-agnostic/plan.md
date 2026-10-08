@@ -96,4 +96,4 @@ VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
 - [x] Q11-Q16 committed-code review targets, reads, syntax, no posting - yes
 
 ## Status
-Awaiting GATE 1
+Approved - building
