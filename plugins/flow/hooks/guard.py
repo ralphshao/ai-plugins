@@ -4,7 +4,8 @@
 Claude Code ignores `hooks:` frontmatter on plugin agents, so the guards run
 from the plugin's hooks.json instead and pick a policy by `agent_type`:
 
-- flow:code-reviewer, flow:review-validator: read-only Bash, no writes.
+- flow:code-reviewer, flow:review-validator: read-only Bash (git, p4,
+  file commands), no writes.
 - flow:tester: read-only Bash plus test/coverage runners; writes to test
   files only.
 
@@ -24,6 +25,10 @@ TESTER = "flow:tester"
 
 GIT_READ = {"diff", "log", "show", "status", "blame", "ls-files", "grep",
             "rev-parse", "merge-base"}
+P4_READ = {"describe", "diff", "diff2", "print", "annotate", "filelog",
+           "files", "fstat", "opened", "changes", "info", "where", "have"}
+# Spec commands that only read with -o (no -o opens an editor or writes).
+P4_SPEC = {"change", "changelist", "client", "stream"}
 READ_CMDS = {"ls", "cat", "head", "tail", "wc", "grep", "rg", "find"}
 # Test runners: first word -> allowed second words (None = any).
 RUNNERS = {
@@ -95,6 +100,8 @@ def check_bash(cmd, runners):
             if i >= len(words) or words[i] not in GIT_READ:
                 raise Denied(
                     f"git subcommand not allowed: {' '.join(words[:i + 1])}")
+        elif head == "p4":
+            check_p4(words)
         elif runners and head in RUNNERS:
             allowed = RUNNERS[head]
             if allowed is not None and arg not in allowed:
@@ -104,6 +111,28 @@ def check_bash(cmd, runners):
                 raise Denied("python -m only for pytest, coverage, unittest")
         elif head not in READ_CMDS:
             raise Denied(f"command not allowed: {head}")
+
+
+def check_p4(words):
+    """Read-only p4 subcommands. Global flags other than -ztag are denied:
+    -c, -p, -u, -P, -x and friends pick another client, server, user, or a
+    file of commands."""
+    i = 1
+    while i < len(words) and words[i].startswith("-"):
+        if words[i] == "-ztag":
+            i += 1
+        elif words[i] == "-z" and words[i + 1:i + 2] == ["tag"]:
+            i += 2
+        else:
+            raise Denied(f"p4 global flag not allowed: {words[i]}")
+    sub, rest = (words[i], words[i + 1:]) if i < len(words) else (None, [])
+    if sub in P4_SPEC and rest[:1] == ["-o"] and not any(
+            w.startswith("-") for w in rest[1:]):
+        return
+    if sub not in P4_READ:
+        raise Denied(f"p4 subcommand not allowed: {' '.join(words[:i + 1])}")
+    if sub == "print" and any(w.startswith("-o") for w in rest):
+        raise Denied("p4 print -o writes a file")
 
 
 def check_test_path(path):

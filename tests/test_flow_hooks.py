@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 
@@ -15,9 +16,10 @@ PASS = f'{PY} -c "print(1)"'
 FAIL = f'{PY} -c "import sys; print(\'boom\'); sys.exit(3)"'
 
 
-def hook(name, payload):
+def hook(name, payload, env=None):
     p = subprocess.run([sys.executable, str(HOOKS / name)],
-                       input=json.dumps(payload), capture_output=True, text=True)
+                       input=json.dumps(payload), capture_output=True, text=True,
+                       env=env)
     assert p.returncode == 0, p.stderr
     return p.stdout.strip(), p.stderr
 
@@ -82,6 +84,68 @@ def test_gate_reads_fenced_command(repo):
     assert gate(repo, text)["decision"] == "block"
 
 
+def fake_p4(tmp_path, client_root, code=0):
+    """A PATH with a `p4` that reports client_root as the client and exits
+    with code."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "p4.py"
+    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\nraise SystemExit({code})\n")
+    if os.name == "nt":
+        (bin_dir / "p4.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
+    else:
+        exe = bin_dir / "p4"
+        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
+        exe.chmod(0o755)
+    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+
+
+def test_gate_finds_plan_at_p4_client_root(tmp_path):
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    gate(ws, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(ws / "src")}, env=fake_p4(tmp_path, ws))
+    assert json.loads(out)["decision"] == "block"
+
+
+def test_gate_ignores_p4_client_root_outside_cwd(tmp_path):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    gate(ws, plan())
+    other = tmp_path / "other"
+    other.mkdir()
+    out, _ = hook("stop_gate.py", {"cwd": str(ws)}, env=fake_p4(tmp_path, other))
+    assert json.loads(out)["decision"] == "block"  # falls back to cwd
+
+
+def test_gate_ignores_failing_p4(tmp_path):
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    gate(ws, plan())
+    env = fake_p4(tmp_path, ws, code=1)
+    assert hook("stop_gate.py", {"cwd": str(ws / "src")}, env=env)[0] == ""
+
+
+def test_gate_without_git_or_p4_uses_cwd(tmp_path):
+    empty = tmp_path / "empty-bin"
+    empty.mkdir()
+    gate(tmp_path, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(tmp_path)},
+                  env={**os.environ, "PATH": str(empty)})
+    assert json.loads(out)["decision"] == "block"
+
+
+def test_gate_finds_plan_in_linked_worktree(repo):
+    git("-c", "user.name=t", "-c", "user.email=t@example.com",
+        "commit", "-q", "--allow-empty", "-m", "init", cwd=repo)
+    wt = repo.parent / (repo.name + "-wt")
+    git("worktree", "add", "-q", "-b", "flow/x", str(wt), cwd=repo)
+    (wt / "src").mkdir()
+    gate(wt, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(wt / "src")})
+    assert json.loads(out)["decision"] == "block"
+
+
 # --- format.py ---------------------------------------------------------------
 
 @pytest.fixture(scope="module")
@@ -131,6 +195,19 @@ def test_format_stops_at_repo_root(fmt, tmp_path, monkeypatch):
     inner.mkdir()
     git("init", "-q", cwd=inner)
     src = inner / "a.py"
+    src.write_text("")
+    assert fmt.formatter(src) is None
+
+
+@pytest.mark.parametrize("marker", [".p4config", "p4env"])
+def test_format_stops_at_p4_workspace_root(fmt, tmp_path, monkeypatch, marker):
+    monkeypatch.setattr(fmt.shutil, "which", lambda name: f"/bin/{name}")
+    monkeypatch.setenv("P4CONFIG", "p4env")
+    (tmp_path / "ruff.toml").write_text("")
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    (ws / marker).write_text("P4CLIENT=ws\n")
+    src = ws / "src" / "a.py"
     src.write_text("")
     assert fmt.formatter(src) is None
 

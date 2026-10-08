@@ -1,6 +1,6 @@
 ---
-name: pr-body
-description: The shape of a pull request body - a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating a PR description.
+name: change-description
+description: The shape of a code review description (pull request, Swarm review, or changelist description) - a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating one.
 ---
 
 Adapted from the `pr` skill in mattpocock/skills (MIT), itself credited to
@@ -43,4 +43,5 @@ Rules:
   published artifacts); two-way otherwise.
 - **Decisions:** from a flow plan, every decision made between the gates.
   Omit the section when there are none.
-- Drop `Closes` when there is no issue.
+- `Closes #<n>` is the GitHub form; use the issue link the review host's
+  `fetch-issue` names, and drop the line when there is no issue.

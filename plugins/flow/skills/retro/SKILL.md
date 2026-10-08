@@ -15,8 +15,8 @@ Arguments: `$ARGUMENTS`
 ## 1. Gather evidence
 
 Default to the current session. Otherwise read what the user points at: a
-PR (`gh pr view`, its review comments), a branch's commits, or session
-logs. Note each place where the agent went wrong, slowed down, or needed
+review (the host's `fetch-review`, and its comments), a branch's commits
+or changelists, or session logs. Note each place where the agent went wrong, slowed down, or needed
 the user to step in.
 
 ## 2. Find candidates
