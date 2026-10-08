@@ -56,13 +56,13 @@ Codex behavior this decision relies on, as of openai/codex
   `sandbox_mode`, so the generated role files no longer set it. A crash in
   the guard blocks the call for flow's agents and allows it for every other
   caller.
-- **flow ships its Codex agents ready-made, and a PreToolUse hook on
-  `Agent` copies them** (`hooks/codex_agents.py`). The role files live in
-  `codex-agents/`, rendered from `agents/*.md` by
-  `scripts/render_codex_agents.py`, and a test fails when they drift. On a
-  `flow-*` spawn the hook rewrites out-of-date copies and deletes generated
-  ones that no agent matches. If the
-  files are missing, it installs them and blocks that spawn, because Codex
+- **A PreToolUse hook on `Agent` converts flow's Claude agents into Codex
+  role files at spawn time and syncs them** (`hooks/codex_agents.py`).
+  `agents/*.md` is the only source. Each agent's Codex model and effort sit
+  in its own `codex-model` and `codex-effort` frontmatter keys, which
+  Claude Code ignores; Claude's `model`, `effort`, and `tools` are dropped.
+  On a `flow-*` spawn the hook rewrites out-of-date role files and deletes
+  generated ones that no agent matches. If the files are missing, it installs them and blocks that spawn, because Codex
   reads the list of roles only at session start. This replaces the
   `setup-codex` skill.
 - **Every hook has a `commandWindows`**, and the POSIX `command` falls back
@@ -84,8 +84,13 @@ Codex behavior this decision relies on, as of openai/codex
 - **Point `[agents.<name>] config_file` in the user's `config.toml` at the
   plugin's files.** Rejected. It still writes to the user's Codex config,
   and the plugin cache path changes with every flow version.
-- **Render the role files in the hook at spawn time.** Rejected. The
-  shipped files are reviewable in diffs, and the hook only has to copy.
+- **Commit the rendered role files, with a script to regenerate them and a
+  test that they match `agents/*.md`.** Tried during #10, then rejected.
+  The hook would only copy, but each agent's instructions are one long
+  line in the TOML, so diffs of them can't be reviewed, and every agent
+  edit needs an extra step. Rendering at spawn time keeps one source with
+  no generated files; its cost is that a malformed `agents/*.md` makes the
+  hook exit 1 and the spawn go ahead with the old role file.
 - **Use the spawn hook to add instructions to subagent prompts, as
   context-mode does.** Rejected. Each flow agent carries its own
   instructions.

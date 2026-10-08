@@ -1,6 +1,5 @@
 """Tests for plugins/flow/hooks/codex_agents.py, run as the hook runs it."""
 
-import importlib.util
 import json
 import os
 import re
@@ -13,7 +12,6 @@ from conftest import REPO_ROOT
 
 FLOW = REPO_ROOT / "plugins" / "flow"
 HOOK = FLOW / "hooks" / "codex_agents.py"
-RENDER = FLOW / "scripts" / "render_codex_agents.py"
 NAMES = {"flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator",
          "flow-tester"}
 tomllib = pytest.importorskip("tomllib")  # Python 3.11+
@@ -125,29 +123,12 @@ def test_sync_leaves_no_temp_files(home, tmp_path):
         f"{n}.toml" for n in NAMES)
 
 
-def test_shipped_agents_match_their_sources():
-    spec = importlib.util.spec_from_file_location("render", RENDER)
-    render = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(render)
-    wanted = dict(render.render(p) for p in sorted((FLOW / "agents").glob("*.md")))
-    shipped = {p.name: p.read_text(encoding="utf-8")
-               for p in (FLOW / "codex-agents").glob("*.toml")}
-    assert shipped == wanted, (
-        "codex-agents/ is stale: run python3 plugins/flow/scripts/render_codex_agents.py")
-
-
-def test_installed_agents_are_the_shipped_copies(home, tmp_path):
+def test_codex_settings_come_from_codex_keys(home, tmp_path):
     spawn(home, tmp_path, {"agent_type": "flow-tester"})
-    for shipped in (FLOW / "codex-agents").glob("*.toml"):
-        assert (home / "agents" / shipped.name).read_text(encoding="utf-8") == \
-            shipped.read_text(encoding="utf-8")
-
-
-def test_codex_settings_come_from_codex_keys():
+    installed = agents(home / "agents")
     for source in (FLOW / "agents").glob("*.md"):
         text = source.read_text(encoding="utf-8")
-        shipped = tomllib.loads((FLOW / "codex-agents" / f"flow-{source.stem}.toml")
-                               .read_text(encoding="utf-8"))
+        shipped = installed[f"flow-{source.stem}"]
         for src, key in (("codex-model", "model"),
                          ("codex-effort", "model_reasoning_effort")):
             value = re.search(rf"^{src}:\s*(\S+)$", text, re.M)
