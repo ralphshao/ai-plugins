@@ -37,7 +37,7 @@ to users' plugin caches. Repo docs describe the new layout.
       `tests/flow/` (drop `flow_` prefix), add `pytest.ini`; full suite green
       with same count
 - [x] Add `plugins/ai-plugins/README.md`
-- [ ] Add `plugins/flow/README.md`
+- [x] Add `plugins/flow/README.md`
 - [ ] Update root README "Repo structure" and AGENTS.md "Tests" section
 - [ ] Set versions: ai-plugins 1.4.0 -> 0.2.1, flow 0.2.3 -> 0.2.4
 
