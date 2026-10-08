@@ -29,7 +29,7 @@ Copy `## Decisions` out of the plan first; the review body needs it. Then
 
 ## 4. Review request
 
-Write the review body with the `pr-body` skill, including the Decisions
+Write the review body with the `change-description` skill, including the Decisions
 list. `publish`, then `ready-for-review`.
 
 ## 5. GATE 2
