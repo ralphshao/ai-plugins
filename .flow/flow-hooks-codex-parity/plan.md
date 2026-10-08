@@ -52,6 +52,28 @@ From context-mode:
   matcher aliases make one shared file enough. Rewriting files at runtime
   also edits the plugin cache.
 
+How context-mode handles subagents, and what applies to flow:
+
+- It detects a subagent call by `agent_id` or `agent_type` on stdin
+  (`hooks/pretooluse.mjs:167`), then changes behavior for that call. flow's
+  guard already chooses a policy by `agent_type`. The gap is the Codex role
+  names (finding 3).
+- It hooks the spawn call itself: PreToolUse on `Agent` (Codex alias for
+  `spawn_agent`) appends routing rules to the subagent's prompt through
+  `updatedInput` (`core/routing.mjs:892`). Not needed for flow: each flow
+  agent carries its own instructions. On Codex, `updatedInput` also only
+  works on codex-cli 0.141.0 or later.
+- It tells a subagent only about tools the subagent can call. Subagents with
+  a fixed tool set get no ctx_* advice, and Claude Code subagents get a
+  ToolSearch step first for deferred tools. flow's Codex agent preamble
+  already does the equivalent ("use the closest tool you do have").
+- It records subagent launches and results for its post-compaction resume
+  snapshot. Not needed: flow keeps its task state in `plan.md`.
+- It sends no hook output to a subagent stop. Both hosts fire `Stop` only for
+  the root turn and `SubagentStop` for a child turn (codex
+  `core/src/hook_runtime.rs:400`). So `stop_gate.py` never runs the test
+  command when a reviewer or tester returns. That is correct as it is.
+
 ## Acceptance criteria
 - A Codex `flow-code-reviewer` or `flow-review-validator` subagent gets the
   same Bash rules as on Claude Code, and its `apply_patch` call is denied.
@@ -110,6 +132,12 @@ From context-mode:
 - Shared `hooks/patch.py` instead of copying the parser into two scripts -
   both hooks need the same header rules, and the scripts already sit in one
   folder that Python puts on `sys.path`.
+- No hook on subagent spawn (`Agent` / `spawn_agent`) and no
+  `SubagentStop` hook - flow's agents carry their own instructions, and
+  nothing in flow needs to run when a subagent returns.
+- Read the patch from `tool_input.command` only - the current Codex source
+  sends only that key. context-mode also reads `patch`, but no current
+  Codex build sends it.
 
 ## Open questions
 - [ ] Q1 The stop gate runs the full test command at the end of every turn
