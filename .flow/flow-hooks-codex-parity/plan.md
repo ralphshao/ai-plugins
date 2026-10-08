@@ -172,6 +172,9 @@ How context-mode handles subagents, and what applies to flow:
 - [x] explicit approvals (user request): `flow`, `plan`, and `ship`
       skills and AGENTS.md say gate approval and version bumps are given
       only explicitly, never inferred from answers to other questions.
+- [x] ADRs (user request): ADR 3 for this hook design, with the Codex
+      source facts it relies on in its Context; ADR 4 for explicit gate
+      approval and version bumps.
 - [x] stop gate (Q1): in a git repo, after a passing run, save a
       fingerprint of `HEAD`, `git status --porcelain`, `git diff`, and the
       contents of untracked files.
@@ -187,8 +190,8 @@ How context-mode handles subagents, and what applies to flow:
   Findings).
 - Changing the plugin version (AGENTS.md says to ask; see Q3).
 - Editing `docs/plans/flow.md`: plans aren't maintained once implemented.
-- An ADR for this hook design and a Codex reference note: tracked in #11,
-  with the `docs/plans/flow.md` clean-up.
+- Backfilling ADRs for older flow decisions and deleting
+  `docs/plans/flow.md`: tracked in #11.
 
 ## Decisions
 - One shared `hooks/hooks.json` for both hosts - Codex reads the same path,
@@ -215,6 +218,9 @@ How context-mode handles subagents, and what applies to flow:
   otherwise skip the run.
 - Stop-gate fingerprint is git-only - a Perforce fingerprint needs more
   `p4` calls than it saves. Perforce keeps today's behavior.
+- Codex reference facts go in ADR 3's Context, not a separate note - they
+  are dated and back that one decision, and an ADR is never edited, which
+  suits facts pinned to one Codex commit.
 - AGENTS.md keeps `ai-plugins:update` mirroring upstream versions without a
   separate ask - running the update is the user's go, and the skill's
   documented behavior stays as it is.
