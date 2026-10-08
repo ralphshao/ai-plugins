@@ -5,7 +5,10 @@ phase, subagents for review and testing, hooks for the rules that must hold.
 It lives in this marketplace as a second local plugin next to `ai-plugins`,
 so any machine or cloud session gets it by installing from the marketplace.
 
-Status: design approved, not implemented.
+Status: implemented in #7, extended in #8. This plan is no longer maintained:
+the skill, agent, and hook files under `plugins/flow/` are the current source
+of truth, and later design decisions are in `docs/adr/` (VCS and review-host
+layers: [ADR 1](../adr/0001-flow-vcs-and-review-host-layers.md)).
 
 ## Goals
 

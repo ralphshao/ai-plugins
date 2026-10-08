@@ -100,6 +100,19 @@ above. It lists the lines that still mention the plugin, so update those by
 hand. All three leave their edits uncommitted. Review them with `git diff`
 before committing.
 
+## Versions
+
+Ask the user before changing any plugin's version, including which number
+to use. Change it per plugin entry, never with a search-and-replace across a
+file: several plugins can share a version string.
+
+## Design records
+
+`docs/plans/` holds design plans, which aren't maintained once implemented.
+`docs/adr/` holds architecture decision records: one numbered file per
+hard-to-reverse decision, never edited after acceptance. A changed decision
+gets a new ADR that supersedes the old one.
+
 ## Commit convention
 
 This repo pushes real commits per change (not squashed), with a body
