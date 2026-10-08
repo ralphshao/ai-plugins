@@ -25,11 +25,10 @@ pinned `sha` (and the `ref` it came from), not a relative path. See
 [Create the marketplace file](https://developers.openai.com/plugins/build/plugins)
 for the source schema.
 
-A repo's Claude and Codex manifests can sit at different depths. `caveman`
-and `avoid-ai-writing` each bundle both variants at *different*
-subdirectories, so the two marketplace files use different `path`s for the
-same plugin. `add` detects this; [AGENTS.md](../../AGENTS.md#path-quirks)
-lists which `path` each file uses.
+Some repos keep their Claude and Codex manifests at different depths, so
+the two marketplace files use different `path`s for the same plugin. `add`
+detects this; [AGENTS.md](../../AGENTS.md#path-quirks) lists which plugins
+do it and the `path` each file uses.
 
 ## Requirements
 
