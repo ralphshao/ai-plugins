@@ -44,8 +44,8 @@ before the review is marked ready.
 
 ## Agents
 
-`code-reviewer`, `correctness-reviewer` (same instructions on a stronger
-model), `review-validator`, and `tester`. They are `flow:<name>` in Claude
+`code-reviewer`, `correctness-reviewer` (same instructions, with a stronger
+model or higher effort), `review-validator`, and `tester`. They are `flow:<name>` in Claude
 Code and `flow-<name>` in Codex.
 
 ## Hooks

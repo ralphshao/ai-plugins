@@ -11,7 +11,7 @@ table in sync.
 | --- | --- |
 | `ai-plugins:add <github-url-or-owner/repo>` | Pins a GitHub repo's latest release (or latest commit if it has none) and adds it to both catalogs and the README table. Detects where the repo's `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json` live. |
 | `ai-plugins:remove <plugin-name>` | Removes a plugin from both catalogs and the README table, then lists other lines that still mention it. |
-| `ai-plugins:update` | Re-pins every remote plugin to its latest upstream release (or latest commit) and prints a before/after SHA comparison. |
+| `ai-plugins:update` | Re-pins every remote plugin to its latest upstream release (or the latest commit of its default branch if it has no releases, or of its pinned non-default `ref`) and prints a before/after SHA comparison. |
 
 The root README's [Managing plugins](../../README.md#managing-plugins)
 section has the full flag reference. All three skills leave their edits
