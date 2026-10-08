@@ -103,8 +103,8 @@ paths with an unanchored regex and false-matched `andrej-**karpath**y-skills`.
 The README plugin table is matched by the link text in each row's first
 cell, parsed exactly.
 
-Plugin order is alphabetical (case-insensitive), with `ai-plugins` always
-first. It's the same in both marketplace files and in the README table.
+Plugin order is `ai-plugins` first, then the other local plugins, then
+the remote ones, each group alphabetical (case-insensitive). It's the same in both marketplace files and in the README table.
 The script re-sorts on every write, so hand edits get normalized the next
 time it runs.
 

@@ -13,9 +13,10 @@ table in sync.
 | `ai-plugins:remove <name>` | Removes the plugin from both marketplace files and the root README's plugin table, then lists any other lines in README.md and AGENTS.md that still mention it. |
 | `ai-plugins:update` | Uses `git ls-remote` to find each pinned plugin's latest release (or latest commit on its default branch if it has no release tags, or on its `ref` if that is some other branch), and prints the before/after SHA and commit subject. For anything that moved, it rewrites `source.sha` and `source.ref` in both marketplace files. If the plugin's version changed, it also updates `version` in `.claude-plugin/marketplace.json` and the plugin's row in the root README's table. |
 
-All three keep the plugin lists sorted alphabetically, with `ai-plugins`
-first, in both marketplace files and the README table. They leave their
-edits uncommitted, so review them with `git diff` before committing. Run
+All three keep the plugin lists sorted: `ai-plugins` first, then the other
+local plugins, then remote ones, each group alphabetical. This holds in
+both marketplace files and the README table. They leave their edits
+uncommitted, so review them with `git diff` before committing. Run
 `claude plugin validate .` to check the Claude manifest.
 
 ## How plugins are pinned

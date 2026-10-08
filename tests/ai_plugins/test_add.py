@@ -2,7 +2,7 @@
 
 import pytest
 
-from conftest import manifest
+from conftest import codex_entry, manifest
 
 CLAUDE = ".claude-plugin/plugin.json"
 CODEX = ".codex-plugin/plugin.json"
@@ -231,6 +231,20 @@ def test_add_keeps_lists_sorted(market, make_remote):
         remote.commit({CLAUDE: manifest(repo), CODEX: manifest(repo)})
         market.run("add", remote.slug, check=True)
     expected = ["ai-plugins", "Alpha", "mike", "zulu"]
+    assert market.names() == expected
+    assert market.names("codex") == expected
+    assert [r.split("](")[0].strip("| [`") for r in market.table_rows()] == expected
+
+
+def test_add_sorts_local_plugins_before_remote_ones(market, make_remote):
+    market.add_entry({"name": "zeta", "source": "./plugins/zeta"})
+    market.add_entry(codex_entry("zeta", {"source": "local", "path": "./plugins/zeta"}),
+                     "codex")
+    market.add_row("| [`zeta`](plugins/zeta) | Local | 1.0.0 |")
+    remote = make_remote("alpha")
+    remote.commit({CLAUDE: manifest("alpha"), CODEX: manifest("alpha")})
+    market.run("add", remote.slug, check=True)
+    expected = ["ai-plugins", "zeta", "alpha"]
     assert market.names() == expected
     assert market.names("codex") == expected
     assert [r.split("](")[0].strip("| [`") for r in market.table_rows()] == expected

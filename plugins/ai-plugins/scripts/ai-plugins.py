@@ -77,9 +77,26 @@ def kill_tree(proc):
     proc.kill()
 
 
-def sort_key(plugin_name):
-    # ai-plugins always first, everything else alphabetical.
-    return (plugin_name != SELF, plugin_name.lower())
+def sort_key(plugin_name, local=False):
+    # ai-plugins first, then the other local plugins, then remote ones; each
+    # group alphabetical.
+    return (plugin_name != SELF, not local, plugin_name.lower())
+
+
+def is_local(entry):
+    """True for a plugin whose source lives in this repo.
+
+    Claude's catalog uses a relative-path string; Codex's uses
+    {"source": "local", "path": ...}.
+    """
+    source = entry.get("source")
+    return isinstance(source, str) or (
+        isinstance(source, dict) and source.get("source") == "local")
+
+
+def local_names(*catalogs):
+    return {p["name"] for data in catalogs if data for p in data["plugins"]
+            if is_local(p)}
 
 
 # --- JSON catalogs --------------------------------------------------------
@@ -106,7 +123,7 @@ def write_file(path, text):
 
 
 def save_catalog(path, data):
-    data["plugins"].sort(key=lambda p: sort_key(p["name"]))
+    data["plugins"].sort(key=lambda p: sort_key(p["name"], is_local(p)))
     write_file(path, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
 
@@ -147,9 +164,9 @@ def read_readme_table():
     return lines, start, end, rows
 
 
-def write_readme_table(table, rows):
+def write_readme_table(table, rows, local):
     lines, start, end, _ = table
-    body = [rows[name] for name in sorted(rows, key=sort_key)]
+    body = [rows[name] for name in sorted(rows, key=lambda n: sort_key(n, n in local))]
     lines[start:end] = body
     write_file(README_FILE, "\n".join(lines))
 
@@ -405,7 +422,7 @@ def cmd_update(_args):
     if codex is not None:
         save_catalog(CODEX_FILE, codex)
     if table is not None:
-        write_readme_table(table, rows)
+        write_readme_table(table, rows, local_names(claude, codex))
     print_review_hint("Pinned refs (and versions, where changed) updated")
 
 
@@ -562,7 +579,7 @@ def cmd_add(args):
         rows = table[3]
         link = f"{web_url}/tree/HEAD/{claude_dir}" if claude_dir else web_url
         rows[name] = readme_row(name, link, description, version or "—")
-        write_readme_table(table, rows)
+        write_readme_table(table, rows, local_names(claude, codex))
     print()
     print_review_hint(f"Added {name}")
 
@@ -594,7 +611,7 @@ def cmd_remove(args):
         if path in removed:
             save_catalog(path, data)
     if in_table:
-        write_readme_table(table, rows)
+        write_readme_table(table, rows, local_names(*(data for _, data in catalogs)))
         removed.append(f"{README_FILE} plugin table")
 
     if not removed:

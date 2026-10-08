@@ -16,6 +16,15 @@
       }
     },
     {
+      "name": "flow",
+      "source": "./plugins/flow",
+      "description": "Engineering workflow: plan, build, review, and ship a change with two human gates",
+      "version": "0.2.4",
+      "author": {
+        "name": "Ralph Shao"
+      }
+    },
+    {
       "name": "andrej-karpathy-skills",
       "source": {
         "source": "url",
@@ -72,15 +81,6 @@
       "author": {
         "name": "Mert Koseoğlu",
         "url": "https://github.com/mksglu"
-      }
-    },
-    {
-      "name": "flow",
-      "source": "./plugins/flow",
-      "description": "Engineering workflow: plan, build, review, and ship a change with two human gates",
-      "version": "0.2.4",
-      "author": {
-        "name": "Ralph Shao"
       }
     },
     {

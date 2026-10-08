@@ -56,10 +56,12 @@ def test_catalog_is_in_canonical_script_format(ai_plugins, path, tmp_path):
 
 @pytest.mark.parametrize("path", [CLAUDE_FILE, CODEX_FILE])
 def test_catalog_names_unique_and_sorted(ai_plugins, path):
-    names = [p["name"] for p in load(path)["plugins"]]
+    plugins = load(path)["plugins"]
+    names = [p["name"] for p in plugins]
     assert len(names) == len(set(names))
     assert names[0] == "ai-plugins"
-    assert names == sorted(names, key=ai_plugins.sort_key)
+    local = ai_plugins.local_names(load(path))
+    assert names == sorted(names, key=lambda n: ai_plugins.sort_key(n, n in local))
 
 
 def test_remote_sources_are_pinned(claude, codex):
@@ -93,7 +95,8 @@ def test_codex_entries_have_policy_and_category(codex):
 
 def test_readme_table_lists_every_plugin_in_order(ai_plugins, claude, codex, table):
     names = {p["name"] for p in claude["plugins"] + codex["plugins"]}
-    assert list(table) == sorted(names, key=ai_plugins.sort_key)
+    local = ai_plugins.local_names(claude, codex)
+    assert list(table) == sorted(names, key=lambda n: ai_plugins.sort_key(n, n in local))
 
 
 def test_readme_versions_match_claude_catalog(claude, table):
