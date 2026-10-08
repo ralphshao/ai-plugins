@@ -4,7 +4,7 @@ description: The code-reviewer on a stronger model, for deep-review's correctnes
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
 model: claude-opus-5-5
 effort: high
-codex-model: gpt-6-astra
+codex-model: gpt-6.1-sol
 codex-effort: high
 skills:
   - andrej-karpathy-skills:karpathy-guidelines
