@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 
@@ -15,9 +16,10 @@ PASS = f'{PY} -c "print(1)"'
 FAIL = f'{PY} -c "import sys; print(\'boom\'); sys.exit(3)"'
 
 
-def hook(name, payload):
+def hook(name, payload, env=None):
     p = subprocess.run([sys.executable, str(HOOKS / name)],
-                       input=json.dumps(payload), capture_output=True, text=True)
+                       input=json.dumps(payload), capture_output=True, text=True,
+                       env=env)
     assert p.returncode == 0, p.stderr
     return p.stdout.strip(), p.stderr
 
@@ -80,6 +82,50 @@ def test_gate_without_plan_is_a_no_op(repo):
 def test_gate_reads_fenced_command(repo):
     text = plan().replace(f"`{FAIL}`", f"```bash\n{FAIL}\n```")
     assert gate(repo, text)["decision"] == "block"
+
+
+def fake_p4(tmp_path, client_root):
+    """A PATH with a `p4` whose `info` reports client_root as the client."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "p4.py"
+    script.write_text(f"print('... clientName ws')\nprint('... clientRoot {client_root.as_posix()}')\n")
+    if os.name == "nt":
+        (bin_dir / "p4.cmd").write_text(f'@"{sys.executable}" "{script}" %*\n')
+    else:
+        exe = bin_dir / "p4"
+        exe.write_text(f"#!{sys.executable}\nexec(open({str(script)!r}).read())\n")
+        exe.chmod(0o755)
+    return {**os.environ, "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}
+
+
+def test_gate_finds_plan_at_p4_client_root(tmp_path):
+    ws = tmp_path / "ws"
+    (ws / "src").mkdir(parents=True)
+    gate(ws, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(ws / "src")}, env=fake_p4(tmp_path, ws))
+    assert json.loads(out)["decision"] == "block"
+
+
+def test_gate_ignores_p4_client_root_outside_cwd(tmp_path):
+    ws = tmp_path / "ws"
+    ws.mkdir()
+    gate(ws, plan())
+    other = tmp_path / "other"
+    other.mkdir()
+    out, _ = hook("stop_gate.py", {"cwd": str(ws)}, env=fake_p4(tmp_path, other))
+    assert json.loads(out)["decision"] == "block"  # falls back to cwd
+
+
+def test_gate_finds_plan_in_linked_worktree(repo):
+    git("-c", "user.name=t", "-c", "user.email=t@example.com",
+        "commit", "-q", "--allow-empty", "-m", "init", cwd=repo)
+    wt = repo.parent / (repo.name + "-wt")
+    git("worktree", "add", "-q", "-b", "flow/x", str(wt), cwd=repo)
+    (wt / "src").mkdir()
+    gate(wt, plan())
+    out, _ = hook("stop_gate.py", {"cwd": str(wt / "src")})
+    assert json.loads(out)["decision"] == "block"
 
 
 # --- format.py ---------------------------------------------------------------

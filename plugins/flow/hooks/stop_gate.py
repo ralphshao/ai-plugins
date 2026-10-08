@@ -10,11 +10,15 @@ It allows the stop when:
   waiting on the user), or
 - stop_hook_active is set (the agent already got one block this turn).
 
+The root is the git work tree, else the Perforce client root containing the
+current directory, else the current directory.
+
 The command comes from the repo's own plan file, so this runs the repo's
 tests with the same trust as running them by hand.
 """
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -52,13 +56,32 @@ def active_plans(root):
     return plans
 
 
-def repo_root(cwd):
+def run(cmd, cwd):
+    """stdout of cmd, or None if it's missing or fails."""
+    exe = shutil.which(cmd[0])  # finds p4.bat/.cmd on Windows too
+    if not exe:
+        return None
     try:
-        out = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=cwd,
-                             capture_output=True, text=True)
-    except OSError:
-        return Path(cwd)
-    return Path(out.stdout.strip()) if out.returncode == 0 else Path(cwd)
+        out = subprocess.run([exe, *cmd[1:]], cwd=cwd, capture_output=True,
+                             text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return out.stdout if out.returncode == 0 else None
+
+
+def repo_root(cwd):
+    """The git work tree, else the p4 client root containing cwd, else cwd."""
+    cwd = Path(cwd).resolve()
+    top = run(["git", "rev-parse", "--show-toplevel"], cwd)
+    if top and top.strip():
+        return Path(top.strip())
+    info = run(["p4", "-ztag", "info"], cwd) or ""
+    m = re.search(r"^\.\.\. clientRoot (.+)$", info, re.M)
+    if m:
+        root = Path(m.group(1).strip()).resolve()
+        if root == cwd or root in cwd.parents:
+            return root
+    return cwd
 
 
 def main():
