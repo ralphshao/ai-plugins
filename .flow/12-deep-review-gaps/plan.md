@@ -31,6 +31,10 @@ A deep-review report never reads as complete when a lens or validator didn't run
 - A validator that fails twice keeps its file's findings as Likely "not validated", not dropped - dropping would hide findings the reviewers did make.
 - "Can't start" means the launch is refused or errors, not a reviewer returning zero findings.
 
+- Review F1 (UNSURE, Low): a subagent that starts but returns no report or no verdicts also counts as not run - fixing it serves #12's goal that a partial review never reads as full.
+- Review F4 (pre-existing, CONFIRMED): validators also get the `Read files:` line - one clause in a sentence this change already edits.
+- Review F2, F3 (Readability): refuted by the validator, not changed.
+
 ## Open questions
 
 ## Status

@@ -65,7 +65,7 @@ Then the lens brief:
   - Refused Bequest: a subclass that ignores or overrides most of what it inherits.
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
-If a reviewer can't start (the launch is refused or errors), retry it once. If it still can't start, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that runs and reports no findings did run.
+If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.
 
 ## 4. Merge
 
@@ -75,7 +75,7 @@ If no reviewer that ran reported any findings, skip to step 6.
 
 ## 5. Validate
 
-Group the merged findings by file. In one message, launch one `flow:review-validator` subagent per file, in parallel. Give it the scope, the intent, the spec (if any), the `References:` line, and that file's findings verbatim, each with its title, category, cited lines, current code, and proposed fix.
+Group the merged findings by file. In one message, launch one `flow:review-validator` subagent per file, in parallel. Give it the scope, the intent, the spec (if any), the `Read files:` and `References:` lines, and that file's findings verbatim, each with its title, category, cited lines, current code, and proposed fix.
 
 Apply its verdicts:
 
@@ -85,7 +85,7 @@ Apply its verdicts:
 
 Add anything listed under `Noticed:` to the report as Likely; it hasn't been validated.
 
-If a validator can't start, retry it once. If it still can't start, keep that file's findings, marked Likely and "not validated", and record the file as not validated.
+If a validator can't start or returns no verdicts, retry it once. If it still fails, keep that file's findings, marked Likely and "not validated", and record the file as not validated. Treat a finding the validator returned no verdict for the same way.
 
 ## 6. Report
 
