@@ -65,11 +65,13 @@ Then the lens brief:
   - Refused Bequest: a subclass that ignores or overrides most of what it inherits.
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
+If a reviewer can't start (the launch is refused or errors), retry it once. If it still can't start, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that runs and reports no findings did run.
+
 ## 4. Merge
 
 Pool the findings. Two findings are duplicates when they name the same `file:line` and the same problem; keep the one with the stronger evidence. Keep each pre-existing issue once.
 
-If no reviewer reported any findings, skip to step 6.
+If no reviewer that ran reported any findings, skip to step 6.
 
 ## 5. Validate
 
@@ -83,9 +85,11 @@ Apply its verdicts:
 
 Add anything listed under `Noticed:` to the report as Likely; it hasn't been validated.
 
+If a validator can't start, retry it once. If it still can't start, keep that file's findings, marked Likely and "not validated", and record the file as not validated.
+
 ## 6. Report
 
-Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, and the standards files used. Then give the findings in two sections, so one axis can't bury the other:
+Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
 - `## Correctness & spec`: Correctness, Spec, and silent-failure findings.
 - `## Standards & quality`: everything else.
@@ -96,6 +100,6 @@ Within each section, group by file and put the most severe first. Then add `## P
 - the worst issue in each section
 - how many findings validation dropped
 
-If nothing survived, say: "No issues found. Checked <lenses run>, spec (or: no spec), and standards."
+If nothing survived and every selected lens and validator ran, say: "No issues found. Checked <lenses run>, spec (or: no spec), and standards." If something didn't run, say instead: "No issues found in what ran", followed by the `Not checked:` line.
 
 If `resolve-target` made a temporary checkout, remove it as the VCS skill says, even when the review stopped early. Never post the findings to the review host; the report stays here.

@@ -15,7 +15,7 @@ A deep-review report never reads as complete when a lens or validator didn't run
 
 ## Steps
 - [x] Add References to step 2, the context block, and the validator inputs in step 5.
-- [ ] Add retry-once and not-run handling to steps 3 and 5, and to the report in step 6.
+- [x] Add retry-once and not-run handling to steps 3 and 5, and to the report in step 6.
 
 ## Test command
 `python3 -m pytest`
