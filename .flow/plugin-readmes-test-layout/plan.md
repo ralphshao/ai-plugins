@@ -22,6 +22,10 @@ to users' plugin caches. Repo docs describe the new layout.
 - `pytest.ini` sets `testpaths = tests`.
 - AGENTS.md "Tests" section describes the layout and per-plugin runs.
 - `claude plugin validate .` passes.
+- `ai-plugins` is version 0.2.1 and `flow` is 0.2.4 in each plugin's
+  `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`, in
+  `.claude-plugin/marketplace.json`, and in the README table
+  (`tests/test_marketplace.py` checks they agree).
 
 ## Seams under test
 - The pytest suite itself (collection count + pass) - catches: broken
@@ -35,6 +39,7 @@ to users' plugin caches. Repo docs describe the new layout.
 - [ ] Add `plugins/ai-plugins/README.md`
 - [ ] Add `plugins/flow/README.md`
 - [ ] Update root README "Repo structure" and AGENTS.md "Tests" section
+- [ ] Set versions: ai-plugins 1.4.0 -> 0.2.1, flow 0.2.3 -> 0.2.4
 
 ## Test command
 `python3 -m pytest`
@@ -43,7 +48,6 @@ to users' plugin caches. Repo docs describe the new layout.
 - Moving `plugins/flow/evals/`.
 - Editing ADRs (ADR 6 names `tests/test_flow_layout.py`; ADRs are never
   edited after acceptance).
-- Version bumps.
 
 ## Decisions
 - `plugins/flow/evals/` stays - `claude plugin eval` only reads an eval dir
@@ -57,6 +61,9 @@ to users' plugin caches. Repo docs describe the new layout.
   README's existing links; loaders ignore them.
 - Doc updates (plugin READMEs, root README, AGENTS.md) are in this change -
   user asked mid-plan.
+
+- Versions: ai-plugins reset to 0.2.1 (one-time exception, user's number),
+  flow 0.2.3 -> 0.2.4 - user gave both numbers.
 
 ## Open questions
 
