@@ -11,14 +11,12 @@ flow works in git repos (GitHub for reviews) and in Perforce workspaces
 
 ## Usage
 
-In Claude Code:
+In Claude Code and Codex:
 
 ```
 /flow:flow <prompt | #issue | issue URL>   start a task
 /flow:flow                                 resume the task in .flow/
 ```
-
-In Codex, invoke the `flow` skill the same way.
 
 flow sizes the task first:
 
