@@ -61,6 +61,16 @@ ALWAYS_DENIED = [
     "p4 -p ssl:evil:1666 info",
     "p4 -x cmds.txt edit",
     "p4",
+    "p4 -z foo opened",
+    "p4 -z",
+    "p4 -ztag",
+    "p4 -ztag edit a.py",
+    "p4 -ztag -c other opened",
+    "p4 -Ztag opened",
+    "p4 -ztag print -q -o out.py //depot/a.py",
+    "p4 client -d ws",
+    "p4 stream -i",
+    "p4 change -f -o 12345",
 ]
 RUNNERS = ["pytest -q", "python3 -m pytest tests", "go test ./...", "npm test",
            "npx vitest run"]
