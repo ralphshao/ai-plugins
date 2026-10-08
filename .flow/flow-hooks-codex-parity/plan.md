@@ -260,9 +260,9 @@ How context-mode handles subagents, and what applies to flow:
       the bump 0.3.0 instead of 0.2.2, still only when you say so? -
       answered no: "do it now" meant the Windows python case (Q2, built).
       Version handled in Q8
-- [ ] Q8 Bump flow to 0.2.2 (user's choice) in both `plugin.json` files,
-      the Claude marketplace entry, and the README table row - waits for the user's
-      explicit go; never assumed - blocks: the bump commit only
+- [x] Q8 Bump flow to 0.2.2 (user's choice) in both `plugin.json` files,
+      the Claude marketplace entry, and the README table row - approved
+      explicitly by the user, done
 - [x] Q7 On approval, push `flow/flow-hooks-codex-parity` and open a draft
       PR (the flow plan phase does this)? - answered yes
 
