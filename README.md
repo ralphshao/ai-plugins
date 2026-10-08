@@ -38,7 +38,7 @@ codex plugin install <plugin-name>@ai-plugins
 ```
 .claude-plugin/marketplace.json   # Claude Code marketplace catalog
 .agents/plugins/marketplace.json  # Codex marketplace catalog
-plugins/                          # source for the two local plugins
+plugins/                          # source for the local plugins
   ai-plugins/                     #   marketplace maintenance plugin
   flow/                           #   engineering workflow plugin
 docs/adr/                         # architecture decision records
