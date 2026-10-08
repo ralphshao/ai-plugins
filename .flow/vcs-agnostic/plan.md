@@ -2,16 +2,23 @@
 
 ## Goal
 flow runs the same plan/build/ship loop in a git repo or a Perforce
-workspace. Phase skills name VCS operations; a `vcs-git` or `vcs-perforce`
-skill says how to do each one.
+workspace, with or without a review host. Phase skills name operations; a
+VCS skill (`vcs-git`, `vcs-perforce`) and an optional review-host skill
+(`host-github`, `host-swarm`) say how to do each one.
 
 ## Acceptance criteria
-- `skills/vcs-git/SKILL.md` and `skills/vcs-perforce/SKILL.md` exist, each
-  defining the required operations: isolate, checkpoint, diff-scope,
-  publish-draft, ready-for-review, land. fetch-issue is optional: vcs-git
-  defines it, vcs-perforce doesn't.
-- Phase skills (flow, start, plan, ship) and deep-review contain no `git`
-  or `gh` commands; they call the operations and say how to pick the skill.
+- VCS skills `vcs-git` and `vcs-perforce` each define: isolate, checkpoint,
+  diff-scope, publish, land.
+- Host skills `host-github` and `host-swarm` define any of the optional
+  host operations: fetch-issue, fetch-review, open-draft, ready-for-review.
+  host-github defines all four; host-swarm defines all but fetch-issue.
+- With no host: open-draft/ready-for-review report the branch or CL for
+  review, GATE 2 tells the user to land it; fetch-issue falls back to a
+  connected tracker tool, else asks for the text.
+- Phase skills (flow, start, plan, ship) and deep-review contain no `git`,
+  `gh`, or `p4` commands; they call operations and say how to pick skills.
+- `gh` appears only in host-github; Swarm only in host-swarm.
+- pr-body stays, worded as the review-body template for any host.
 - Reviewer/tester agents take the diff command from the caller, git or p4.
 - guard.py lets reviewers run read-only p4 subcommands and blocks writes
   and connection-changing global flags.
@@ -24,12 +31,14 @@ skill says how to do each one.
 - `guard.check_bash` via the hook - catches: p4 allow/deny list / misses: real p4 behavior
 - `stop_gate.py` run as a hook with a fake `p4` on PATH - catches: root fallback order / misses: real p4 info output variants
 - `format.ancestors` - catches: walk stops at P4CONFIG / misses: nothing relevant
-- layout test over skill files - catches: missing required operation in a VCS skill, git/gh commands leaking back into phase skills / misses: prose quality
+- layout test over skill files - catches: missing operation in a VCS skill, gh/Swarm/VCS commands leaking outside their skill / misses: prose quality
 
 ## Steps
-- [ ] Add vcs-git skill (moves git + gh steps out of phases)
+- [ ] Add vcs-git skill
 - [ ] Add vcs-perforce skill
-- [ ] Rewrite flow, start, plan, ship, deep-review to use operations; layout test
+- [ ] Add host-github skill (all gh steps move here)
+- [ ] Add host-swarm skill
+- [ ] Rewrite flow, start, plan, ship, deep-review, pr-body to use operations; layout test
 - [ ] Generalize agents' scope wording (code-reviewer, review-validator, tester)
 - [ ] guard.py: p4 read-only allowlist + tests
 - [ ] stop_gate.py: p4 clientRoot fallback + test
@@ -40,22 +49,23 @@ skill says how to do each one.
 `python3 -m pytest -q`
 
 ## Out of scope
-- Perforce eval cases (no p4 server in CI).
-- VCSs other than git and Perforce.
-- Non-GitHub trackers for git repos.
+- Perforce/Swarm eval cases (no server in CI).
+- VCSs other than git and Perforce; hosts other than GitHub and Swarm.
 
 ## Decisions
-- Skill names `vcs-git`, `vcs-perforce`, model-invocable, `user-invocable: false` - prefix avoids triggering on every git mention.
-- Detect: git work tree first, then `p4 info` client root containing cwd, else ask - git is cheap and common.
-- Shared operation contract (isolate, checkpoint, diff-scope, publish-draft, ready-for-review, land) - phases stay VCS-free.
-- fetch-issue optional; start uses it if defined, else a connected tracker tool, else asks - Perforce has no issue tracker, and issues aren't a VCS concern.
-- Perforce: pending CL (task stream only if repo uses streams); checkpoint = shelve; Swarm review when present, else shelved CL; user submits; .flow files shelved in CL and reverted before ready.
-- gh issue/PR steps live in vcs-git.
+- Skill names `vcs-*` and `host-*`, model-invocable, `user-invocable: false` - prefix avoids triggering on every git mention.
+- Detect VCS: git work tree first, then `p4 info` client root containing cwd, else ask - git is cheap and common.
+- Detect host: host-github when origin URL is github.com and `gh` works; host-swarm when `p4 property -l -n P4.Swarm.URL` is set; else none.
+- Two layers: VCS (isolate, checkpoint, diff-scope, publish, land) and optional host (fetch-issue, fetch-review, open-draft, ready-for-review) - git has no PRs; GitHub and Swarm do.
+- Perforce: pending CL (task stream only if repo uses streams); checkpoint/publish = shelve; user submits; .flow files shelved in CL and reverted before ready.
+- Swarm in its own host skill - optional in p4 shops, REST API for fetch-review, own detection.
+- fetch-issue optional; no host or no fetch-issue -> tracker tool, else ask - issues aren't a VCS concern.
 - guard p4 read allowlist; stop_gate git -> p4 clientRoot -> cwd; format stops at P4CONFIG; tests for each.
 - No Perforce eval; bump to 0.2.0.
 
 ## Open questions
-- [x] Q1-Q7 interview round 1 - accepted all recommendations
+- [x] Q1-Q7 interview round 1 - accepted all
+- [x] Q8 split VCS and review-host layers, Swarm in host-swarm - yes
 
 ## Status
 Awaiting GATE 1
