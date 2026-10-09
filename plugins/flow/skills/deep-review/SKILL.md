@@ -47,22 +47,9 @@ References: <paths, or "none">
 Then the lens brief:
 
 - **correctness** (launch `flow:strong-reviewer` instead, the same reviewer pinned to a stronger model; Codex: `flow-strong-reviewer`): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
-- **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline below; report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
+- **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline (read it from the path given); report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
-  Paste this smell baseline (from Fowler's *Refactoring*, ch. 3; list adapted from mattpocock/skills, MIT) into the standards brief:
-
-  - Mysterious Name: the name doesn't reveal what it does or holds.
-  - Duplicated Code: the same logic shape in more than one hunk or file.
-  - Feature Envy: a function that uses another object's data more than its own.
-  - Data Clumps: the same few fields or params always travel together.
-  - Primitive Obsession: a string or number standing in for a domain concept.
-  - Repeated Switches: the same switch or if-cascade on the same type in several places.
-  - Shotgun Surgery: one logical change forces scattered edits across many files.
-  - Divergent Change: one module edited for several unrelated reasons.
-  - Speculative Generality: abstraction, parameters, or hooks no requirement asks for.
-  - Message Chains: long `a.b().c().d()` walks the caller shouldn't depend on.
-  - Middle Man: a function or class that mostly delegates onward.
-  - Refused Bequest: a subclass that ignores or overrides most of what it inherits.
+  Give the standards reviewer the path `${CLAUDE_SKILL_DIR}/references/smell-baseline.md` to Read for the baseline; don't paste it.
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
 If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.

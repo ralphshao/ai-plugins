@@ -117,7 +117,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] docs/adr: new ADR superseding ADR 0001's interview split.
 - [ ] plan: GATE 1 shows the full plan sections.
 - [x] deep-review: narrow the errors-lens trigger.
-- [ ] deep-review: move the smell baseline to references/.
+- [x] deep-review: move the smell baseline to references/.
 - [ ] deep-review: allowed-tools additions.
 - [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
   and test_codex_agents.py first (red), then agent, guard.py, skills, README.
