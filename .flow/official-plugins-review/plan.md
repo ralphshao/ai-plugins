@@ -58,6 +58,9 @@ Not flow, but found: `context-mode` is enabled twice in
   skips a missing preload with a debug-log warning.
 - AGENTS.md "Validating changes" says to run `plugin-dev:plugin-validator`
   and `plugin-dev:skill-reviewer` on plugin changes.
+- `plan` runs the interview until no decision is open for both Normal and
+  Large; flow/SKILL.md's "Large adds" no longer lists the interview.
+- A new ADR supersedes ADR 0001's "Large adds a full interview".
 - `tests/flow` passes.
 
 ## Seams under test
@@ -79,6 +82,8 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan: no-test-command note goes under Decisions; Test command left empty.
 - [ ] deep-review: name sibling files to Read instead of "the flow skill".
 - [ ] README: mention the history lens; list optional companion plugins.
+- [ ] plan + flow skills: Normal interview runs until no decision is open.
+- [ ] docs/adr: new ADR superseding ADR 0001's interview split.
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
 - [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
@@ -105,6 +110,9 @@ Not flow, but found: `context-mode` is enabled twice in
 - Companion skills stay soft preloads, not plugin.json `dependencies` -
   dependencies are hard (flow stops loading without them) and need
   cross-marketplace allowlisting; a missing preload is only skipped.
+- Normal interview matches Large (rounds until nothing is open) - user
+  chose it over capping at one round; avoids guessed defaults. Costs
+  Normal 1-2 extra rounds before GATE 1.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
