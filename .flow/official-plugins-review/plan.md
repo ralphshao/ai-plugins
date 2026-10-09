@@ -125,9 +125,8 @@ Not flow, but found: `context-mode` is enabled twice in
 `uv run --with pytest pytest tests/flow`
 
 ## Out of scope
-- Installing `security-guidance` (user's call; command given in chat).
 - Prior-PR-comment lens from `code-review` (needs a new host operation).
-- A security lens in deep-review (security-guidance covers it).
+- A security lens in deep-review - pending Q3.
 
 ## Decisions
 - History lens uses git log/blame only, not past PR comments - no new host
@@ -169,11 +168,14 @@ Not flow, but found: `context-mode` is enabled twice in
   keep history readable.
 - Task started under flow 0.1.0; brief backfilled with 0.2.4's VCS, host,
   and Isolation lines after the user updated - state matches 0.2.4 now.
+- No `security-guidance` - user finds it too heavy (per-turn Opus review,
+  commit reviews, SDK install at session start).
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 - [x] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
+- [ ] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
 
 ## Status
 Awaiting GATE 1
