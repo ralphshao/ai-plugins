@@ -15,12 +15,25 @@ to end with the 5-10 files most worth reading, and read those yourself
 before going on. Facts are your job: never ask the user something you can
 look up.
 
-## 2. Interview
+## 2. Draft approaches (Large only)
 
-Use the `interview` skill on the decisions the exploration left open, in
-rounds until no decision is open. Skip it if nothing is open.
+In one message, spawn two planning subagents (`Plan` in Claude Code,
+`explorer` in Codex) with the brief and the key files. One drafts the
+smallest change that meets the request, reusing what exists; the other
+drafts the cleanest structure for it. Each returns its approach: the
+files it touches, the shape of the change, and its trade-offs.
 
-## 3. Write the plan
+Compare the drafts. Each point where they differ is a decision for the
+interview, with your recommendation, so the user can take parts of both.
+Don't ask the user to pick a whole draft.
+
+## 3. Interview
+
+Use the `interview` skill on the decisions the exploration and the drafts
+left open, in rounds until no decision is open. Skip it if nothing is
+open.
+
+## 4. Write the plan
 
 Write `.flow/<slug>/plan.md`:
 
@@ -68,7 +81,7 @@ Rules:
 
 Checkpoint: `flow: plan <slug>`.
 
-## 4. GATE 1
+## 5. GATE 1
 
 Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
 Out of scope, and Decisions) and ask for approval. Stop and wait. Don't write code before approval.

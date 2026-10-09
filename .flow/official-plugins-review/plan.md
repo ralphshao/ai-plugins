@@ -106,7 +106,7 @@ Not flow, but found: `context-mode` is enabled twice in
   via `p4 annotate`/`p4 filelog`).
 - [x] deep-review: skip the history lens when no changed hunk has prior
   history; report it as skipped.
-- [ ] plan: Large tasks draft two contrasting approaches; the interview asks
+- [x] plan: Large tasks draft two contrasting approaches; the interview asks
   per difference.
 - [x] plan: exploration returns key files; read them.
 - [x] deep-review: keep reported severity on UNSURE findings.
