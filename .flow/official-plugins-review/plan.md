@@ -79,6 +79,10 @@ Not flow, but found: `context-mode` is enabled twice in
   (switch to Normal, run `start`). Never down to Trivial once a branch and
   brief exist. Each change updates `Size:` in brief.md and adds a reason
   under Decisions. GATE 1 shows the size.
+- deep-review runs a `security` lens (argument word `security`, and under
+  `all`) only when the diff's `+` lines touch a trust boundary: auth, shell
+  or exec, SQL, file paths, deserialization, HTML output, or secrets. It
+  reports only security findings, as Correctness, validated like the rest.
 - `tests/flow` passes.
 
 ## Seams under test
@@ -102,13 +106,14 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] deep-review: keep reported severity on UNSURE findings.
 - [ ] plan: no-test-command note goes under Decisions; Test command left empty.
 - [ ] deep-review: name sibling files to Read instead of "the flow skill".
-- [ ] README: mention the history lens; list optional companion plugins.
+- [ ] README: mention the history and security lenses; list optional companion plugins.
 - [ ] plan + flow skills: Normal interview runs until no decision is open.
 - [ ] docs/adr: new ADR superseding ADR 0001's interview split.
 - [ ] plan: GATE 1 shows the full plan sections.
 - [ ] deep-review: narrow the errors-lens trigger.
 - [ ] deep-review: move the smell baseline to references/.
 - [ ] deep-review: allowed-tools additions.
+- [ ] deep-review: conditional `security` lens.
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
@@ -126,7 +131,6 @@ Not flow, but found: `context-mode` is enabled twice in
 
 ## Out of scope
 - Prior-PR-comment lens from `code-review` (needs a new host operation).
-- A security lens in deep-review - pending Q3.
 
 ## Decisions
 - History lens uses git log/blame only, not past PR comments - no new host
@@ -170,12 +174,14 @@ Not flow, but found: `context-mode` is enabled twice in
   and Isolation lines after the user updated - state matches 0.2.4 now.
 - No `security-guidance` - user finds it too heavy (per-turn Opus review,
   commit reviews, SDK install at session start).
+- Conditional security lens instead of security-guidance - Q3, user said
+  yes; costs one reviewer only on diffs touching a trust boundary.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 - [x] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
-- [ ] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
+- [x] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
 
 ## Status
 Awaiting GATE 1
