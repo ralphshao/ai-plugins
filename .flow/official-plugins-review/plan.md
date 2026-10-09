@@ -131,6 +131,11 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,
   plugins/flow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json,
   and the root README table; last build step.
+- [x] guard.py: tester may run tests through `uv run`/`uvx` (safe options,
+  --with limited to test tools); backticks and $( allowed inside single
+  quotes. Tests first.
+- [x] guard.py + README: document that the guard doesn't run if Python
+  can't start.
 - [x] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
 
@@ -202,6 +207,11 @@ Not flow, but found: `context-mode` is enabled twice in
   through cmd.exe on CI.
 - No new ADR for the Windows command - ADR 8 requires a commandWindows
   but doesn't fix its interpreter; reversible.
+- Guard allows uv for the tester and single-quoted backticks - user said
+  yes after the subagent-run review: the tester couldn't run the repo's
+  own test command, and a reviewer couldn't grep for backticks.
+- Guard launch failure stays fail-open, documented - user's call; blocking
+  would stop the main session too on a machine without Python.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions

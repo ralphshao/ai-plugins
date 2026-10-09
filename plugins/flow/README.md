@@ -56,7 +56,8 @@ Claude Code and `flow-<name>` in Codex.
 `hooks/hooks.json` wires four hooks, shared by Claude Code and Codex:
 
 - `guard.py` keeps the reviewers read-only and limits `tester` to writing
-  test files.
+  test files. It runs only when Python starts: without a usable interpreter
+  the hook errors without blocking, and the agents run unguarded.
 - `codex_agents.py` converts `agents/*.md` into Codex role files and keeps
   them current, because Codex plugins can't ship agents.
 - `format.py` formats an edited file with a formatter the repo already uses

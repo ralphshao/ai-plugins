@@ -7,9 +7,11 @@ hooks.json instead and pick a policy by `agent_type`. Claude Code sends the
 plugin agent name (flow:tester); Codex sends the role name that
 codex_agents.py installs (flow-tester).
 
-- Reviewers (code-reviewer, strong-reviewer, review-validator): read-only Bash (git, p4,
-  file commands), no writes.
-- Tester: read-only Bash plus test/coverage runners; writes to test files
+- Reviewers (code-reviewer, strong-reviewer, review-validator): read-only
+  Bash (git, p4, file commands), no writes. Backticks and $( are allowed only
+  inside single quotes, where the shell treats them as text.
+- Tester: read-only Bash plus test/coverage runners, also through `uv run`
+  or `uvx` (with --with limited to test tools); writes to test files
   only. A test file it writes can still edit source when a runner runs it;
   that gap is accepted (ADR 4).
 
@@ -19,6 +21,11 @@ passes through. Exit 2 blocks the call and shows stderr to the agent.
 
 A guard bug fails closed for flow's agents (exit 2) and open for everyone
 else (exit 0), so it can't let a reviewer write or block the main session.
+That holds only once Python starts: if the hook command can't launch an
+interpreter (no python3, python, or py launcher with Python 3), the hook
+exits with a non-blocking error and the guard doesn't run at all. Python
+3.9+ on PATH is a requirement. Making a failed launch block would block every
+Bash, Write, and Edit in the main session too, on a machine without Python.
 """
 import json
 import re
@@ -53,6 +60,11 @@ RUNNERS = {
     "jest": None, "vitest": None,
 }
 PY_MODULES = {"pytest", "coverage", "unittest"}
+# uv run / uvx options allowed before the runner. --with only adds test tools:
+# an arbitrary package would install and run anything.
+UV_FLAGS = {"--offline", "--frozen", "--locked", "--no-sync", "--isolated"}
+UV_VALUE_FLAGS = {"--python", "-p", "--with"}
+UV_WITH = re.compile(r"^(pytest(-[\w-]+)?|coverage)([<>=!~].*)?$")
 # Flags that write files or run other programs.
 BAD_FLAGS = {"-exec", "-execdir", "-ok", "-okdir", "-delete", "-fprint",
              "-fprint0", "-fprintf", "-fls", "--pre", "-O",
@@ -73,8 +85,7 @@ def pipeline(cmd):
     A | inside quotes (grep -E "a|b", grep "x\\|y") is part of the pattern,
     not a pipe. Any other shell operator outside quotes is denied.
     """
-    # Quotes don't stop these from expanding, so check the raw string.
-    if re.search(r"`|\$\(|\n", cmd):
+    if "\n" in cmd or substitutes(cmd):
         raise Denied("no newlines or command substitution")
     lex = shlex.shlex(cmd, posix=True, punctuation_chars=True)
     lex.whitespace_split = True
@@ -94,6 +105,52 @@ def pipeline(cmd):
     return segments
 
 
+def substitutes(cmd):
+    """True if ` or $( would run a command: anywhere outside single quotes.
+    Double quotes don't stop them; single quotes do, and nothing escapes
+    inside single quotes."""
+    quote, i = None, 0
+    while i < len(cmd):
+        c = cmd[i]
+        if quote == "'":
+            if c == "'":
+                quote = None
+        elif c == "\\":
+            i += 1  # escapes the next character, outside single quotes
+        elif c == "`" or cmd.startswith("$(", i):
+            return True
+        elif c == '"':
+            quote = None if quote == '"' else '"'
+        elif c == "'" and quote is None:
+            quote = "'"
+        i += 1
+    return False
+
+
+def strip_uv(words):
+    """For `uv run ...` or `uvx ...`, check uv's own options and return the
+    runner command that follows them; otherwise return words unchanged."""
+    if words[0] == "uvx":
+        i = 1
+    elif words[:2] == ["uv", "run"]:
+        i = 2
+    else:
+        return words
+    while i < len(words) and words[i].startswith("-"):
+        flag = words[i]
+        if flag in UV_FLAGS:
+            i += 1
+        elif flag in UV_VALUE_FLAGS and i + 1 < len(words):
+            if flag == "--with" and not UV_WITH.match(words[i + 1]):
+                raise Denied(f"uv --with only for test tools: {words[i + 1]}")
+            i += 2
+        else:
+            raise Denied(f"uv option not allowed: {flag}")
+    if i >= len(words):
+        raise Denied("uv needs a test runner to run")
+    return words[i:]
+
+
 def check_bash(cmd, runners):
     for words in pipeline(cmd):
         if not words:
@@ -101,6 +158,8 @@ def check_bash(cmd, runners):
         part = " ".join(words)
         if any(w in BAD_FLAGS or w.startswith("--output") for w in words):
             raise Denied(f"flag not allowed in: {part}")
+        if runners:
+            words = strip_uv(words)
         head, arg = words[0], words[1] if len(words) > 1 else None
         if head == "git":
             # Skip global options that only pick the repo or disable the
