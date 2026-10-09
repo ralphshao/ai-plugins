@@ -7,11 +7,11 @@ allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Ba
 
 Orchestrate a review with the `flow:code-reviewer` and `flow:review-validator` subagents. You coordinate; the subagents read the code. Don't review the code yourself, and don't edit anything.
 
-On Codex, use the agent names from the `flow` skill's "Agent names on Codex" section.
+Some steps below point at sections of the `flow` skill. Read them from `${CLAUDE_SKILL_DIR}/../flow/SKILL.md` (the `flow` folder next to this skill's own); don't invoke `flow`, which would start or resume a task. On Codex, use the agent names from its "Agent names on Codex" section.
 
 ## 1. Pin the scope
 
-Arguments: `$ARGUMENTS`
+Arguments: `$ARGUMENTS` (on Codex: whatever the user passed with the request)
 
 Lens words (`correctness`, `standards`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
 
@@ -89,7 +89,7 @@ If a validator can't start or returns no verdicts, retry it once. If it still fa
 
 ## 6. Report
 
-Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
+Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
 - `## Correctness & spec`: Correctness, Spec, and silent-failure findings.
 - `## Standards & quality`: everything else.
