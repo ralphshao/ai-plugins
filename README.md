@@ -25,7 +25,7 @@ codex plugin add <plugin-name>@ai-plugins
 | Plugin | Description | Version |
 | --- | --- | --- |
 | [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 0.2.1 |
-| [`flow`](plugins/flow) | Engineering workflow: plan, build, review, and ship a change with two human gates | 0.2.4 |
+| [`flow`](plugins/flow) | Engineering workflow: plan, build, review, and ship a change with two human gates | 0.2.5 |
 | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Behavioral guidelines to reduce common LLM coding mistakes | 1.0.0 |
 | [avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) | Audit & rewrite content to remove AI writing patterns ("AI-isms") | 3.36.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
