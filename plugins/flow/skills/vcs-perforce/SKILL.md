@@ -64,7 +64,9 @@ or the stream (stream mode), plus the state changelist.
    submitted.
 2. Changelist mode: create the work changelist, described `flow: <slug>`.
    Other files already open in the workspace stay where they are; flow only
-   opens files into its own changelists.
+   opens files into its own changelists. Files the caller says belong to
+   this task (a Trivial edit that grew into Normal) move into it:
+   `p4 reopen -c <work cl> <files>`.
 3. Stream mode: stay on the stream. Each checkpoint gets its own changelist.
 
 ## checkpoint
@@ -80,7 +82,8 @@ Open new plan files and shelve the state changelist:
 ## diff-scope
 
 Changes to review or test, as a diff command, a change list, and a read
-root.
+root. There is no single base revision: each file's base is the revision the
+diff compares it against (its previous or have revision).
 
 This is read-only; the caller checkpoints first when it wants the shelf
 current.
@@ -135,7 +138,8 @@ The user lands the work; never do it yourself.
 ## resolve-target
 
 Turn a deep-review target into a diff command, intent, and how to read the
-files.
+files. As in `diff-scope`, each file's base is the revision the diff
+compares it against.
 
 A bare number or `#<n>`: if a review host is present, ask its
 `fetch-review` first; if no review has that ID, treat it as a changelist.

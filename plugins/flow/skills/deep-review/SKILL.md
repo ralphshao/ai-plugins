@@ -1,24 +1,24 @@
 ---
 name: deep-review
-description: Multi-pass review of uncommitted work, a branch, or committed code (git SHA or range, PR, Perforce changelist, Swarm review). Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, and silent failures when the diff touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
-argument-hint: "[target: sha:<rev> | <a>..<b> | pr:<n> | cl:<n> | review:<n> | #<n> | base-ref] [spec path] [correctness|standards|errors|all]"
-allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*), Bash(git merge-base:*), Bash(git symbolic-ref:*), Bash(git cat-file:*), Bash(git fetch origin pull/*), Bash(git worktree add --detach:*), Bash(git worktree remove:*), Bash(gh pr view:*), Bash(gh issue view:*), Bash(p4 -ztag info:*), Bash(p4 -ztag describe:*), Bash(p4 -ztag client -o:*), Bash(p4 -ztag stream -o:*), Bash(p4 info:*), Bash(p4 describe:*), Bash(p4 diff:*), Bash(p4 diff2:*), Bash(p4 opened:*), Bash(p4 changes:*), Bash(p4 property -l:*)
+description: Multi-pass review of uncommitted work, a branch, or committed code (git SHA or range, PR, Perforce changelist, Swarm review). Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, history, security when the diff touches a trust boundary, and silent failures when it touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
+argument-hint: "[target: sha:<rev> | <a>..<b> | pr:<n> | cl:<n> | review:<n> | #<n> | base-ref] [spec path] [correctness|standards|history|security|errors|all]"
+allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*), Bash(git merge-base:*), Bash(git symbolic-ref:*), Bash(git cat-file:*), Bash(git fetch origin pull/:*), Bash(git remote get-url:*), Bash(gh auth status), Bash(git worktree add --detach:*), Bash(git worktree remove:*), Bash(gh pr view:*), Bash(gh issue view:*), Bash(p4 -ztag info:*), Bash(p4 -ztag describe:*), Bash(p4 -ztag client -o:*), Bash(p4 -ztag stream -o:*), Bash(p4 info:*), Bash(p4 describe:*), Bash(p4 diff:*), Bash(p4 diff2:*), Bash(p4 opened:*), Bash(p4 changes:*), Bash(p4 property -l:*), Bash(p4 login -s:*)
 ---
 
 Orchestrate a review with the `flow:code-reviewer` and `flow:review-validator` subagents. You coordinate; the subagents read the code. Don't review the code yourself, and don't edit anything.
 
-On Codex, use the agent names from the `flow` skill's "Agent names on Codex" section.
+Some steps below point at sections of the `flow` skill. Read them from `${CLAUDE_SKILL_DIR}/../flow/SKILL.md` (the `flow` folder next to this skill's own); don't invoke `flow`, which would start or resume a task. On Codex, use the agent names from its "Agent names on Codex" section.
 
 ## 1. Pin the scope
 
-Arguments: `$ARGUMENTS`
+Arguments: `$ARGUMENTS` (on Codex: whatever the user passed with the request)
 
-Lens words (`correctness`, `standards`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
+Lens words (`correctness`, `standards`, `history`, `security`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
 
 - **Target** (`sha:<rev>`, `<a>..<b>`, `pr:<n>`, `cl:<n>`, `review:<n>`, `#<n>`, a bare number, bare hex, or a base ref): run the VCS skill's `resolve-target`. It may call the host's `fetch-review`.
 - **Nothing**: run `diff-scope`. Uncommitted work wins over the branch or changelist.
 
-Either way you get a diff command, the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
+Either way you get a diff command, its base revision (per file on Perforce), the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
 
 ## 2. Gather context
 
@@ -28,15 +28,18 @@ Collect these once, so each subagent doesn't repeat the work:
 - **Spec**: a spec path given in the arguments; otherwise issues referenced in the review body or descriptions (`#123`, `Closes #45`, a tracker key), fetched with `fetch-issue` or its no-host fallback. If there's none, note "no spec" and drop the Spec checks.
 - **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the read root and in each parent directory of a changed file (from the diff's file list).
 - **References**: sources reviewers can check findings against. List paths (not contents) of ADRs in the repo's ADR folder (`docs/adr/`, or wherever the repo keeps them) that mention a changed file or module, plus any local clones or docs of external systems the change depends on that the arguments, intent, spec, or standards files name. Don't search the disk for clones. If there are none, note "none".
-- **Error handling touched?** Grep the added lines of the diff (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `?.`, `?? `, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Note yes or no.
+- **Error handling touched?** Scan the added lines in the diff output (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Plain optional chaining (`?.`) and null-coalescing (`??`) don't count: they're everyday syntax in several languages. Note yes or no.
+- **Trust boundary touched?** Scan the `+` lines for code that handles auth or permissions, runs a shell or subprocess (`exec`, `spawn`, `system`, `subprocess`, backticks), builds SQL or other queries, builds file paths from input, deserializes data (`pickle`, `yaml.load`, `eval`, `unserialize`), writes HTML without escaping (`innerHTML`, `dangerouslySetInnerHTML`, `|safe`), or holds keys, tokens, or passwords. Note yes or no.
+- **History to check?** Yes when the diff changes or removes an existing line: a line starting with `-` inside a hunk (after an `@@` line). The `--- a/...` and `--- /dev/null` file headers come before a file's first `@@` and don't count. A diff that only adds lines, such as one made only of new files, has no history to check: note no.
 
 ## 3. Review in parallel
 
-In one message, launch one `flow:code-reviewer` subagent per selected lens (the correctness lens uses `flow:correctness-reviewer`). Give each the same context block:
+In one message, launch one `flow:code-reviewer` subagent per selected lens (the correctness and security lenses use `flow:strong-reviewer`). Give each the same context block:
 
 ```
 Scope: <the diff command>
 Read files: <read root path, or the print command>
+Base: <the revision the diff compares against>
 Commits: <commits or changelists in range>
 Intent: <review title/body, or "descriptions only">
 Spec: <spec text, or "none">
@@ -46,23 +49,12 @@ References: <paths, or "none">
 
 Then the lens brief:
 
-- **correctness** (launch `flow:correctness-reviewer` instead, the same reviewer pinned to a stronger model; Codex: `flow-correctness-reviewer`): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
-- **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline below; report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
+- **correctness** (launch `flow:strong-reviewer` instead, the same reviewer pinned to a stronger model; Codex: `flow-strong-reviewer`): "Report only Correctness and Spec findings. Look for bugs the diff introduces: wrong results, broken references, unhandled errors, security holes, races, leaks. Check the diff against the spec if there is one. Skip everything else."
+- **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline (read it from the path given); report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
-  Paste this smell baseline (from Fowler's *Refactoring*, ch. 3; list adapted from mattpocock/skills, MIT) into the standards brief:
-
-  - Mysterious Name: the name doesn't reveal what it does or holds.
-  - Duplicated Code: the same logic shape in more than one hunk or file.
-  - Feature Envy: a function that uses another object's data more than its own.
-  - Data Clumps: the same few fields or params always travel together.
-  - Primitive Obsession: a string or number standing in for a domain concept.
-  - Repeated Switches: the same switch or if-cascade on the same type in several places.
-  - Shotgun Surgery: one logical change forces scattered edits across many files.
-  - Divergent Change: one module edited for several unrelated reasons.
-  - Speculative Generality: abstraction, parameters, or hooks no requirement asks for.
-  - Message Chains: long `a.b().c().d()` walks the caller shouldn't depend on.
-  - Middle Man: a function or class that mostly delegates onward.
-  - Refused Bequest: a subclass that ignores or overrides most of what it inherits.
+  Give the standards reviewer the path `${CLAUDE_SKILL_DIR}/references/smell-baseline.md` to Read for the baseline; don't paste it.
+- **history** (skip it when there's no history to check, even under `all`; run it when `history` is named explicitly): "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history with the VCS's read-only commands: annotate or blame them on the Base revision, then read the commits or changelists that last touched them. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
+- **security** (only when `all` is selected and a trust boundary was touched, or when `security` is named explicitly; launch `flow:strong-reviewer`, Codex: `flow-strong-reviewer`): "Report only security findings, as Correctness. Start from the changed lines and follow untrusted input to where it's used: injection (shell, SQL, path, template), missing or bypassable auth and permission checks, unsafe deserialization, unescaped output, SSRF, secrets in code or logs, and weak crypto or randomness used for security. For each finding, name the input, the path it takes, and the impact. Report only flaws the diff takes part in. Skip everything else."
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
 If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.
@@ -81,7 +73,7 @@ Apply its verdicts:
 
 - `CONFIRMED`: keep. If the fix is `CORRECTED`, use the corrected fix. If it `BREAKS` something, add that to the finding.
 - `REFUTED`: drop.
-- `UNSURE`: keep at Low severity, marked Likely, with the validator's reason.
+- `UNSURE`: keep at Low severity, marked Likely, with the validator's reason, and keep the severity the reviewer reported next to it: `Low (reported: High; UNSURE: <reason>)`. The `flow` skill escalates an UNSURE high-severity finding, so that signal must survive.
 
 Add anything listed under `Noticed:` to the report as Likely; it hasn't been validated.
 
@@ -89,9 +81,9 @@ If a validator can't start or returns no verdicts, retry it once. If it still fa
 
 ## 6. Report
 
-Use the `flow:code-reviewer` output format. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
+Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. Lenses that step 2's scans turned off (history with no history to check, security with no trust boundary, errors with no error handling) weren't selected: list them on one `Skipped:` line, e.g. `Skipped: history (only adds lines), security (no trust boundary)`, and never under `Not checked:`. If any selected lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
-- `## Correctness & spec`: Correctness, Spec, and silent-failure findings.
+- `## Correctness & spec`: Correctness, Spec, history, security, and silent-failure findings.
 - `## Standards & quality`: everything else.
 
 Within each section, group by file and put the most severe first. Then add `## Pre-existing`, if there are any. End with:

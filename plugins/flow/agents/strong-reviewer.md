@@ -1,6 +1,6 @@
 ---
-name: correctness-reviewer
-description: The code-reviewer on a stronger model, for deep-review's correctness lens. Same instructions and limits as code-reviewer. Use only when deep-review asks for it.
+name: strong-reviewer
+description: The code-reviewer on a stronger model, for deep-review's correctness and security lenses. Same instructions and limits as code-reviewer. Use only when deep-review asks for it.
 tools: Read, Grep, Glob, Bash, LSP, mcp__codegraph__codegraph_explore
 model: claude-opus-5-5
 effort: high

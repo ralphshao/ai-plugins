@@ -10,8 +10,8 @@ from conftest import REPO_ROOT
 
 GUARD = REPO_ROOT / "plugins" / "flow" / "hooks" / "guard.py"
 # Claude Code names, then the Codex role names codex_agents.py installs.
-REVIEWERS = ["flow:code-reviewer", "flow:correctness-reviewer", "flow:review-validator",
-             "flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator"]
+REVIEWERS = ["flow:code-reviewer", "flow:strong-reviewer", "flow:review-validator",
+             "flow-code-reviewer", "flow-strong-reviewer", "flow-review-validator"]
 TESTERS = ["flow:tester", "flow-tester"]
 # guard.py maps every name above to one of two policies, so the command and
 # path cases run once per policy; test_each_name_gets_its_policy covers the
@@ -42,6 +42,9 @@ READ_ONLY = [
     "p4 client -o",
     "p4 stream -o //depot/task-x",
     "p4 diff -du | head -40",
+    # Backticks and $( are plain text inside single quotes.
+    "grep -n '`git \\|`gh ' plugins/flow/skills/plan/SKILL.md",
+    "grep -rn '$(' src",
 ]
 ALWAYS_DENIED = [
     "git show -s d2472e6 && git diff --stat",
@@ -81,11 +84,23 @@ ALWAYS_DENIED = [
     "p4 client -d ws",
     "p4 stream -i",
     "p4 change -f -o 12345",
+    'grep "`id`" src',
+    'grep "$(id)" src',
+    "grep 'a'\"$(id)\" src",
+    "grep 'a\\' `id`",
 ]
 RUNNERS = ["pytest -q", "python3 -m pytest tests", "go test ./...", "npm test",
-           "npx vitest run"]
+           "npx vitest run", "uv run pytest -q",
+           "uv run --offline --with pytest pytest tests -q",
+           "uv run --python 3.9 --with pytest pytest",
+           "uv run --frozen --with pytest-cov --with coverage pytest",
+           "uv run python -m pytest", "uvx pytest -q"]
 BAD_RUNNERS = ["python3 -m pip install x", "python3 script.py", "npm install",
-               "npx prettier --write ."]
+               "npx prettier --write .", "uv run python script.py",
+               "uv run --with evil pytest", "uv run --with=evil pytest",
+               "uv run rm -rf x", "uv pip install x", "uv run", "uv run --python",
+               "uv run --index-url http://x pytest", "uv run --script x.py",
+               "uvx ruff check", "uvx --from evil pytest"]
 
 
 def run(payload):

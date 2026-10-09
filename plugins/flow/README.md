@@ -20,12 +20,15 @@ In Claude Code and Codex:
 
 flow sizes the task first:
 
-- **Trivial** (typos, docs, formatting): makes the change, runs the tests,
-  shows the diff. No gates.
+- **Trivial** (typos, docs, formatting): makes the change on its own
+  branch (or the worktree's, when the session starts in one), runs the
+  tests, commits, and pushes. Opening a review is up to you. No plan, no
+  gates.
 - **Normal** (a feature or bug fix): start, plan, GATE 1, build test-first,
   ship, GATE 2.
-- **Large** (crosses modules or redesigns an API): as Normal, plus a full
-  interview, ADRs for one-way-door decisions, and a test-coverage pass.
+- **Large** (crosses modules or redesigns an API): as Normal, plus two
+  contrasting plan drafts, ADRs for one-way-door decisions, and a
+  test-coverage pass.
 
 Task state lives in `.flow/<slug>/` (`brief.md`, `plan.md`) and is committed
 with the work, so a task can resume on another machine. `ship` removes it
@@ -39,23 +42,25 @@ before the review is marked ready.
 | `start`, `plan`, `ship` | The phases. `flow` runs them in order; you can also run one yourself. |
 | `tdd` | Red-green slices at the seams the plan lists. |
 | `interview` | Rounds of numbered questions with recommended answers until no decision is open. |
-| `deep-review` | Parallel reviewers, one per lens, with every finding checked by a validator. Also usable on its own. |
+| `deep-review` | Parallel reviewers, one per lens, with every finding checked by a validator. Lenses: correctness, standards, history (changes that undo an earlier fix; skipped when the diff only adds lines), security (only when the diff touches a trust boundary), and errors (only when it touches error handling). Also usable on its own. |
 | `change-body` | The shape of a PR, Swarm review, or changelist description. |
 | `retro` | Suggests environment fixes that would have prevented a session's mistakes. |
 | `vcs-git`, `vcs-perforce`, `host-github`, `host-swarm` | How each VCS and review-host operation runs. Loaded by the other skills, not invoked by you. |
 
 ## Agents
 
-`code-reviewer`, `correctness-reviewer` (same instructions, with a
-stronger model or higher effort), `review-validator`, and `tester`. They
-are `flow:<name>` in Claude Code and `flow-<name>` in Codex.
+`code-reviewer`, `strong-reviewer` (same instructions, with a
+stronger model or higher effort; runs the correctness and security
+lenses), `review-validator`, and `tester`. They are `flow:<name>` in
+Claude Code and `flow-<name>` in Codex.
 
 ## Hooks
 
 `hooks/hooks.json` wires four hooks, shared by Claude Code and Codex:
 
 - `guard.py` keeps the reviewers read-only and limits `tester` to writing
-  test files.
+  test files. It runs only when Python starts: without a usable interpreter
+  the hook errors without blocking, and the agents run unguarded.
 - `codex_agents.py` converts `agents/*.md` into Codex role files and keeps
   them current, because Codex plugins can't ship agents.
 - `format.py` formats an edited file with a formatter the repo already uses
@@ -70,6 +75,11 @@ this plugin.
 
 - Python 3.9+ on PATH, for the hooks.
 - `git` or `p4`. `gh` or the GitHub MCP tools for GitHub reviews.
+- On Windows (Codex), the `py` launcher or `python` on PATH.
+
+Optional: the reviewers preload `andrej-karpathy-skills:karpathy-guidelines`
+and `ponytail:ponytail-review` when those plugins are installed, and run
+without them otherwise.
 
 ## Design
 
