@@ -20,8 +20,9 @@ In Claude Code and Codex:
 
 flow sizes the task first:
 
-- **Trivial** (typos, docs, formatting): makes the change, runs the tests,
-  shows the diff. No gates.
+- **Trivial** (typos, docs, formatting): makes the change on its own
+  branch (or the worktree's, when the session starts in one), runs the
+  tests, commits, and opens a review ready to land. No plan, no GATE 1.
 - **Normal** (a feature or bug fix): start, plan, GATE 1, build test-first,
   ship, GATE 2.
 - **Large** (crosses modules or redesigns an API): as Normal, plus two
