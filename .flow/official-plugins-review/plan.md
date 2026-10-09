@@ -121,7 +121,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] deep-review: allowed-tools additions.
 - [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
   and test_codex_agents.py first (red), then agent, guard.py, skills, README.
-- [ ] deep-review: conditional `security` lens on `flow:strong-reviewer`.
+- [x] deep-review: conditional `security` lens on `flow:strong-reviewer`.
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
