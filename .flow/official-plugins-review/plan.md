@@ -165,6 +165,10 @@ Not flow, but found: `context-mode` is enabled twice in
 - Re-size line format `Size: <old> -> <new> - <reason>` - existing eval
   graders match `Size:\W{0,4}<size>` on the first size, so they keep
   passing; no new evals in this change.
+- One PR for all steps - user's choice; sole reviewer, commits per step
+  keep history readable.
+- Task started under flow 0.1.0; brief backfilled with 0.2.4's VCS, host,
+  and Isolation lines after the user updated - state matches 0.2.4 now.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
