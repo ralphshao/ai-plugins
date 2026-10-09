@@ -104,7 +104,7 @@ Not flow, but found: `context-mode` is enabled twice in
 ## Steps
 - [x] deep-review: add the `history` lens (argument word, brief; Perforce
   via `p4 annotate`/`p4 filelog`).
-- [ ] deep-review: skip the history lens when no changed hunk has prior
+- [x] deep-review: skip the history lens when no changed hunk has prior
   history; report it as skipped.
 - [ ] plan: Large tasks draft two contrasting approaches; the interview asks
   per difference.
@@ -190,6 +190,9 @@ Not flow, but found: `context-mode` is enabled twice in
   now serves two lenses, so a topic name misleads. No model in the name:
   Codex runs it on GPT.
 - Keep 0.2.5 despite the rename - user's call after the semver note.
+- History lens skip test: diff has no `-` lines (only additions) - the
+  orchestrator can read that from the diff without running blame; an
+  added-only diff can't undo an earlier fix.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions

@@ -29,6 +29,7 @@ Collect these once, so each subagent doesn't repeat the work:
 - **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the read root and in each parent directory of a changed file (from the diff's file list).
 - **References**: sources reviewers can check findings against. List paths (not contents) of ADRs in the repo's ADR folder (`docs/adr/`, or wherever the repo keeps them) that mention a changed file or module, plus any local clones or docs of external systems the change depends on that the arguments, intent, spec, or standards files name. Don't search the disk for clones. If there are none, note "none".
 - **Error handling touched?** Scan the added lines in the diff output (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Plain optional chaining (`?.`) and null-coalescing (`??`) don't count: they're everyday syntax in several languages. Note yes or no.
+- **History to check?** Yes when the diff changes or removes an existing line: a `-` line in the diff output, not counting the `---` file headers. A diff that only adds lines, such as one made only of new files, has no history to check: note no.
 
 ## 3. Review in parallel
 
@@ -50,7 +51,7 @@ Then the lens brief:
 - **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline (read it from the path given); report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
   Give the standards reviewer the path `${CLAUDE_SKILL_DIR}/references/smell-baseline.md` to Read for the baseline; don't paste it.
-- **history**: "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history: in git, `git log -L <start>,<end>:<file>` or `git blame` on the pre-change revision, then `git show` on the commits that matter; in Perforce, `p4 annotate` and `p4 filelog`, then `p4 describe`. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
+- **history** (skip it when there's no history to check, even under `all`; run it when `history` is named explicitly): "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history: in git, `git log -L <start>,<end>:<file>` or `git blame` on the pre-change revision, then `git show` on the commits that matter; in Perforce, `p4 annotate` and `p4 filelog`, then `p4 describe`. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
 If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.
@@ -77,7 +78,7 @@ If a validator can't start or returns no verdicts, retry it once. If it still fa
 
 ## 6. Report
 
-Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
+Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If the history lens was skipped for lack of history, add `Skipped: history (diff only adds lines)`. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
 - `## Correctness & spec`: Correctness, Spec, and silent-failure findings.
 - `## Standards & quality`: everything else.
