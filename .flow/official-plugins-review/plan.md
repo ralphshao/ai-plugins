@@ -116,7 +116,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan + flow skills: Normal interview runs until no decision is open.
 - [ ] docs/adr: new ADR superseding ADR 0001's interview split.
 - [ ] plan: GATE 1 shows the full plan sections.
-- [ ] deep-review: narrow the errors-lens trigger.
+- [x] deep-review: narrow the errors-lens trigger.
 - [ ] deep-review: move the smell baseline to references/.
 - [ ] deep-review: allowed-tools additions.
 - [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py

@@ -28,7 +28,7 @@ Collect these once, so each subagent doesn't repeat the work:
 - **Spec**: a spec path given in the arguments; otherwise issues referenced in the review body or descriptions (`#123`, `Closes #45`, a tracker key), fetched with `fetch-issue` or its no-host fallback. If there's none, note "no spec" and drop the Spec checks.
 - **Standards files**: paths (not contents) of `CLAUDE.md`, `AGENTS.md`, and `CONTRIBUTING.md` at the read root and in each parent directory of a changed file (from the diff's file list).
 - **References**: sources reviewers can check findings against. List paths (not contents) of ADRs in the repo's ADR folder (`docs/adr/`, or wherever the repo keeps them) that mention a changed file or module, plus any local clones or docs of external systems the change depends on that the arguments, intent, spec, or standards files name. Don't search the disk for clones. If there are none, note "none".
-- **Error handling touched?** Grep the added lines of the diff (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `?.`, `?? `, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Note yes or no.
+- **Error handling touched?** Scan the added lines in the diff output (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Plain optional chaining (`?.`) and null-coalescing (`??`) don't count: they're everyday syntax in several languages. Note yes or no.
 
 ## 3. Review in parallel
 
