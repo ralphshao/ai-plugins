@@ -118,7 +118,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan: GATE 1 shows the full plan sections.
 - [x] deep-review: narrow the errors-lens trigger.
 - [x] deep-review: move the smell baseline to references/.
-- [ ] deep-review: allowed-tools additions.
+- [x] deep-review: allowed-tools additions.
 - [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
   and test_codex_agents.py first (red), then agent, guard.py, skills, README.
 - [ ] deep-review: conditional `security` lens on `flow:strong-reviewer`.
