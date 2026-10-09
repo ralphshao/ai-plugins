@@ -131,7 +131,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,
   plugins/flow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json,
   and the root README table; last build step.
-- [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
+- [x] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
 
 ## Test command

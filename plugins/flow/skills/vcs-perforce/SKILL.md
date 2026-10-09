@@ -64,7 +64,9 @@ or the stream (stream mode), plus the state changelist.
    submitted.
 2. Changelist mode: create the work changelist, described `flow: <slug>`.
    Other files already open in the workspace stay where they are; flow only
-   opens files into its own changelists.
+   opens files into its own changelists. Files the caller says belong to
+   this task (a Trivial edit that grew into Normal) move into it:
+   `p4 reopen -c <work cl> <files>`.
 3. Stream mode: stay on the stream. Each checkpoint gets its own changelist.
 
 ## checkpoint

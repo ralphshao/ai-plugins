@@ -36,7 +36,8 @@ Don't ask the user to pick a whole draft.
 
 Use the `interview` skill on the decisions the exploration and the drafts
 left open, in rounds until no decision is open. Skip it if nothing is
-open.
+open. Skip the interview's closing confirmation: GATE 1 shows the decisions
+and asks once, so a "yes" to a summary can't pass for approval.
 
 ## 4. Write the plan
 
@@ -83,17 +84,20 @@ Rules:
   leave the Test command section with no lines at all, not even a
   placeholder: the stop-time gate runs its first line as a command.
 - Record interview answers under Decisions.
+- Large: add one step per one-way-door decision to write its ADR. The
+  `flow:tester` pass belongs to `ship` and needs no step.
 
 Checkpoint: `flow: plan <slug>`.
 
 ## 5. GATE 1
 
 Re-size first against the written plan, as after exploring: the interview
-can grow the scope. Going up adds Large's ADR and tester steps to the plan
-but not the drafts, since the design is settled; going down drops them.
+can grow the scope. Going up adds Large's ADR steps to the plan but not the
+drafts, since the design is settled; going down drops them. `checkpoint`
+if the size changed.
 
 Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
-Out of scope, and Decisions) and ask for approval. Stop and wait. Don't write code before approval.
+Out of scope, Decisions, and Open questions) and ask for approval. Stop and wait. Don't write code before approval.
 
 Approval must be explicit: the user says the plan is approved, or to build
 it. Answering open questions, saying "yes" to one of them, or "do it now"

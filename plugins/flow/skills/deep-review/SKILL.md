@@ -18,7 +18,7 @@ Lens words (`correctness`, `standards`, `history`, `security`, `errors`, `all`) 
 - **Target** (`sha:<rev>`, `<a>..<b>`, `pr:<n>`, `cl:<n>`, `review:<n>`, `#<n>`, a bare number, bare hex, or a base ref): run the VCS skill's `resolve-target`. It may call the host's `fetch-review`.
 - **Nothing**: run `diff-scope`. Uncommitted work wins over the branch or changelist.
 
-Either way you get a diff command, the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
+Either way you get a diff command, its base (the revision it compares against: for uncommitted work, the current one), the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
 
 ## 2. Gather context
 
@@ -30,7 +30,7 @@ Collect these once, so each subagent doesn't repeat the work:
 - **References**: sources reviewers can check findings against. List paths (not contents) of ADRs in the repo's ADR folder (`docs/adr/`, or wherever the repo keeps them) that mention a changed file or module, plus any local clones or docs of external systems the change depends on that the arguments, intent, spec, or standards files name. Don't search the disk for clones. If there are none, note "none".
 - **Error handling touched?** Scan the added lines in the diff output (`+` lines) for `try`, `catch`, `except`, `rescue`, `recover`, `finally`, `.catch(`, `|| default`-style fallbacks, `Result`/`Err(`, and `if err != nil`. Plain optional chaining (`?.`) and null-coalescing (`??`) don't count: they're everyday syntax in several languages. Note yes or no.
 - **Trust boundary touched?** Scan the `+` lines for code that handles auth or permissions, runs a shell or subprocess (`exec`, `spawn`, `system`, `subprocess`, backticks), builds SQL or other queries, builds file paths from input, deserializes data (`pickle`, `yaml.load`, `eval`, `unserialize`), writes HTML without escaping (`innerHTML`, `dangerouslySetInnerHTML`, `|safe`), or holds keys, tokens, or passwords. Note yes or no.
-- **History to check?** Yes when the diff changes or removes an existing line: a `-` line in the diff output, not counting the `---` file headers. A diff that only adds lines, such as one made only of new files, has no history to check: note no.
+- **History to check?** Yes when the diff changes or removes an existing line: a line starting with `-` inside a hunk (after an `@@` line). The `--- a/...` and `--- /dev/null` file headers come before a file's first `@@` and don't count. A diff that only adds lines, such as one made only of new files, has no history to check: note no.
 
 ## 3. Review in parallel
 
@@ -39,6 +39,7 @@ In one message, launch one `flow:code-reviewer` subagent per selected lens (the 
 ```
 Scope: <the diff command>
 Read files: <read root path, or the print command>
+Base: <the revision the diff compares against>
 Commits: <commits or changelists in range>
 Intent: <review title/body, or "descriptions only">
 Spec: <spec text, or "none">
@@ -52,7 +53,7 @@ Then the lens brief:
 - **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline (read it from the path given); report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
   Give the standards reviewer the path `${CLAUDE_SKILL_DIR}/references/smell-baseline.md` to Read for the baseline; don't paste it.
-- **history** (skip it when there's no history to check, even under `all`; run it when `history` is named explicitly): "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history with the VCS's read-only commands: annotate or blame them on the pre-change revision, then read the commits or changelists that last touched them. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
+- **history** (skip it when there's no history to check, even under `all`; run it when `history` is named explicitly): "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history with the VCS's read-only commands: annotate or blame them on the Base revision, then read the commits or changelists that last touched them. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
 - **security** (only when `all` is selected and a trust boundary was touched, or when `security` is named explicitly; launch `flow:strong-reviewer`, Codex: `flow-strong-reviewer`): "Report only security findings, as Correctness. Start from the changed lines and follow untrusted input to where it's used: injection (shell, SQL, path, template), missing or bypassable auth and permission checks, unsafe deserialization, unescaped output, SSRF, secrets in code or logs, and weak crypto or randomness used for security. For each finding, name the input, the path it takes, and the impact. Report only flaws the diff takes part in. Skip everything else."
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
@@ -80,7 +81,7 @@ If a validator can't start or returns no verdicts, retry it once. If it still fa
 
 ## 6. Report
 
-Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. If the history lens was skipped for lack of history, add `Skipped: history (diff only adds lines)`. If any lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
+Use the finding format from the `## Output format` section of `${CLAUDE_SKILL_DIR}/../../agents/code-reviewer.md`. Start with one line naming the scope, the lenses run, the spec, the standards files, and the references used. Lenses that step 2's scans turned off (history with no history to check, security with no trust boundary, errors with no error handling) weren't selected: list them on one `Skipped:` line, e.g. `Skipped: history (only adds lines), security (no trust boundary)`, and never under `Not checked:`. If any selected lens didn't run or any file wasn't validated, follow it with a `Not checked:` line naming each one, so the report can't read as a full review. Then give the findings in two sections, so one axis can't bury the other:
 
 - `## Correctness & spec`: Correctness, Spec, history, security, and silent-failure findings.
 - `## Standards & quality`: everything else.

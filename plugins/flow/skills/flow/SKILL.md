@@ -54,14 +54,15 @@ later. Re-size at these points, and nowhere else:
 - **After exploring** (`plan`), before the drafts and the interview.
 - **At GATE 1**, against the written plan.
 - **During a Trivial edit**, upward only: if the change turns out to alter
-  behavior a caller could notice, stop, switch to Normal, and run `start`.
-  It carries the uncommitted edit onto the new branch.
+  behavior a caller could notice, stop, switch to Normal, and run `start`,
+  telling `isolate` which files the edit touched so it keeps them with the
+  task.
 
 Never re-size down to Trivial once a branch and brief exist: the gates
 stay. On each change, say `Size: <old> -> <new> - <reason>` in one line,
 update the brief's `Size:` line, and add the reason under `## Decisions`
-when a plan exists. During the build, a size change is a scope change:
-escalate it.
+when a plan exists. During the build, don't re-size: if the work looks
+bigger than its size, that's a scope change, so escalate it.
 
 ## 3. Run the path
 
@@ -84,7 +85,8 @@ next to this skill's own), and do what it says.
 4. `ship`: verify, review, ready the review, then **GATE 2**. The user
    lands it.
 
-Large adds: `plan` drafts two contrasting approaches before the interview,
+Large adds: `plan` drafts two contrasting approaches before the interview
+(not when a task first becomes Large at GATE 1),
 one-way-door decisions get an ADR (`docs/adr/` or the repo's existing
 location), and ship includes a `flow:tester` pass.
 

@@ -41,7 +41,8 @@ worktree path, if any) for the brief.
   task, or in a linked worktree made for it (`git rev-parse --git-dir`
   differs from `git rev-parse --git-common-dir`).
 - **Clean tree:** "clean" means `git status --porcelain` lists nothing
-  outside `.flow/<slug>/`.
+  outside `.flow/<slug>/` and the files the caller says belong to this task
+  (a Trivial edit that grew into Normal). Branching in place keeps them.
   - On the default branch: `git switch -c flow/<slug>`.
   - Elsewhere (another branch, detached HEAD):
     `git switch -c flow/<slug> <default branch>`.
