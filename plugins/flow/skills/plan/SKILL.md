@@ -97,7 +97,8 @@ drafts, since the design is settled; going down drops them. `checkpoint`
 if the size changed.
 
 Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
-Out of scope, Decisions, and Open questions) and ask for approval. Stop and wait. Don't write code before approval.
+Out of scope, Decisions, and Open questions) and ask for approval. Stop
+and wait. Don't write code before approval.
 
 Approval must be explicit: the user says the plan is approved, or to build
 it. Answering open questions, saying "yes" to one of them, or "do it now"

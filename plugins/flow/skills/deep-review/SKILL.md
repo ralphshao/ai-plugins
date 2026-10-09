@@ -18,7 +18,7 @@ Lens words (`correctness`, `standards`, `history`, `security`, `errors`, `all`) 
 - **Target** (`sha:<rev>`, `<a>..<b>`, `pr:<n>`, `cl:<n>`, `review:<n>`, `#<n>`, a bare number, bare hex, or a base ref): run the VCS skill's `resolve-target`. It may call the host's `fetch-review`.
 - **Nothing**: run `diff-scope`. Uncommitted work wins over the branch or changelist.
 
-Either way you get a diff command, its base (the revision it compares against: for uncommitted work, the current one), the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
+Either way you get a diff command, its base revision (per file on Perforce), the commits or changelists in range, the intent text, and how reviewers read files: a read root directory, or a print command for files that aren't local (Perforce). If the target doesn't resolve or the diff is empty, stop and say so. Don't start subagents on a bad scope.
 
 ## 2. Gather context
 

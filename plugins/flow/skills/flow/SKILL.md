@@ -61,7 +61,7 @@ later. Re-size at these points, and nowhere else:
 Never re-size down to Trivial once a branch and brief exist: the gates
 stay. On each change, say `Size: <old> -> <new> - <reason>` in one line,
 update the brief's `Size:` line, and add the reason under `## Decisions`
-when a plan exists. During the build, don't re-size: if the work looks
+(if `plan.md` doesn't exist yet, when you write it). During the build, don't re-size: if the work looks
 bigger than its size, that's a scope change, so escalate it.
 
 ## 3. Run the path

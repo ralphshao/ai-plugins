@@ -64,10 +64,10 @@ didn't touch.
 
 ## diff-scope
 
-The changes to review or test, as a diff command, a commit list, and a read
-root.
+The changes to review or test, as a diff command, its base revision, a
+commit list, and a read root.
 
-- Uncommitted work: `git diff HEAD`.
+- Uncommitted work: `git diff HEAD`; base `HEAD`.
 - The task branch: base is `git merge-base <default branch> HEAD`; diff is
   `git diff <base>...HEAD`, commits `git log <base>..HEAD --oneline`.
 - Read root: the repo root.
@@ -92,15 +92,18 @@ user: "merge `flow/<slug>` into `<default branch>`" (and, for a worktree,
 
 ## resolve-target
 
-Turn a deep-review target into a diff command, commit list, intent, and read
-root.
+Turn a deep-review target into a diff command, its base revision, commit
+list, intent, and read root.
 
-| Target | Diff | Commits / intent |
-|--------|------|------------------|
-| `sha:<rev>`, or bare hex of 7-40 chars | `git diff <rev>^1 <rev>` (root commit: `git show <rev>`) | `git log -1 --format=%B <rev>` |
-| `<a>..<b>` or `<a>...<b>` | `git diff <a>...<b>` | `git log <a>..<b> --oneline` |
-| any other ref (a base) | `git diff <base>...HEAD` | `git log <base>..HEAD --oneline` |
-| `pr:<n>`, `#<n>`, or a bare number | host `fetch-review` gives base and head SHAs; `git diff <base>...<head>` | the review's title and body, plus commit subjects |
+| Target | Diff | Base revision | Commits / intent |
+|--------|------|---------------|------------------|
+| `sha:<rev>`, or bare hex of 7-40 chars | `git diff <rev>^1 <rev>` (root commit: `git show <rev>`) | `<rev>^1` (root commit: none) | `git log -1 --format=%B <rev>` |
+| `<a>..<b>` or `<a>...<b>` | `git diff <a>...<b>` | `git merge-base <a> <b>` | `git log <a>..<b> --oneline` |
+| any other ref (a base) | `git diff <base>...HEAD` | `git merge-base <base> HEAD` | `git log <base>..HEAD --oneline` |
+| `pr:<n>`, `#<n>`, or a bare number | host `fetch-review` gives base and head SHAs; `git diff <base>...<head>` | `git merge-base <base> <head>` | the review's title and body, plus commit subjects |
+
+A three-dot diff compares against the merge-base, not the base ref's tip, so
+the base revision is the merge-base.
 
 Prefixes always win. Without one, a string with a letter a-f is a SHA; an
 all-digit string of 7 or more characters is a SHA if it resolves as a

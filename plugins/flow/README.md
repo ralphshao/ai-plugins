@@ -24,8 +24,9 @@ flow sizes the task first:
   shows the diff. No gates.
 - **Normal** (a feature or bug fix): start, plan, GATE 1, build test-first,
   ship, GATE 2.
-- **Large** (crosses modules or redesigns an API): as Normal, plus a full
-  interview, ADRs for one-way-door decisions, and a test-coverage pass.
+- **Large** (crosses modules or redesigns an API): as Normal, plus two
+  contrasting plan drafts, ADRs for one-way-door decisions, and a
+  test-coverage pass.
 
 Task state lives in `.flow/<slug>/` (`brief.md`, `plan.md`) and is committed
 with the work, so a task can resume on another machine. `ship` removes it

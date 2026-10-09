@@ -218,6 +218,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 - [x] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
 - [x] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
+- [ ] Q4 deep-review allowed-tools: drop `p4 tickets:*` (prints every ticket; its only sanctioned use pipes to curl, which still prompts), make `gh auth status` exact (`:*` matches `--show-token`), and narrow `git fetch origin:*` to `git fetch origin pull/:*` (the base-branch fetch keeps prompting)? This differs from the plan's accepted allowed-tools list. - recommended: yes - blocks: ship
 
 ## Status
 Approved - building
