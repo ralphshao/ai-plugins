@@ -62,7 +62,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan: Large tasks draft two contrasting approaches; the interview asks
   per difference.
 - [ ] plan: exploration returns key files; read them.
-- [ ] README: mention the history lens (blocked on Q1).
+- [ ] README: mention the history lens.
 
 ## Test command
 `uv run --with pytest pytest tests/flow`
@@ -82,9 +82,10 @@ Not flow, but found: `context-mode` is enabled twice in
   likes parts of each.
 - Contrasting approaches only for Large - Normal tasks rarely have two real
   designs; costs two subagents.
+- README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
-- [ ] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
+- [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 
 ## Status
 Awaiting GATE 1
