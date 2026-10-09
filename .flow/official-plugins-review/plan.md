@@ -122,7 +122,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
   and test_codex_agents.py first (red), then agent, guard.py, skills, README.
 - [x] deep-review: conditional `security` lens on `flow:strong-reviewer`.
-- [ ] hooks.json: `py -3` with `python` fallback on Windows; update
+- [x] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
 - [x] flow + plan skills: re-size after exploration and at GATE 1; Trivial
@@ -193,6 +193,15 @@ Not flow, but found: `context-mode` is enabled twice in
 - History lens skip test: diff has no `-` lines (only additions) - the
   orchestrator can read that from the diff without running blame; an
   added-only diff can't undo an earlier fix.
+- History lens brief names no VCS commands - ADR 6 keeps git/p4 specifics
+  out of phase skills (test_layout enforces it); reviewers know blame and
+  annotate, and guard.py allows both.
+- Windows hooks use `for %P in (py.exe) do if not "%~$PATH:P"=="" (py -3 ...)
+  else (python ...)` - if/else runs exactly one interpreter, so guard.py's
+  exit 2 isn't followed by a python rerun. A Windows-only test runs it
+  through cmd.exe on CI.
+- No new ADR for the Windows command - ADR 8 requires a commandWindows
+  but doesn't fix its interpreter; reversible.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions

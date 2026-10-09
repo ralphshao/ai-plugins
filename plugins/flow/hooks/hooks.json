@@ -8,7 +8,7 @@
           {
             "type": "command",
             "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/guard.py\"",
-            "commandWindows": "python \"%PLUGIN_ROOT%\\hooks\\guard.py\""
+            "commandWindows": "for %P in (py.exe) do if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\guard.py\") else (python \"%PLUGIN_ROOT%\\hooks\\guard.py\")"
           }
         ]
       },
@@ -18,7 +18,7 @@
           {
             "type": "command",
             "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/codex_agents.py\"",
-            "commandWindows": "python \"%PLUGIN_ROOT%\\hooks\\codex_agents.py\""
+            "commandWindows": "for %P in (py.exe) do if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\codex_agents.py\") else (python \"%PLUGIN_ROOT%\\hooks\\codex_agents.py\")"
           }
         ]
       }
@@ -30,7 +30,7 @@
           {
             "type": "command",
             "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/format.py\"",
-            "commandWindows": "python \"%PLUGIN_ROOT%\\hooks\\format.py\""
+            "commandWindows": "for %P in (py.exe) do if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\format.py\") else (python \"%PLUGIN_ROOT%\\hooks\\format.py\")"
           }
         ]
       }
@@ -41,7 +41,7 @@
           {
             "type": "command",
             "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/stop_gate.py\"",
-            "commandWindows": "python \"%PLUGIN_ROOT%\\hooks\\stop_gate.py\"",
+            "commandWindows": "for %P in (py.exe) do if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\stop_gate.py\") else (python \"%PLUGIN_ROOT%\\hooks\\stop_gate.py\")",
             "timeout": 660
           }
         ]

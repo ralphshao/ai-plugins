@@ -59,8 +59,13 @@ def test_hook_commands_resolve_inside_plugin():
         assert script, hook["command"]
         assert (FLOW / script.group(1)).is_file(), hook["command"]
         # Codex on Windows runs hooks in cmd.exe, which can't expand ${...}.
-        win = re.fullmatch(r'python "%PLUGIN_ROOT%\\(.+)"', hook["commandWindows"])
-        assert win and win.group(1) == script.group(1).replace("/", "\\"), hook
+        # Prefer the py launcher, else python; if/else runs exactly one, so a
+        # hook's exit code (guard.py's 2) isn't followed by a second run.
+        win = re.fullmatch(r'for %P in \(py\.exe\) do if not "%~\$PATH:P"=="" '
+                           r'\(py -3 "%PLUGIN_ROOT%\\(.+)"\) '
+                           r'else \(python "%PLUGIN_ROOT%\\(.+)"\)', hook["commandWindows"])
+        want = script.group(1).replace("/", "\\")
+        assert win and win.group(1) == want and win.group(2) == want, hook
 
 
 @pytest.mark.skipif(os.name == "nt" or not shutil.which("sh"), reason="needs POSIX sh")
@@ -71,6 +76,24 @@ def test_hook_command_falls_back_to_python(tmp_path):
                        capture_output=True, text=True,
                        env={"PATH": str(tmp_path), "CLAUDE_PLUGIN_ROOT": str(FLOW)})
     assert p.returncode == 0, p.stderr
+
+
+
+@pytest.mark.skipif(os.name != "nt", reason="needs cmd.exe")
+@pytest.mark.parametrize("with_py", [False, True], ids=["python", "py"])
+def test_windows_hook_command_keeps_exit_code(with_py):
+    if with_py and not shutil.which("py"):
+        pytest.skip("no py launcher")
+    guard = next(h for h in hooks() if "guard.py" in h["command"])
+    path = os.path.dirname(sys.executable)
+    if with_py:
+        path += os.pathsep + os.path.dirname(shutil.which("py"))
+    payload = json.dumps({"agent_type": "flow:code-reviewer", "tool_name": "Write",
+                          "tool_input": {"file_path": "x.py", "content": ""}})
+    p = subprocess.run(["cmd.exe", "/d", "/s", "/c", guard["commandWindows"]],
+                       input=payload, capture_output=True, text=True,
+                       env={**os.environ, "PATH": path, "PLUGIN_ROOT": str(FLOW)})
+    assert p.returncode == 2, (p.returncode, p.stdout, p.stderr)
 
 
 # VCS and review-host skills: phases name operations, these skills run them.
