@@ -17,10 +17,8 @@ look up.
 
 ## 2. Interview
 
-Use the `interview` skill on the decisions the exploration left open.
-
-- Normal: at most one round. Skip it if nothing is open.
-- Large: rounds until no decision is open.
+Use the `interview` skill on the decisions the exploration left open, in
+rounds until no decision is open. Skip it if nothing is open.
 
 ## 3. Write the plan
 

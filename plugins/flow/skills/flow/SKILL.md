@@ -68,8 +68,7 @@ next to this skill's own), and do what it says.
 4. `ship`: verify, review, ready the review, then **GATE 2**. The user
    lands it.
 
-Large adds: the interview runs until no decision is open, one-way-door
-decisions get an ADR (`docs/adr/` or the repo's existing location), and ship
+Large adds: one-way-door decisions get an ADR (`docs/adr/` or the repo's existing location), and ship
 includes a `flow:tester` pass.
 
 ## Decisions between gates
