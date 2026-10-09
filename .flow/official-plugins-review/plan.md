@@ -92,8 +92,8 @@ Not flow, but found: `context-mode` is enabled twice in
   the test command.
 
 ## Steps
-- [ ] deep-review: add the `history` lens (argument word, brief, Perforce
-  equivalent via `p4 annotate`/`p4 filelog` if guard allows, else git only).
+- [ ] deep-review: add the `history` lens (argument word, brief; Perforce
+  via `p4 annotate`/`p4 filelog`).
 - [ ] deep-review: skip the history lens when no changed hunk has prior
   history; report it as skipped.
 - [ ] plan: Large tasks draft two contrasting approaches; the interview asks
@@ -158,6 +158,13 @@ Not flow, but found: `context-mode` is enabled twice in
 - Task re-sized Normal -> Large at GATE 1 - scope grew to deep-review,
   plan, flow, hooks, a test, new ADRs and a version bump. Ship adds the
   `flow:tester` pass.
+- Perforce history lens uses `p4 annotate`/`p4 filelog` - guard.py's
+  P4_READ already allows both.
+- Contrasting drafts use `Plan` subagents in Claude Code and `explorer` in
+  Codex - Codex has no Plan type; matches how plan names Explore/explorer.
+- Re-size line format `Size: <old> -> <new> - <reason>` - existing eval
+  graders match `Size:\W{0,4}<size>` on the first size, so they keep
+  passing; no new evals in this change.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
