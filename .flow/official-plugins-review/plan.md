@@ -73,6 +73,12 @@ Not flow, but found: `context-mode` is enabled twice in
 - Each hook's `commandWindows` uses the `py -3` launcher when present and
   falls back to `python`, and passes the script's exit code through
   unchanged (guard.py's exit 2 must still block).
+- flow re-sizes at three points besides the start: after exploration
+  (before drafts and interview), at GATE 1 against the written plan, and
+  upward-only mid-edit on a Trivial task that turns out to change behavior
+  (switch to Normal, run `start`). Never down to Trivial once a branch and
+  brief exist. Each change updates `Size:` in brief.md and adds a reason
+  under Decisions. GATE 1 shows the size.
 - `tests/flow` passes.
 
 ## Seams under test
@@ -106,6 +112,8 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
+- [ ] flow + plan skills: re-size after exploration and at GATE 1; Trivial
+  switches to Normal on a behavior change; never down to Trivial.
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
 - [ ] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,
   plugins/flow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json,
@@ -143,6 +151,13 @@ Not flow, but found: `context-mode` is enabled twice in
   exit (a plain `py ... || python ...` would rerun guard.py after it
   blocks). If cmd.exe has no single-line form that does this, escalate.
 - Bump flow to 0.2.5 as the last build step - Q2, user said yes.
+- Re-size only after exploration, at GATE 1, and Trivial-upward - build
+  scope growth already escalates; ship and resume add no new facts.
+- No ADR for re-sizing - ADR 0001 sets the start-time sizing and doesn't
+  forbid later checks; reversible prose change.
+- Task re-sized Normal -> Large at GATE 1 - scope grew to deep-review,
+  plan, flow, hooks, a test, new ADRs and a version bump. Ship adds the
+  `flow:tester` pass.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
