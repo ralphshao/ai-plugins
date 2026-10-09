@@ -109,7 +109,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
 - [ ] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,
   plugins/flow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json,
-  and the root README table; last build step. Waits on Q2.
+  and the root README table; last build step.
 - [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
 
@@ -142,11 +142,12 @@ Not flow, but found: `context-mode` is enabled twice in
 - Windows `py -3` fallback must not rerun the script after a non-zero
   exit (a plain `py ... || python ...` would rerun guard.py after it
   blocks). If cmd.exe has no single-line form that does this, escalate.
+- Bump flow to 0.2.5 as the last build step - Q2, user said yes.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
-- [ ] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
+- [x] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
 
 ## Status
 Awaiting GATE 1
