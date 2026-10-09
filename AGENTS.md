@@ -73,6 +73,14 @@ that changed. Weigh their advice
 against this file and the ADRs; they don't know this repo's conventions
 (e.g. the `codex-*` agent frontmatter is intentional).
 
+## Installed vs. repo copy
+
+A session runs the installed copy of a plugin, not this repo's. Its version
+is in `~/.claude/plugins/installed_plugins.json`; cache folders under
+`~/.claude/plugins/cache/` keep old versions, so don't go by them. A change
+here reaches sessions only after `claude plugin update <name>@ai-plugins`
+and a restart.
+
 ## Tests
 
 From the repo root, with [uv](https://docs.astral.sh/uv/):
