@@ -67,7 +67,9 @@ reachable from `source.url` (+ `path`, for `git-subdir`).
 For changes to a local plugin (`ai-plugins`, `flow`), also run
 plugin-dev's agents, enabled for this repo in `.claude/settings.json`:
 `plugin-dev:plugin-validator` on the plugin folder, and
-`plugin-dev:skill-reviewer` on each skill you changed. Weigh their advice
+`plugin-dev:skill-reviewer` on each skill you changed. skill-reviewer has
+no shell, so it can't run a diff: name the changed files and the sections
+that changed. Weigh their advice
 against this file and the ADRs; they don't know this repo's conventions
 (e.g. the `codex-*` agent frontmatter is intentional).
 

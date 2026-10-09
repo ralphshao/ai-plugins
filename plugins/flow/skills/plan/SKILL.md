@@ -39,6 +39,11 @@ left open, in rounds until no decision is open. Skip it if nothing is
 open. Skip the interview's closing confirmation: GATE 1 shows the decisions
 and asks once, so a "yes" to a summary can't pass for approval.
 
+When the request asks for a review, an audit, or suggestions, scope itself
+is open: the findings are candidates, not steps. Put them to the user in
+the first round, one question each with a recommendation, and write steps
+only for the ones they take.
+
 ## 4. Write the plan
 
 Write `.flow/<slug>/plan.md`:
