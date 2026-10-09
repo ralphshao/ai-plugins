@@ -189,6 +189,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - Rename correctness-reviewer to strong-reviewer - user chose it; the agent
   now serves two lenses, so a topic name misleads. No model in the name:
   Codex runs it on GPT.
+- Keep 0.2.5 despite the rename - user's call after the semver note.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
@@ -197,4 +198,4 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
 
 ## Status
-Awaiting GATE 1
+Approved - building
