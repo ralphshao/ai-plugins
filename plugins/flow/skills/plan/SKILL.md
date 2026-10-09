@@ -62,9 +62,10 @@ Rules:
   seams and the highest one that works; fewer is better. Each gets one line
   on what a test there catches and misses.
 - Steps are vertical slices, each small enough for one checkpoint.
-- The test command must exist in the repo already. If there isn't one, say
-  so under Status and leave the section empty: the stop-time test gate then
-  stays off.
+- The test command must exist in the repo already. If there isn't one, add
+  `No test command in repo - stop-time test gate off` under Decisions and
+  leave the Test command section with no lines at all, not even a
+  placeholder: the stop-time gate runs its first line as a command.
 - Record interview answers under Decisions.
 
 Checkpoint: `flow: plan <slug>`.
