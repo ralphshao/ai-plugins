@@ -66,17 +66,15 @@ bigger than its size, that's a scope change, so escalate it.
 
 ## 3. Run the path
 
-**Trivial:** no `.flow/` files and no GATE 1. Pick a slug as `start` does,
+**Trivial:** no `.flow/` files and no gates. Pick a slug as `start` does,
 then:
 
 1. `isolate`. A session already in a worktree or on a feature branch made
    for this task stays put; on the default branch it gets its own branch.
 2. Make the change and run the relevant tests.
-3. `checkpoint` it as one commit.
-4. `publish`, then `ready-for-review`, with a body from the `change-body`
-   skill: Summary, Evidence, and Merge danger, no Decisions.
-5. **GATE 2:** report the review link (or the branch, with no host) and the
-   test result. The user lands it.
+3. `checkpoint` it as one commit, then `publish`.
+4. Report the branch, the commit, and the test result, and stop. Opening a
+   review and landing it are the user's.
 
 If the edit turns out to change behavior, see re-sizing above.
 
@@ -132,8 +130,8 @@ To escalate, park and continue:
 ## VCS and review host
 
 Phases name operations; two skills say how to run them. Pick both once per
-task, before its first operation (`start`'s, or Trivial's `isolate`), and
-name them in the brief when there is one.
+task, before `start`'s first operation, and name them in the brief. Trivial
+needs only the VCS skill, picked before its `isolate`.
 
 - **VCS skill**, required: `vcs-git`, then `vcs-perforce`. Use the first
   whose Detect section matches; if none does, ask. Operations: `find-state`,
