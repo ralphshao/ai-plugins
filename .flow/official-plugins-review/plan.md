@@ -112,7 +112,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [x] deep-review: keep reported severity on UNSURE findings.
 - [x] plan: no-test-command note goes under Decisions; Test command left empty.
 - [x] deep-review: name sibling files to Read instead of "the flow skill".
-- [ ] README: mention the history and security lenses; list optional companion plugins.
+- [x] README: mention the history and security lenses; list optional companion plugins.
 - [x] plan + flow skills: Normal interview runs until no decision is open.
 - [x] docs/adr: new ADR superseding ADR 0001's interview split.
 - [x] plan: GATE 1 shows the full plan sections.
