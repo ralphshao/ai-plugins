@@ -102,7 +102,7 @@ Not flow, but found: `context-mode` is enabled twice in
   the test command.
 
 ## Steps
-- [ ] deep-review: add the `history` lens (argument word, brief; Perforce
+- [x] deep-review: add the `history` lens (argument word, brief; Perforce
   via `p4 annotate`/`p4 filelog`).
 - [ ] deep-review: skip the history lens when no changed hunk has prior
   history; report it as skipped.

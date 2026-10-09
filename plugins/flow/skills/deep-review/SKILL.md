@@ -1,7 +1,7 @@
 ---
 name: deep-review
-description: Multi-pass review of uncommitted work, a branch, or committed code (git SHA or range, PR, Perforce changelist, Swarm review). Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, and silent failures when the diff touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
-argument-hint: "[target: sha:<rev> | <a>..<b> | pr:<n> | cl:<n> | review:<n> | #<n> | base-ref] [spec path] [correctness|standards|errors|all]"
+description: Multi-pass review of uncommitted work, a branch, or committed code (git SHA or range, PR, Perforce changelist, Swarm review). Runs parallel flow:code-reviewer subagents, one per lens (correctness/spec, standards/quality, history, and silent failures when the diff touches error handling), validates every finding with flow:review-validator, and reports only what survives. Use for "deep review", "thorough review", "review this branch/PR before I merge", or /deep-review.
+argument-hint: "[target: sha:<rev> | <a>..<b> | pr:<n> | cl:<n> | review:<n> | #<n> | base-ref] [spec path] [correctness|standards|history|errors|all]"
 allowed-tools: Read, Grep, Glob, Agent, Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git show:*), Bash(git rev-parse:*), Bash(git merge-base:*), Bash(git symbolic-ref:*), Bash(git cat-file:*), Bash(git fetch origin:*), Bash(git remote get-url:*), Bash(gh auth status:*), Bash(git worktree add --detach:*), Bash(git worktree remove:*), Bash(gh pr view:*), Bash(gh issue view:*), Bash(p4 -ztag info:*), Bash(p4 -ztag describe:*), Bash(p4 -ztag client -o:*), Bash(p4 -ztag stream -o:*), Bash(p4 info:*), Bash(p4 describe:*), Bash(p4 diff:*), Bash(p4 diff2:*), Bash(p4 opened:*), Bash(p4 changes:*), Bash(p4 property -l:*), Bash(p4 tickets:*), Bash(p4 login -s:*)
 ---
 
@@ -13,7 +13,7 @@ Some steps below point at sections of the `flow` skill. Read them from `${CLAUDE
 
 Arguments: `$ARGUMENTS` (on Codex: whatever the user passed with the request)
 
-Lens words (`correctness`, `standards`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
+Lens words (`correctness`, `standards`, `history`, `errors`, `all`) pick the lenses; the default is `all`. A path to an existing file is the spec. Pick the VCS and review-host skills as the `flow` skill's "VCS and review host" section says. Any other argument is a target:
 
 - **Target** (`sha:<rev>`, `<a>..<b>`, `pr:<n>`, `cl:<n>`, `review:<n>`, `#<n>`, a bare number, bare hex, or a base ref): run the VCS skill's `resolve-target`. It may call the host's `fetch-review`.
 - **Nothing**: run `diff-scope`. Uncommitted work wins over the branch or changelist.
@@ -50,6 +50,7 @@ Then the lens brief:
 - **standards**: "Report only Standards, Tests, Performance, Readability, Best practice, and Simplification findings. For Standards, quote the rule and name its file. Also check the diff against the smell baseline (read it from the path given); report a smell as a Readability or Simplification finding labelled 'possible <smell>', never as a hard violation, and drop it where a documented repo standard endorses the pattern. Skip correctness bugs; another reviewer covers them."
 
   Give the standards reviewer the path `${CLAUDE_SKILL_DIR}/references/smell-baseline.md` to Read for the baseline; don't paste it.
+- **history**: "Report only Correctness findings that come from the code's history. For the lines each hunk changes or removes, read their history: in git, `git log -L <start>,<end>:<file>` or `git blame` on the pre-change revision, then `git show` on the commits that matter; in Perforce, `p4 annotate` and `p4 filelog`, then `p4 describe`. Report a change that undoes an earlier fix, reintroduces a bug a past commit removed, or contradicts the reason a past commit or changelist description gives for the code. Quote that description. Skip everything else."
 - **errors** (only when `all` is selected and error handling was touched, or when `errors` is named explicitly): "Report only silent-failure findings, as Correctness: swallowed or overly broad catches, log-and-continue, defaults returned on error, fallbacks that hide failures, retries that give up silently. For each broad catch, name the errors it would hide. Skip everything else."
 
 If a reviewer can't start (the launch is refused or errors) or returns without a report, retry it once. If it still fails, record that lens as not run and go on with the others. If no lens ran, stop and say the review didn't run, and why. A reviewer that returns a report with no findings did run.
