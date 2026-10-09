@@ -115,7 +115,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] README: mention the history and security lenses; list optional companion plugins.
 - [ ] plan + flow skills: Normal interview runs until no decision is open.
 - [ ] docs/adr: new ADR superseding ADR 0001's interview split.
-- [ ] plan: GATE 1 shows the full plan sections.
+- [x] plan: GATE 1 shows the full plan sections.
 - [x] deep-review: narrow the errors-lens trigger.
 - [x] deep-review: move the smell baseline to references/.
 - [x] deep-review: allowed-tools additions.

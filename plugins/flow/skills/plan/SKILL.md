@@ -72,8 +72,8 @@ Checkpoint: `flow: plan <slug>`.
 
 ## 4. GATE 1
 
-Show the plan (Goal, Acceptance criteria, Seams, Steps) and ask for
-approval. Stop and wait. Don't write code before approval.
+Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
+Out of scope, and Decisions) and ask for approval. Stop and wait. Don't write code before approval.
 
 Approval must be explicit: the user says the plan is approved, or to build
 it. Answering open questions, saying "yes" to one of them, or "do it now"
