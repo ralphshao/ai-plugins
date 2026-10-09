@@ -45,6 +45,19 @@ Not flow, but found: `context-mode` is enabled twice in
   `## Decisions`.
 - `plan`'s exploration subagent returns the key files to read, and the
   main agent reads them before the interview.
+- deep-review keeps an UNSURE finding's reported severity
+  (`Low (reported: High; UNSURE: <reason>)`), so flow's "UNSURE on a
+  high-severity finding" escalation can fire.
+- plan puts a "no test command" note under Decisions, not Status, and
+  leaves `## Test command` with no lines (stop_gate runs its first line).
+- deep-review names the files to Read for flow's "VCS and review host" and
+  "Agent names on Codex" sections and for the reviewer output format, and
+  says not to invoke `flow`.
+- flow's README lists `andrej-karpathy-skills` and `ponytail` as optional
+  companions: reviewers preload their skills when installed; Claude Code
+  skips a missing preload with a debug-log warning.
+- AGENTS.md "Validating changes" says to run `plugin-dev:plugin-validator`
+  and `plugin-dev:skill-reviewer` on plugin changes.
 - `tests/flow` passes.
 
 ## Seams under test
@@ -62,7 +75,13 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan: Large tasks draft two contrasting approaches; the interview asks
   per difference.
 - [ ] plan: exploration returns key files; read them.
-- [ ] README: mention the history lens.
+- [ ] deep-review: keep reported severity on UNSURE findings.
+- [ ] plan: no-test-command note goes under Decisions; Test command left empty.
+- [ ] deep-review: name sibling files to Read instead of "the flow skill".
+- [ ] README: mention the history lens; list optional companion plugins.
+- [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
+- [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
+  `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
 
 ## Test command
 `uv run --with pytest pytest tests/flow`
@@ -83,6 +102,9 @@ Not flow, but found: `context-mode` is enabled twice in
 - Contrasting approaches only for Large - Normal tasks rarely have two real
   designs; costs two subagents.
 - `plugin-dev` enabled at project scope via committed `.claude/settings.json` - user asked; installed from the official marketplace at b860d6f.
+- Companion skills stay soft preloads, not plugin.json `dependencies` -
+  dependencies are hard (flow stops loading without them) and need
+  cross-marketplace allowlisting; a missing preload is only skipped.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
