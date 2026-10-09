@@ -107,6 +107,9 @@ Not flow, but found: `context-mode` is enabled twice in
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
+- [ ] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,
+  plugins/flow/.codex-plugin/plugin.json, .claude-plugin/marketplace.json,
+  and the root README table; last build step. Waits on Q2.
 - [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
 
@@ -117,7 +120,6 @@ Not flow, but found: `context-mode` is enabled twice in
 - Installing `security-guidance` (user's call; command given in chat).
 - Prior-PR-comment lens from `code-review` (needs a new host operation).
 - A security lens in deep-review (security-guidance covers it).
-- Version bump of flow (only on the user's explicit go).
 
 ## Decisions
 - History lens uses git log/blame only, not past PR comments - no new host
@@ -144,6 +146,7 @@ Not flow, but found: `context-mode` is enabled twice in
 
 ## Open questions
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
+- [ ] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
 
 ## Status
 Awaiting GATE 1
