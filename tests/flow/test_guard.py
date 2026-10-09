@@ -10,8 +10,8 @@ from conftest import REPO_ROOT
 
 GUARD = REPO_ROOT / "plugins" / "flow" / "hooks" / "guard.py"
 # Claude Code names, then the Codex role names codex_agents.py installs.
-REVIEWERS = ["flow:code-reviewer", "flow:correctness-reviewer", "flow:review-validator",
-             "flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator"]
+REVIEWERS = ["flow:code-reviewer", "flow:strong-reviewer", "flow:review-validator",
+             "flow-code-reviewer", "flow-strong-reviewer", "flow-review-validator"]
 TESTERS = ["flow:tester", "flow-tester"]
 # guard.py maps every name above to one of two policies, so the command and
 # path cases run once per policy; test_each_name_gets_its_policy covers the

@@ -7,7 +7,7 @@ hooks.json instead and pick a policy by `agent_type`. Claude Code sends the
 plugin agent name (flow:tester); Codex sends the role name that
 codex_agents.py installs (flow-tester).
 
-- Reviewers (code-reviewer, correctness-reviewer, review-validator): read-only Bash (git, p4,
+- Reviewers (code-reviewer, strong-reviewer, review-validator): read-only Bash (git, p4,
   file commands), no writes.
 - Tester: read-only Bash plus test/coverage runners; writes to test files
   only. A test file it writes can still edit source when a runner runs it;
@@ -27,9 +27,9 @@ import sys
 from pathlib import PurePath
 from typing import NoReturn
 
-REVIEWERS = {"flow:code-reviewer", "flow:correctness-reviewer",
+REVIEWERS = {"flow:code-reviewer", "flow:strong-reviewer",
              "flow:review-validator", "flow-code-reviewer",
-             "flow-correctness-reviewer", "flow-review-validator"}
+             "flow-strong-reviewer", "flow-review-validator"}
 TESTERS = {"flow:tester", "flow-tester"}
 FLOW_AGENTS = REVIEWERS | TESTERS
 WRITES = {"Write", "Edit", "apply_patch"}

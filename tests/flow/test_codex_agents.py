@@ -12,7 +12,7 @@ from conftest import REPO_ROOT
 
 FLOW = REPO_ROOT / "plugins" / "flow"
 HOOK = FLOW / "hooks" / "codex_agents.py"
-NAMES = {"flow-code-reviewer", "flow-correctness-reviewer", "flow-review-validator",
+NAMES = {"flow-code-reviewer", "flow-strong-reviewer", "flow-review-validator",
          "flow-tester"}
 try:
     import tomllib  # Python 3.11+: also proves the output is valid TOML.
@@ -147,9 +147,9 @@ def test_codex_settings_come_from_codex_keys(home, tmp_path):
             assert shipped.get(key) == (value and value.group(1)), (source.name, key)
 
 
-def test_correctness_reviewer_is_code_reviewer_on_another_model():
+def test_strong_reviewer_is_code_reviewer_on_another_model():
     # Only the frontmatter may differ: the instructions are code-reviewer's.
     def body(name):
         return (FLOW / "agents" / f"{name}.md").read_text(encoding="utf-8").split("\n---\n", 1)[1]
-    assert body("correctness-reviewer") == body("code-reviewer"), \
-        "copy agents/code-reviewer.md's body into agents/correctness-reviewer.md"
+    assert body("strong-reviewer") == body("code-reviewer"), \
+        "copy agents/code-reviewer.md's body into agents/strong-reviewer.md"

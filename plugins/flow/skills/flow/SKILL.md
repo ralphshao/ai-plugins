@@ -127,9 +127,9 @@ and continue where you can.
 
 ## Agent names on Codex
 
-This plugin's agents are `flow:code-reviewer`, `flow:correctness-reviewer`,
+This plugin's agents are `flow:code-reviewer`, `flow:strong-reviewer`,
 `flow:review-validator`, and `flow:tester` in Claude Code. In Codex they are
-`flow-code-reviewer`, `flow-correctness-reviewer`, `flow-review-validator`,
+`flow-code-reviewer`, `flow-strong-reviewer`, `flow-review-validator`,
 and `flow-tester`. flow's hooks install them on the
 first spawn and keep them current after that. Codex picks up a new install
 after a restart, and the first spawn is denied with a message saying so.

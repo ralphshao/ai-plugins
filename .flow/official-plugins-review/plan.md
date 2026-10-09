@@ -119,7 +119,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] deep-review: narrow the errors-lens trigger.
 - [ ] deep-review: move the smell baseline to references/.
 - [ ] deep-review: allowed-tools additions.
-- [ ] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
+- [x] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
   and test_codex_agents.py first (red), then agent, guard.py, skills, README.
 - [ ] deep-review: conditional `security` lens on `flow:strong-reviewer`.
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
