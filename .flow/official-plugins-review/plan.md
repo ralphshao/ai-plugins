@@ -109,7 +109,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] plan: Large tasks draft two contrasting approaches; the interview asks
   per difference.
 - [ ] plan: exploration returns key files; read them.
-- [ ] deep-review: keep reported severity on UNSURE findings.
+- [x] deep-review: keep reported severity on UNSURE findings.
 - [ ] plan: no-test-command note goes under Decisions; Test command left empty.
 - [ ] deep-review: name sibling files to Read instead of "the flow skill".
 - [ ] README: mention the history and security lenses; list optional companion plugins.

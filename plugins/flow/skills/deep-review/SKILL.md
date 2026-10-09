@@ -81,7 +81,7 @@ Apply its verdicts:
 
 - `CONFIRMED`: keep. If the fix is `CORRECTED`, use the corrected fix. If it `BREAKS` something, add that to the finding.
 - `REFUTED`: drop.
-- `UNSURE`: keep at Low severity, marked Likely, with the validator's reason.
+- `UNSURE`: keep at Low severity, marked Likely, with the validator's reason, and keep the severity the reviewer reported next to it: `Low (reported: High; UNSURE: <reason>)`. The `flow` skill escalates an UNSURE high-severity finding, so that signal must survive.
 
 Add anything listed under `Noticed:` to the report as Likely; it hasn't been validated.
 
