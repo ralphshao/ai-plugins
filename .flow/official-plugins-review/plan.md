@@ -212,13 +212,16 @@ Not flow, but found: `context-mode` is enabled twice in
   own test command, and a reviewer couldn't grep for backticks.
 - Guard launch failure stays fail-open, documented - user's call; blocking
   would stop the main session too on a machine without Python.
+- deep-review allowed-tools drops `p4 tickets`, makes `gh auth status` exact,
+  and narrows the fetch to `pull/:*` - Q4, user said yes; the broader rules
+  could print secrets or force-update local branches without a prompt.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
 - [x] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 - [x] Q2 Bump flow to 0.2.5 as the last build step? - recommended: yes - blocks: version step
 - [x] Q3 Add a conditional `security` lens to deep-review, run only when the diff's `+` lines touch a trust boundary (auth, shell/exec, SQL, file paths, deserialization, HTML output, secrets), like the errors lens? - recommended: yes - blocks: none (would add one step)
-- [ ] Q4 deep-review allowed-tools: drop `p4 tickets:*` (prints every ticket; its only sanctioned use pipes to curl, which still prompts), make `gh auth status` exact (`:*` matches `--show-token`), and narrow `git fetch origin:*` to `git fetch origin pull/:*` (the base-branch fetch keeps prompting)? This differs from the plan's accepted allowed-tools list. - recommended: yes - blocks: ship
+- [x] Q4 deep-review allowed-tools: drop `p4 tickets:*` (prints every ticket; its only sanctioned use pipes to curl, which still prompts), make `gh auth status` exact (`:*` matches `--show-token`), and narrow `git fetch origin:*` to `git fetch origin pull/:*` (the base-branch fetch keeps prompting)? This differs from the plan's accepted allowed-tools list. - recommended: yes - blocks: ship
 
 ## Status
 Approved - building
