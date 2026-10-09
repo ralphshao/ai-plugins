@@ -125,7 +125,7 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
-- [ ] flow + plan skills: re-size after exploration and at GATE 1; Trivial
+- [x] flow + plan skills: re-size after exploration and at GATE 1; Trivial
   switches to Normal on a behavior change; never down to Trivial.
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
 - [ ] Bump flow 0.2.4 -> 0.2.5 (patch) in plugins/flow/.claude-plugin/plugin.json,

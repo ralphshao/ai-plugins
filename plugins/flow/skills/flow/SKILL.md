@@ -48,10 +48,26 @@ Size by what changes, not by how many lines. A one-line change to what a
 public function returns, raises, or accepts is Normal, not Trivial. When
 unsure between two sizes, pick the larger.
 
+This first call only has to tell Trivial from the rest; the facts come
+later. Re-size at these points, and nowhere else:
+
+- **After exploring** (`plan`), before the drafts and the interview.
+- **At GATE 1**, against the written plan.
+- **During a Trivial edit**, upward only: if the change turns out to alter
+  behavior a caller could notice, stop, switch to Normal, and run `start`.
+  It carries the uncommitted edit onto the new branch.
+
+Never re-size down to Trivial once a branch and brief exist: the gates
+stay. On each change, say `Size: <old> -> <new> - <reason>` in one line,
+update the brief's `Size:` line, and add the reason under `## Decisions`
+when a plan exists. During the build, a size change is a scope change:
+escalate it.
+
 ## 3. Run the path
 
 **Trivial:** make the change in the current workspace, run the relevant tests,
-show the diff, and stop. No `.flow/` files, no gates.
+show the diff, and stop. No `.flow/` files, no gates. (See re-sizing above if
+the edit turns out to change behavior.)
 
 **Normal and Large:** follow these phase skills in order. They are
 user-only, so you can't invoke them as skills: Read each phase's file from
@@ -68,8 +84,9 @@ next to this skill's own), and do what it says.
 4. `ship`: verify, review, ready the review, then **GATE 2**. The user
    lands it.
 
-Large adds: one-way-door decisions get an ADR (`docs/adr/` or the repo's existing location), and ship
-includes a `flow:tester` pass.
+Large adds: `plan` drafts two contrasting approaches before the interview,
+one-way-door decisions get an ADR (`docs/adr/` or the repo's existing
+location), and ship includes a `flow:tester` pass.
 
 ## Decisions between gates
 

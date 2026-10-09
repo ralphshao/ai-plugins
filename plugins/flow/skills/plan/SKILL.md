@@ -15,6 +15,11 @@ to end with the 5-10 files most worth reading, and read those yourself
 before going on. Facts are your job: never ask the user something you can
 look up.
 
+Then re-size, as the `flow` skill's "Size the task" section says: now that
+you know which modules the change touches and whether it has a one-way
+door, the size from the brief may be wrong. A new size changes which of
+the steps below run.
+
 ## 2. Draft approaches (Large only)
 
 In one message, spawn two planning subagents (`Plan` in Claude Code,
@@ -82,6 +87,10 @@ Rules:
 Checkpoint: `flow: plan <slug>`.
 
 ## 5. GATE 1
+
+Re-size first against the written plan, as after exploring: the interview
+can grow the scope. Going up adds Large's ADR and tester steps to the plan
+but not the drafts, since the design is settled; going down drops them.
 
 Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
 Out of scope, and Decisions) and ask for approval. Stop and wait. Don't write code before approval.
