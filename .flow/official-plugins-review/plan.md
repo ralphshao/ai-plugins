@@ -68,7 +68,7 @@ Not flow, but found: `context-mode` is enabled twice in
 `uv run --with pytest pytest tests/flow`
 
 ## Out of scope
-- Installing plugins (user settings; commands given in chat).
+- Installing `security-guidance` (user's call; command given in chat).
 - Prior-PR-comment lens from `code-review` (needs a new host operation).
 - A security lens in deep-review (security-guidance covers it).
 - Version bump of flow (only on the user's explicit go).
@@ -82,6 +82,7 @@ Not flow, but found: `context-mode` is enabled twice in
   likes parts of each.
 - Contrasting approaches only for Large - Normal tasks rarely have two real
   designs; costs two subagents.
+- `plugin-dev` enabled at project scope via committed `.claude/settings.json` - user asked; installed from the official marketplace at b860d6f.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
