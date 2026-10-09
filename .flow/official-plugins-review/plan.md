@@ -35,10 +35,14 @@ Not flow, but found: `context-mode` is enabled twice in
 - `deep-review` runs a `history` lens under `all` (and when named): a
   reviewer reads `git log`/`git blame` for the changed hunks and reports
   changes that undo an earlier fix or contradict the reason in a past
-  commit message.
+  commit message. It is skipped (and named as skipped in the report) when
+  no changed hunk touches lines with prior history, e.g. a diff of only new
+  files.
 - `plan` on a Large task has two Plan subagents draft contrasting
-  approaches (smallest change vs. cleanest structure); the interview asks
-  the user to pick one, and the choice lands under `## Decisions`.
+  approaches (smallest change vs. cleanest structure). The interview asks
+  one question per point where the drafts differ, each with a recommended
+  answer, so the user can mix parts of both; answers land under
+  `## Decisions`.
 - `plan`'s exploration subagent returns the key files to read, and the
   main agent reads them before the interview.
 - `tests/flow` passes.
@@ -53,9 +57,12 @@ Not flow, but found: `context-mode` is enabled twice in
 ## Steps
 - [ ] deep-review: add the `history` lens (argument word, brief, Perforce
   equivalent via `p4 annotate`/`p4 filelog` if guard allows, else git only).
-- [ ] plan: Large tasks draft two contrasting approaches before the interview.
+- [ ] deep-review: skip the history lens when no changed hunk has prior
+  history; report it as skipped.
+- [ ] plan: Large tasks draft two contrasting approaches; the interview asks
+  per difference.
 - [ ] plan: exploration returns key files; read them.
-- [ ] README: mention the history lens.
+- [ ] README: mention the history lens (blocked on Q1).
 
 ## Test command
 `uv run --with pytest pytest tests/flow`
@@ -69,10 +76,15 @@ Not flow, but found: `context-mode` is enabled twice in
 ## Decisions
 - History lens uses git log/blame only, not past PR comments - no new host
   operation needed; guard already allows `git blame`.
+- History lens on by default, skipped when the diff has no prior history -
+  user's choice; ~25-35% more deep-review cost only when history exists.
+- Contrasting approaches are mixed per difference, not picked whole - user
+  likes parts of each.
 - Contrasting approaches only for Large - Normal tasks rarely have two real
   designs; costs two subagents.
 
 ## Open questions
+- [ ] Q1 Mention the history lens in plugins/flow/README.md? - recommended: yes, one line under Skills - blocks: README step
 
 ## Status
 Awaiting GATE 1
