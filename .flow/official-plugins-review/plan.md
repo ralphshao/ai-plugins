@@ -83,6 +83,12 @@ Not flow, but found: `context-mode` is enabled twice in
   `all`) only when the diff's `+` lines touch a trust boundary: auth, shell
   or exec, SQL, file paths, deserialization, HTML output, or secrets. It
   reports only security findings, as Correctness, validated like the rest.
+  It runs on `flow:strong-reviewer`.
+- `flow:correctness-reviewer` is renamed `flow:strong-reviewer`
+  (`flow-strong-reviewer` on Codex) everywhere: agent file, guard.py's
+  reviewer set, deep-review, flow, README, tests. guard.py keeps it
+  read-only; Codex's stale `flow-correctness-reviewer.toml` is removed by
+  codex_agents.py's existing cleanup.
 - `tests/flow` passes.
 
 ## Seams under test
@@ -113,7 +119,9 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] deep-review: narrow the errors-lens trigger.
 - [ ] deep-review: move the smell baseline to references/.
 - [ ] deep-review: allowed-tools additions.
-- [ ] deep-review: conditional `security` lens.
+- [ ] Rename correctness-reviewer -> strong-reviewer: update test_guard.py
+  and test_codex_agents.py first (red), then agent, guard.py, skills, README.
+- [ ] deep-review: conditional `security` lens on `flow:strong-reviewer`.
 - [ ] hooks.json: `py -3` with `python` fallback on Windows; update
   test_layout.py's commandWindows check first (red), then hooks.json.
   New ADR if it changes ADR 0008's stated Windows command.
@@ -176,6 +184,11 @@ Not flow, but found: `context-mode` is enabled twice in
   commit reviews, SDK install at session start).
 - Conditional security lens instead of security-guidance - Q3, user said
   yes; costs one reviewer only on diffs touching a trust boundary.
+- Security lens runs on the stronger-model reviewer - user chose B; a
+  missed vulnerability is the costliest miss, and the trigger bounds cost.
+- Rename correctness-reviewer to strong-reviewer - user chose it; the agent
+  now serves two lenses, so a topic name misleads. No model in the name:
+  Codex runs it on GPT.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
