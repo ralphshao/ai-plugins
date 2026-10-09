@@ -61,9 +61,24 @@ Not flow, but found: `context-mode` is enabled twice in
 - `plan` runs the interview until no decision is open for both Normal and
   Large; flow/SKILL.md's "Large adds" no longer lists the interview.
 - A new ADR supersedes ADR 0001's "Large adds a full interview".
+- GATE 1 shows Goal, Acceptance criteria, Seams, Steps, Test command, Out
+  of scope, and Decisions.
+- deep-review's errors-lens trigger drops `?.` and `?? ` and says to scan
+  the `+` lines of the diff output (not "Grep").
+- The smell baseline lives in `deep-review/references/smell-baseline.md`;
+  the standards brief passes its path instead of pasting it.
+- deep-review `allowed-tools` adds `git remote get-url`, `gh auth status`,
+  `git fetch origin:*` (replacing `git fetch origin pull/*`), `p4 tickets`,
+  `p4 login -s`. Not `curl`.
+- Each hook's `commandWindows` uses the `py -3` launcher when present and
+  falls back to `python`, and passes the script's exit code through
+  unchanged (guard.py's exit 2 must still block).
 - `tests/flow` passes.
 
 ## Seams under test
+- `tests/flow/test_layout.py` commandWindows check - catches: hook entries
+  drifting from the agreed Windows form / misses: real cmd.exe behavior
+  (no Windows host runs hooks through cmd; ADR 0008 accepts that gap).
 - `tests/flow` (layout and hook tests) - catches: broken skill frontmatter,
   layout drift / misses: whether agents follow the new prose.
 - `plugins/flow/evals/large-feature` - catches: Large plan flow end to end
@@ -84,6 +99,13 @@ Not flow, but found: `context-mode` is enabled twice in
 - [ ] README: mention the history lens; list optional companion plugins.
 - [ ] plan + flow skills: Normal interview runs until no decision is open.
 - [ ] docs/adr: new ADR superseding ADR 0001's interview split.
+- [ ] plan: GATE 1 shows the full plan sections.
+- [ ] deep-review: narrow the errors-lens trigger.
+- [ ] deep-review: move the smell baseline to references/.
+- [ ] deep-review: allowed-tools additions.
+- [ ] hooks.json: `py -3` with `python` fallback on Windows; update
+  test_layout.py's commandWindows check first (red), then hooks.json.
+  New ADR if it changes ADR 0008's stated Windows command.
 - [ ] AGENTS.md: plugin-dev validator and skill-reviewer under Validating changes.
 - [ ] Before ship: run `plugin-dev:skill-reviewer` on edited skills and
   `plugin-dev:plugin-validator` on plugins/flow; fix what applies.
@@ -113,6 +135,11 @@ Not flow, but found: `context-mode` is enabled twice in
 - Normal interview matches Large (rounds until nothing is open) - user
   chose it over capping at one round; avoids guessed defaults. Costs
   Normal 1-2 extra rounds before GATE 1.
+- `curl -K -` stays out of allowed-tools - pre-approving curl allows
+  network calls without a prompt; Swarm fetches keep prompting.
+- Windows `py -3` fallback must not rerun the script after a non-zero
+  exit (a plain `py ... || python ...` would rerun guard.py after it
+  blocks). If cmd.exe has no single-line form that does this, escalate.
 - README gets one line on the history lens under Skills - Q1, user said yes.
 
 ## Open questions
