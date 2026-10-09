@@ -64,6 +64,13 @@ relative-path sources' `plugin.json` — it does not fetch remote `url`/
 file either; check its JSON parses and that `source.sha` is a real commit
 reachable from `source.url` (+ `path`, for `git-subdir`).
 
+For changes to a local plugin (`ai-plugins`, `flow`), also run
+plugin-dev's agents, enabled for this repo in `.claude/settings.json`:
+`plugin-dev:plugin-validator` on the plugin folder, and
+`plugin-dev:skill-reviewer` on each skill you changed. Weigh their advice
+against this file and the ADRs; they don't know this repo's conventions
+(e.g. the `codex-*` agent frontmatter is intentional).
+
 ## Tests
 
 From the repo root, with [uv](https://docs.astral.sh/uv/):
