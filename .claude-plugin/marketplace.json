@@ -53,11 +53,11 @@
         "source": "git-subdir",
         "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
         "path": "plugins/avoid-ai-writing",
-        "sha": "6135015a28c228ff24e2a0b86f5bbd816649a0d2",
-        "ref": "v3.36.0"
+        "sha": "db82bc8a2631f75fa829e97dc811c16a091fe1d9",
+        "ref": "v3.37.0"
       },
       "description": "Audit & rewrite content to remove AI writing patterns (\"AI-isms\"). Supports detect-only and edit-in-place modes, voice profiles, and iterate-to-convergence.",
-      "version": "3.36.0",
+      "version": "3.37.0",
       "author": {
         "name": "Conor Bronsdon"
       }
@@ -67,11 +67,11 @@
       "source": {
         "source": "url",
         "url": "https://github.com/JuliusBrussee/caveman.git",
-        "sha": "8b0c1d3699b8d83e87fe4605b378da20c41555e0",
-        "ref": "v2.7.0"
+        "sha": "e20f07e8152a0c0360f58c09e79d30ac94329991",
+        "ref": "v3.2.0"
       },
       "description": "Ultra-compressed communication mode. Shortens prose while preserving technical terms, code, commands, and exact errors.",
-      "version": "2.7.0",
+      "version": "3.2.0",
       "author": {
         "name": "Julius Brussee",
         "url": "https://github.com/JuliusBrussee"
@@ -97,11 +97,11 @@
       "source": {
         "source": "url",
         "url": "https://github.com/ayghri/i-have-adhd.git",
-        "sha": "839872f9d1cd634fed642b4589ce7226199cc15f",
+        "sha": "1ecea1993b7fce257ffbd686c070948b5e07eda6",
         "ref": "main"
       },
       "description": "Shape Claude Code output for an ADHD reader: lead with the next action, number steps, suppress tangents, restate state, make wins visible.",
-      "version": "0.3.0",
+      "version": "0.4.1",
       "author": {
         "name": "Ayoub G.",
         "url": "https://github.com/ayghri"
@@ -112,11 +112,11 @@
       "source": {
         "source": "url",
         "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
-        "ref": "v4.10.0"
+        "sha": "9cc65d03aa2da1db7121b912d03596409ee340b8",
+        "ref": "v5.1.0"
       },
       "description": "Lazy senior dev mode. Forces the simplest, shortest solution that actually works: YAGNI, stdlib first, no unrequested abstractions.",
-      "version": "4.10.0",
+      "version": "5.1.0",
       "author": {
         "name": "Dietrich Gebert",
         "url": "https://github.com/DietrichGebert"
