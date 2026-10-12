@@ -82,8 +82,13 @@ def test_codex_plugins_match_claude_pins(claude, codex):
         assert plugin["source"]["sha"] == other["sha"], plugin["name"]
 
 
+# Local plugins with no Codex build; every other plugin is in both catalogs.
+CLAUDE_ONLY = {"memory-keeper"}
+
+
 def test_catalogs_list_the_same_plugins(claude, codex):
-    assert [p["name"] for p in claude["plugins"]] == [p["name"] for p in codex["plugins"]]
+    names = [p["name"] for p in claude["plugins"] if p["name"] not in CLAUDE_ONLY]
+    assert names == [p["name"] for p in codex["plugins"]]
 
 
 def test_codex_entries_have_policy_and_category(codex):
@@ -116,3 +121,14 @@ def test_local_plugin_versions_agree(claude, codex, name):
         assert manifest["name"] == name
         assert manifest["version"] == entry["version"], f"{name} .{kind}-plugin/plugin.json"
 
+
+
+def test_claude_only_plugins_are_local(claude):
+    for name in CLAUDE_ONLY:
+        entry = next(p for p in claude["plugins"] if p["name"] == name)
+        assert entry["source"] == f"./plugins/{name}"
+        manifest = json.loads((PLUGIN_ROOT.parent / name / ".claude-plugin" / "plugin.json")
+                              .read_text(encoding="utf-8"))
+        assert manifest["name"] == name
+        assert manifest["version"] == entry["version"]
+        assert not (PLUGIN_ROOT.parent / name / ".codex-plugin").exists()

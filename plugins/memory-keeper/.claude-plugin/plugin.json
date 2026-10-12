@@ -1,0 +1,9 @@
+{
+  "name": "memory-keeper",
+  "description": "Keeps claude.ai memory and profile/project instructions accurate, deduplicated, and in the right tier",
+  "version": "0.1.0",
+  "author": {
+    "name": "Ralph Shao"
+  },
+  "license": "MIT"
+}

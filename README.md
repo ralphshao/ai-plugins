@@ -1,7 +1,7 @@
 # ai-plugins
 
 A personal Claude Code / Codex plugin marketplace. Every plugin except
-`ai-plugins` and `flow` is fetched directly from its upstream git repo,
+`ai-plugins`, `flow`, and `memory-keeper` is fetched directly from its upstream git repo,
 pinned to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
@@ -26,6 +26,7 @@ codex plugin add <plugin-name>@ai-plugins
 | --- | --- | --- |
 | [`ai-plugins`](plugins/ai-plugins) | Maintenance skills for the ai-plugins marketplace itself | 0.2.1 |
 | [`flow`](plugins/flow) | Engineering workflow: plan, build, review, and ship a change with two human gates | 0.2.5 |
+| [`memory-keeper`](plugins/memory-keeper) | Keeps claude.ai memory and profile/project instructions accurate, deduplicated, and in the right tier | 0.1.0 |
 | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Behavioral guidelines to reduce common LLM coding mistakes | 1.0.0 |
 | [avoid-ai-writing](https://github.com/conorbronsdon/avoid-ai-writing) | Audit & rewrite content to remove AI writing patterns ("AI-isms") | 3.36.0 |
 | [caveman](https://github.com/JuliusBrussee/caveman) | Ultra-compressed communication mode — cuts filler, keeps technical accuracy | 2.7.0 |
@@ -42,6 +43,7 @@ docs/adr/                         # architecture decision records
 plugins/                          # source for the local plugins
   ai-plugins/                     #   marketplace maintenance plugin
   flow/                           #   engineering workflow plugin
+  memory-keeper/                  #   claude.ai memory maintenance (Claude only)
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
   flow/                           #   tests for plugins/flow
@@ -55,5 +57,5 @@ Install the [`ai-plugins`](plugins/ai-plugins) plugin. Its skills
 ## License
 
 [MIT](LICENSE) covers this repo: the marketplace files and the local
-`ai-plugins` and `flow` plugins. Each remote plugin keeps its own upstream
+`ai-plugins`, `flow`, and `memory-keeper` plugins. Each remote plugin keeps its own upstream
 license.
