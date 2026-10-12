@@ -44,8 +44,8 @@
       "source": {
         "source": "url",
         "url": "https://github.com/conorbronsdon/avoid-ai-writing.git",
-        "sha": "6135015a28c228ff24e2a0b86f5bbd816649a0d2",
-        "ref": "v3.36.0"
+        "sha": "db82bc8a2631f75fa829e97dc811c16a091fe1d9",
+        "ref": "v3.37.0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -59,8 +59,8 @@
         "source": "git-subdir",
         "url": "https://github.com/JuliusBrussee/caveman.git",
         "path": "./plugins/caveman",
-        "sha": "8b0c1d3699b8d83e87fe4605b378da20c41555e0",
-        "ref": "v2.7.0"
+        "sha": "e20f07e8152a0c0360f58c09e79d30ac94329991",
+        "ref": "v3.2.0"
       },
       "policy": {
         "installation": "AVAILABLE",
@@ -87,7 +87,7 @@
       "source": {
         "source": "url",
         "url": "https://github.com/ayghri/i-have-adhd.git",
-        "sha": "839872f9d1cd634fed642b4589ce7226199cc15f",
+        "sha": "1ecea1993b7fce257ffbd686c070948b5e07eda6",
         "ref": "main"
       },
       "policy": {
@@ -101,8 +101,8 @@
       "source": {
         "source": "url",
         "url": "https://github.com/dietrichgebert/ponytail.git",
-        "sha": "1d95ff7d39de12d87014ea40d4e22201bddc501b",
-        "ref": "v4.10.0"
+        "sha": "9cc65d03aa2da1db7121b912d03596409ee340b8",
+        "ref": "v5.1.0"
       },
       "policy": {
         "installation": "AVAILABLE",
