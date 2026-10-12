@@ -4,12 +4,12 @@ Instructions for coding agents working in this repo.
 
 ## What this repo is
 
-A Claude Code / Codex plugin marketplace. Every plugin except `ai-plugins`
-and `flow` is a pinned remote git ref (`url` or `git-subdir` source, with a
+A Claude Code / Codex plugin marketplace. Every plugin except `ai-plugins`,
+`flow`, and `memory-keeper` is a pinned remote git ref (`url` or `git-subdir` source, with a
 `sha`) — not a vendored copy, not a submodule. There's nothing to edit
-locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`
-and `flow` are the exceptions: their source lives directly in this repo at
-`plugins/ai-plugins/` and `plugins/flow/` (local `source` paths).
+locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`,
+`flow`, and `memory-keeper` are the exceptions: their source lives
+directly in this repo at `plugins/<name>/` (local `source` paths).
 
 ## Docs
 
@@ -21,7 +21,9 @@ link the plugin's folder instead.
 ## Two marketplace files, kept in sync
 
 - `.claude-plugin/marketplace.json` — read by Claude Code.
-- `.agents/plugins/marketplace.json` — read by Codex. Same plugins, same
+- `.agents/plugins/marketplace.json` — read by Codex. Same plugins (except
+  Claude-only local plugins: `memory-keeper`, which needs claude.ai memory
+  tools Codex lacks; listed in `CLAUDE_ONLY` in `tests/test_marketplace.py`), same
   `source` object shape (`url`/`git-subdir` with `sha` and `ref`). A plugin
   with only one manifest (e.g. `andrej-karpathy-skills`, which has no
   `.codex-plugin/plugin.json`) uses that manifest's folder as the plugin
@@ -64,7 +66,7 @@ relative-path sources' `plugin.json` — it does not fetch remote `url`/
 file either; check its JSON parses and that `source.sha` is a real commit
 reachable from `source.url` (+ `path`, for `git-subdir`).
 
-For changes to a local plugin (`ai-plugins`, `flow`), also run
+For changes to a local plugin (`ai-plugins`, `flow`, `memory-keeper`), also run
 plugin-dev's agents, enabled for this repo in `.claude/settings.json`:
 `plugin-dev:plugin-validator` on the plugin folder, and
 `plugin-dev:skill-reviewer` on each skill you changed. skill-reviewer has
