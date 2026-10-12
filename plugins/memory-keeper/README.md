@@ -9,8 +9,8 @@ and Codex don't have. Meant for Cowork, including cloud scheduled runs.
 
 | Skill | Does |
 | --- | --- |
-| `memory-keeper:memory-maintenance` | One run, no questions mid-run. Account mode outside a project, project mode inside one. Applies up to 8 safe fixes (say "max N writes" to change the cap), proposes everything else as numbered changes you approve by replying `approve 1, 3`. Say "dry run" to make no writes. |
-| `memory-keeper:setup` | Creates, shows, changes, or removes the weekly cloud scheduled task that runs memory-maintenance: Sunday 8:45 AM for account mode, 9:00 AM for project mode, in your local time zone. |
+| `memory-keeper:maintain` | One run, no questions mid-run. Account mode outside a project, project mode inside one. Applies up to 8 safe fixes (say "max N writes" to change the cap), proposes everything else as numbered changes you approve by replying `approve 1, 3`. Say "dry run" to make no writes. |
+| `memory-keeper:setup` | Creates, shows, changes, or removes the weekly cloud scheduled task that runs memory-keeper:maintain: Sunday 8:45 AM for account mode, 9:00 AM for project mode, in your local time zone. |
 
 ## Memory layout it expects
 
@@ -24,5 +24,5 @@ once inside each project you want maintained. Every task uses the same
 prompt:
 
 ```
-Run the memory-maintenance skill. If the skill isn't available, send a one-line SendUserMessage saying so and stop.
+Run the memory-keeper:maintain skill. If the skill isn't available, send a one-line SendUserMessage saying so and stop.
 ```

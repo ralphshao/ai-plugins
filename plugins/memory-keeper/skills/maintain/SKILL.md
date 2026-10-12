@@ -1,5 +1,5 @@
 ---
-name: "memory-maintenance"
+name: "maintain"
 description: "Cleans up the user's claude.ai memory: dedupes, fixes tiers, stale statuses and descriptions, proposes larger changes and instruction edits. Account mode outside projects, project mode inside one. Use for \"memory maintenance\", \"clean up my memory\", a scheduled maintenance run, or approving its numbered proposals."
 ---
 
