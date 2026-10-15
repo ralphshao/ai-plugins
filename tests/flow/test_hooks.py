@@ -53,6 +53,15 @@ def test_gate_blocks_on_failing_tests(repo):
     assert ".flow/x/plan.md" in result["reason"]
 
 
+def test_gate_stands_down_while_brb_is_armed(repo, tmp_path, monkeypatch):
+    state = tmp_path / "brb"
+    state.mkdir()
+    (state / "flow-brb-s1.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("FLOW_BRB_STATE_DIR", str(state))
+    assert not gate(repo, plan(), session_id="s1")
+    assert gate(repo, session_id="s2")["decision"] == "block"
+
+
 def test_gate_finds_plan_from_a_subdirectory(repo):
     (repo / "src").mkdir()
     gate(repo, plan())

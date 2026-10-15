@@ -1,0 +1,5 @@
+interface:
+  display_name: "Flow: BRB"
+  short_description: "Keep the prompt cache warm during a break (Claude Code only)"
+policy:
+  allow_implicit_invocation: false

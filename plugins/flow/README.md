@@ -60,6 +60,7 @@ before the review is marked ready.
 | `interview` | Rounds of numbered questions with recommended answers until no decision is open. |
 | `deep-review` | Parallel reviewers, one per lens, with every finding checked by a validator. Lenses: correctness, standards, history (changes that undo an earlier fix; skipped when the diff only adds lines), security (only when the diff touches a trust boundary), and errors (only when it touches error handling). Also usable on its own. |
 | `change-body` | The shape of a PR, Swarm review, or changelist description. |
+| `brb` | `/flow:brb [duration]`: keeps the prompt cache warm through a break (Claude Code only). Any message cancels it. |
 | `retro` | Suggests environment fixes that would have prevented a session's mistakes. |
 | `vcs-git`, `vcs-perforce`, `host-github`, `host-swarm` | How each VCS and review-host operation runs. Loaded by the other skills, not invoked by you. |
 
@@ -72,7 +73,7 @@ Claude Code and `flow-<name>` in Codex.
 
 ## Hooks
 
-`hooks/hooks.json` wires four hooks, shared by Claude Code and Codex:
+`hooks/hooks.json` wires these hooks, shared by Claude Code and Codex:
 
 - `guard.py` keeps the reviewers read-only and limits `tester` to writing
   test files. Once a plan is approved, it also stops the main session from
@@ -84,7 +85,13 @@ Claude Code and `flow-<name>` in Codex.
 - `format.py` formats an edited file with a formatter the repo already uses
   (ruff, prettier, gofmt, rustfmt). It never blocks an edit.
 - `stop_gate.py` blocks the agent from stopping while the approved plan's
-  test command fails.
+  test command fails, except while `/brb` is armed.
+- `brb.py` runs `/brb`'s keepalive (Claude Code only). A UserPromptExpansion
+  hook arms it on `/brb`, and a UserPromptSubmit hook cancels it on any
+  other prompt. A background
+  Stop hook (`asyncRewake`) wakes the idle session for a cheap cached turn
+  shortly before the cache expires, until the break plus grace ends. See
+  [ADR 12](../../docs/adr/0012-flow-brb-keepalive-uses-asyncrewake.md).
 
 On Codex, the hooks run only after you accept Codex's hook trust prompt for
 this plugin.

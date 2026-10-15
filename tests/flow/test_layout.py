@@ -13,7 +13,7 @@ from conftest import REPO_ROOT
 
 FLOW = REPO_ROOT / "plugins" / "flow"
 # Orchestrators: only the user may start them, on Claude Code and Codex.
-USER_ONLY = {"flow", "start", "plan", "ship", "retro"}
+USER_ONLY = {"flow", "start", "plan", "ship", "retro", "brb"}
 SKILLS = sorted(p.parent.name for p in (FLOW / "skills").glob("*/SKILL.md"))
 
 
@@ -63,11 +63,15 @@ def test_hook_commands_resolve_inside_plugin():
         # hook's exit code (guard.py's 2) isn't followed by a second run. @
         # keeps cmd from echoing the loop body onto stdout, where stop_gate's
         # JSON goes.
+        # A mode argument (brb.py's stop/prompt) must match in all three forms.
+        arg = re.search(r'/[^"\s]+"((?: \w+)?)$', hook["command"]).group(1)
         win = re.fullmatch(r'for %P in \(py\.exe\) do @if not "%~\$PATH:P"=="" '
-                           r'\(py -3 "%PLUGIN_ROOT%\\(.+)"\) '
-                           r'else \(python "%PLUGIN_ROOT%\\(.+)"\)', hook["commandWindows"])
+                           r'\(py -3 "%PLUGIN_ROOT%\\(.+)"((?: \w+)?)\) '
+                           r'else \(python "%PLUGIN_ROOT%\\(.+)"((?: \w+)?)\)',
+                           hook["commandWindows"])
         want = script.group(1).replace("/", "\\")
-        assert win and win.group(1) == want and win.group(2) == want, hook
+        assert win and win.group(1) == win.group(3) == want, hook
+        assert win.group(2) == win.group(4) == arg, hook
 
 
 @pytest.mark.skipif(os.name == "nt" or not shutil.which("sh"), reason="needs POSIX sh")

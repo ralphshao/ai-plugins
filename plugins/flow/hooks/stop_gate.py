@@ -9,6 +9,7 @@ It allows the stop when:
 - the plan has an unticked item under "## Open questions" (parked work
   waiting on the user), or
 - stop_hook_active is set (the agent already got one block this turn), or
+- /brb is armed for the session (the user is away; ADR 12), or
 - in a git repo, nothing changed since the command last passed: same HEAD,
   same staged and unstaged diff, same untracked files and contents. Files
   under .flow/ don't count. The fingerprint lives in the system temp
@@ -154,9 +155,18 @@ def pass_file(root, cmd):
     return Path(tempfile.gettempdir()) / f"flow-stop-gate-{key}"
 
 
+def brb_armed(session_id):
+    """/brb is armed: the user is away, so don't push the agent into work."""
+    try:
+        from brb import state_path
+    except ImportError:
+        return False
+    return bool(session_id) and state_path(session_id).exists()
+
+
 def check(data):
     """The hook's output for this stop: a block decision, or {} to allow."""
-    if data.get("stop_hook_active"):
+    if data.get("stop_hook_active") or brb_armed(data.get("session_id")):
         return {}
     root = repo_root(data.get("cwd") or ".")
     plans = active_plans(root)

@@ -1,5 +1,5 @@
 {
-  "description": "flow: subagent guards, Codex agent sync, format-on-edit, and the plan's test gate",
+  "description": "flow: subagent guards, Codex agent sync, format-on-edit, the plan's test gate, and the /brb cache keepalive",
   "hooks": {
     "PreToolUse": [
       {
@@ -43,6 +43,39 @@
             "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/stop_gate.py\"",
             "commandWindows": "for %P in (py.exe) do @if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\stop_gate.py\") else (python \"%PLUGIN_ROOT%\\hooks\\stop_gate.py\")",
             "timeout": 660
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/brb.py\" stop",
+            "commandWindows": "for %P in (py.exe) do @if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\brb.py\" stop) else (python \"%PLUGIN_ROOT%\\hooks\\brb.py\" stop)",
+            "asyncRewake": true,
+            "timeout": 3600
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/brb.py\" prompt",
+            "commandWindows": "for %P in (py.exe) do @if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\brb.py\" prompt) else (python \"%PLUGIN_ROOT%\\hooks\\brb.py\" prompt)"
+          }
+        ]
+      }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/brb.py\" expand",
+            "commandWindows": "for %P in (py.exe) do @if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\brb.py\" expand) else (python \"%PLUGIN_ROOT%\\hooks\\brb.py\" expand)"
           }
         ]
       }
