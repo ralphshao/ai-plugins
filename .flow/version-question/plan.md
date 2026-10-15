@@ -38,6 +38,9 @@ flow 0.2.5 -> 0.2.6 (intent; applied at ship only on the user's go)
 - Ship re-confirms a recorded "none" too - a silent no-bump is the PR #24 failure; the build may have grown into a release (user, at GATE 1).
 - ADR number 0013 - 0012 is taken twice; 0013 is free.
 
+- A "yes" to ship's "Still bump <pkg> to Y?" is the go - the question names the number and ship is the when; skill-reviewer flagged the ambiguity.
+- "Versioned package" = any file under a folder with a version manifest, defined once in flow/SKILL.md - skill-reviewer: undefined term.
+
 ## Open questions
 
 ## Status

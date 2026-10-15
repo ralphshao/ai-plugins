@@ -18,8 +18,11 @@ Two things only the user can give, and only explicitly:
   you can't tell, ask.
 - **Version changes.** Never change a version number (package, plugin,
   release) unless the user asks for that change, names the number, and
-  says when. When a task touches a versioned package, ask: GATE 1 records
-  the intent, and ship asks for the go.
+  says when. When a task touches a versioned package (any file under a
+  folder with a version manifest: `plugin.json`, `package.json`,
+  `pyproject.toml`, or the like), ask: GATE 1 records the intent, and ship
+  asks for the go. A "yes" to ship's "Still bump <pkg> to Y?" is the go:
+  it names the number, and ship is the when.
 
 Arguments: `$ARGUMENTS`
 
@@ -70,7 +73,8 @@ then:
 4. Report the branch, the commit, and the test result, and stop. Opening a
    review and landing it are the user's. If the edit touched a versioned
    package, the report also asks "<pkg> is at X. Bump to what, or none?"
-   Don't bump in this task without the user's go.
+   On a reply naming the number, bump it in a new commit, `checkpoint`,
+   and `publish`; without one, don't bump.
 
 If the edit turns out to change behavior, see re-sizing above.
 
@@ -105,7 +109,8 @@ Escalate (ask the user) when any of these hold:
 - Two or more plausible options differ in user-visible behavior.
 - A test or review result shows a requirement is ambiguous.
 - `flow:review-validator` returns UNSURE on a high-severity finding.
-- It changes a version number (see above: ask even when the plan lists it).
+- It changes a version number (see above: ask even when the plan lists it;
+  ship asks and waits rather than parking it).
 
 Don't escalate because you feel unsure; use the list. Anything else: decide,
 and add a line to `## Decisions` in `plan.md` with a one-line reason.

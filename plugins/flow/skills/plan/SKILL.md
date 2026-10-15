@@ -70,7 +70,7 @@ Write `.flow/<slug>/plan.md`:
 - <what this change won't do>
 
 ## Version
-<pkg> <current> -> <target, or "none"> (intent; applied at ship only on the user's go)
+<pkg> <current> -> <target, or "none"> (intent; applied at ship only on the user's go), one line per package
 
 ## Decisions
 - <decision> - <one-line reason>
@@ -92,9 +92,8 @@ Rules:
   leave the Test command section with no lines at all, not even a
   placeholder: the stop-time gate runs its first line as a command.
 - Record interview answers under Decisions.
-- `## Version`: only when the change touches a versioned package (a
-  `plugin.json`, `package.json`, `pyproject.toml`, or the like). Leave it
-  out otherwise. GATE 1 fills in the target.
+- `## Version`: only when the change touches a versioned package (as the
+  `flow` skill defines it). Leave it out otherwise. GATE 1 fills in the target.
 - Large: add one step per one-way-door decision to write its ADR. The
   `flow:tester` pass belongs to `ship` and needs no step.
 
@@ -108,13 +107,13 @@ drafts, since the design is settled; going down drops them. `checkpoint`
 if the size changed.
 
 Show the plan (size, Goal, Acceptance criteria, Seams, Steps, Test command,
-Out of scope, Decisions, and Open questions) and ask for approval. Stop
-and wait.
+Out of scope, Version, Decisions, and Open questions) and ask for
+approval. With a `## Version` section, also ask, per package: "<pkg> is at
+X. Bump to what at ship, or none?" Write the answer into `## Version` and
+as a line under Decisions. It is intent, not a go: `ship` asks again
+before it changes anything. Stop and wait.
 
-With a `## Version` section, ask alongside the plan: "<pkg> is at X. Bump
-to what at ship, or none?" Write the answer into `## Version` and as a
-line under Decisions. It is intent, not a go: `ship` asks again before it
-changes anything. Don't write code before approval.
+Don't write code before approval.
 
 Approval must be explicit: the user says the plan is approved, or to build
 it. Answering open questions, saying "yes" to one of them, or "do it now"
