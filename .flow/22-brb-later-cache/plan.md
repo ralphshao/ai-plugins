@@ -47,7 +47,7 @@ instead of paying a full cache rewrite. Opt-in.
 - [x] `brb.py` arm/stop/prompt modes plus the `hooks.json` entries (an
   asyncRewake Stop and a UserPromptSubmit), with the Codex early exit and
   the min-token guard.
-- [ ] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
+- [x] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
   add it to USER_ONLY.
 - [ ] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
   in `.flow/`, Claude Code only, and why `/later` was dropped: its intent
