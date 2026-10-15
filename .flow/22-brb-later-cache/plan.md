@@ -85,6 +85,10 @@ case they come back, then compacts just before the cache goes cold. Both are opt
 - `/later` waits until just before the TTL ends instead of compacting at
   once - the user's intent: coming back within the TTL keeps the full
   context. It reuses `/brb`'s timer with zero pings.
+- Docs (hooks, prompt-caching pages): asyncRewake exit 2 wakes Claude even
+  when idle; its `timeout` IS enforced, so the hook timeout must exceed the
+  longest sleep (~55 min on 1h TTL); in `-p` mode async hooks are killed at
+  teardown. No hook or documented API triggers `/compact`.
 - `/brb`'s last wake switches to `/later` instead of compacting - the user's
   choice; one shared compact path, plus one more TTL to return.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
@@ -94,6 +98,16 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   confirms it.
 
 ## Open questions
+- [ ] Q1 Claude Code already compacts idle sessions shortly before a 1h cache
+  expires (`idleCompaction`, on by default, terminal sessions, 1h TTL only).
+  Drop `/later` and the compact fallback on Claude Code: `/brb` just stops
+  pinging at duration + grace and native idle compaction takes over; `/later`
+  stays for Codex only (if the spike finds a compact path there) - recommended:
+  yes - blocks: spike's compact part, `skills/later/` step, ADR wording
+- [ ] Q2 The spike needs a live interactive session (desktop app and CLI) with
+  a throwaway asyncRewake Stop hook; I can't install hooks into your settings
+  from the sandbox. You run it from a test plugin I prepare - recommended: yes
+  - blocks: steps 3-5
 
 ## Status
 Approved - building
