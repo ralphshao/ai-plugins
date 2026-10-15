@@ -166,3 +166,76 @@ def test_bad_stdin_is_ignored():
     p = subprocess.run([sys.executable, str(SCRIPT), "stop"], input="nope",
                        capture_output=True, text=True)
     assert p.returncode == 0
+
+
+@pytest.mark.parametrize("prompt", ["/brbx", "/brb 1h extra", "please /brb", ""])
+def test_non_brb_prompts_do_not_arm(run, prompt):
+    run("prompt", prompt=prompt)
+    assert not run.state.exists()
+
+
+def test_rearm_replaces_state_and_corrupt_state_is_inert(run):
+    run("prompt", prompt="/brb 30m", at=5)
+    assert json.loads(run.state.read_text()) == {"armed_at": 5.0,
+                                                 "duration": 1800}
+    run.state.write_text("{not json")
+    assert run("stop") == (0, "")
+
+
+def test_state_path_sanitizes_session_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("FLOW_BRB_STATE_DIR", str(tmp_path))
+    p = brb.state_path("../../etc/x y")
+    assert p.parent == tmp_path and "/" not in p.name
+
+
+# --- in-process: the sleeping Stop hook and its cancel race --------------------
+
+class Sleeper:
+    """Armed /brb at t=1000 on a 1h TTL (wake due at 4300) with a fake clock."""
+
+    def __init__(self, tmp_path, monkeypatch):
+        transcript = tmp_path / "t.jsonl"
+        transcript.write_text(usage_line(h1=500, read=50_000), encoding="utf-8")
+        monkeypatch.setenv("FLOW_BRB_STATE_DIR", str(tmp_path))
+        monkeypatch.setenv("FLOW_BRB_NOW", "1000")
+        monkeypatch.delenv("FLOW_BRB_NO_SLEEP", raising=False)
+        self.state = brb.state_path("s1")
+        self.state.write_text(json.dumps({"armed_at": 1000, "duration": None}))
+        self.clock, self.naps, self.on_nap = 1000.0, [], None
+        self.data = {"session_id": "s1", "transcript_path": str(transcript),
+                     "cwd": str(tmp_path)}
+        monkeypatch.setattr(brb.time, "time", lambda: self.clock)
+        monkeypatch.setattr(brb.time, "sleep", self.sleep)
+        monkeypatch.setattr(brb, "POLL", 1000)
+
+    def sleep(self, n):
+        self.naps.append(n)
+        self.clock += n
+        if self.on_nap:
+            self.on_nap(len(self.naps))
+
+
+@pytest.fixture
+def sleeper(tmp_path, monkeypatch):
+    return Sleeper(tmp_path, monkeypatch)
+
+
+def test_sleeping_stop_pings_in_poll_chunks(sleeper):
+    assert brb.on_stop(sleeper.data) == 2
+    assert sleeper.naps == [1000, 1000, 1000, 300]  # 3300s total, last short
+
+
+def test_cancel_while_sleeping_exits_quietly(sleeper, capsys):
+    sleeper.on_nap = lambda n: sleeper.state.unlink()
+    assert brb.on_stop(sleeper.data) == 0
+    assert len(sleeper.naps) == 1
+    assert capsys.readouterr().err == ""
+
+
+def test_superseded_while_sleeping_exits_quietly(sleeper):
+    def newer_stop(n):
+        st = json.loads(sleeper.state.read_text())
+        sleeper.state.write_text(json.dumps({**st, "token": "newer"}))
+    sleeper.on_nap = newer_stop
+    assert brb.on_stop(sleeper.data) == 0
+    assert json.loads(sleeper.state.read_text())["token"] == "newer"
