@@ -410,3 +410,28 @@ def test_main_denial_is_labelled_and_ignores_agent_names_in_text(tmp_path):
                           old_string='"flow:tester"', new_string='"x"')
     assert code == 2
     assert "flow main-session guard" in err
+
+
+def test_main_bash_is_not_checked(tmp_path):
+    root = main_repo(tmp_path)
+    code, _ = run({"tool_name": "Bash", "cwd": str(root),
+                   "tool_input": {"command": "sed -i s/assert/pass/ tests/test_a.py"}})
+    assert code == 0
+
+
+def test_other_agents_are_not_main_guarded(tmp_path):
+    root = main_repo(tmp_path)
+    code, _ = run({"agent_type": "general-purpose", "tool_name": "Edit", "cwd": str(root),
+                   "tool_input": {"file_path": str(root / "tests/test_a.py"),
+                                  "old_string": "assert 1", "new_string": "pass"}})
+    assert code == 0
+
+
+def test_main_one_parked_plan_lifts_guard_for_all_plans(tmp_path):
+    root = main_repo(tmp_path)
+    other = root / ".flow" / "u"
+    other.mkdir()
+    (other / "plan.md").write_text(
+        PLAN.format(status="Approved - building", questions="- [ ] Q1 ask - blocks: 1\n"))
+    assert main_call(root, "Edit", "tests/test_a.py",
+                     old_string="assert 1", new_string="pass")[0] == 0
