@@ -89,6 +89,8 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   when idle; its `timeout` IS enforced, so the hook timeout must exceed the
   longest sleep (~55 min on 1h TTL); in `-p` mode async hooks are killed at
   teardown. No hook or documented API triggers `/compact`.
+- Q2: yes - spike plugin at `.flow/22-brb-later-cache/spike/`, run by the
+  user in CLI and desktop app.
 - `/brb`'s last wake switches to `/later` instead of compacting - the user's
   choice; one shared compact path, plus one more TTL to return.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
@@ -104,7 +106,7 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   pinging at duration + grace and native idle compaction takes over; `/later`
   stays for Codex only (if the spike finds a compact path there) - recommended:
   yes - blocks: spike's compact part, `skills/later/` step, ADR wording
-- [ ] Q2 The spike needs a live interactive session (desktop app and CLI) with
+- [x] Q2 The spike needs a live interactive session (desktop app and CLI) with
   a throwaway asyncRewake Stop hook; I can't install hooks into your settings
   from the sandbox. You run it from a test plugin I prepare - recommended: yes
   - blocks: steps 3-5
