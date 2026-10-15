@@ -20,7 +20,7 @@ When a flow task touches a versioned package, flow asks the user what the versio
 - [x] ship skill: re-confirm or ask fresh in Verify, bump only on a yes with the number
 - [x] flow skill: Trivial report asks; top-level Version changes bullet mentions the ask
 - [x] AGENTS.md Versions line + ADR 0013
-- [ ] Run tests, plugin-validator, skill-reviewer on plan/ship/flow
+- [x] Run tests, plugin-validator, skill-reviewer on plan/ship/flow
 
 ## Test command
 `uv run --with pytest pytest`
