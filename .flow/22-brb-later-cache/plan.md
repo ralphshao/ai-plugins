@@ -49,12 +49,12 @@ instead of paying a full cache rewrite. Opt-in.
   the min-token guard.
 - [x] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
   add it to USER_ONLY.
-- [ ] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
+- [x] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
   in `.flow/`, Claude Code only, and why `/later` was dropped: its intent
   (wait out the TTL in case the user returns, then compact), the spike
   results (asyncRewake wakes an idle session with a cache hit;
   `Skill("compact")` is rejected), and native idle compaction covering it.
-- [ ] flow README: Skills and Hooks sections (update the hook count).
+- [x] flow README: Skills and Hooks sections (update the hook count).
 
 ## Test command
 `uv run --with pytest pytest tests/flow`
