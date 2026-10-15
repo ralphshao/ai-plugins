@@ -9,7 +9,7 @@ When a flow task touches a versioned package, flow asks the user what the versio
 - `flow` skill, Trivial path: when the edit touches a versioned package, the final report asks the version question. Nothing gets bumped.
 - AGENTS.md `## Versions`: one line describing the ask-at-GATE-1, confirm-at-ship flow.
 - New `docs/adr/0013-flow-asks-the-version-question.md` refines ADR 9. ADR 9's rule that a plan-listed bump isn't a go stays.
-- No version number changes anywhere.
+- flow goes 0.2.5 -> 0.2.6 in `plugins/flow/.claude-plugin/plugin.json`, `plugins/flow/.codex-plugin/plugin.json`, and flow's entry in `.claude-plugin/marketplace.json`, applied at ship on the user's go. No other version changes.
 - `uv run --with pytest pytest` passes.
 
 ## Seams under test
@@ -26,10 +26,13 @@ When a flow task touches a versioned package, flow asks the user what the versio
 `uv run --with pytest pytest`
 
 ## Out of scope
-- Bumping flow (0.2.6 handled outside this task).
 - Any hook or script that detects versioned files: the skills tell the agent to check; no code.
 
+## Version
+flow 0.2.5 -> 0.2.6 (intent; applied at ship only on the user's go)
+
 ## Decisions
+- Bump flow to 0.2.6 in this task - user asked at GATE 1; intent only, ship asks for the go.
 - Version line is a `## Version` section in plan.md, written only when a versioned package is touched - ship can find it by heading; absent means "no versioned package seen at plan time".
 - Ship confirms in step 1 Verify - plan.md (and its Version line) is removed by drop-state in step 3, so the check must come before it.
 - Ship re-confirms a recorded "none" too - a silent no-bump is the PR #24 failure; the build may have grown into a release (user, at GATE 1).
