@@ -10,6 +10,8 @@ leaving while its cache is still warm. Both are opt-in.
   session about TTL minus a lead (55 min on 1h, 4 min on 5m) after the last
   turn, and keeps doing so until duration + grace (50% of the duration, at
   least one TTL).
+- Bare `/brb` defaults its duration by TTL: one cycle (60m) on a 1h TTL,
+  30m on a 5m TTL.
 - Each woken ping turn reads the cache (`cache_read_input_tokens` close to
   the full context) and is answered briefly.
 - Any real user prompt cancels the timer. The plugin's own wakes do not.
@@ -46,7 +48,7 @@ leaving while its cache is still warm. Both are opt-in.
   with `/compact`, or Codex `codex exec resume`. Record the results under
   Decisions. If the asyncRewake wake fails, stop and re-plan.
 - [ ] `brb.py` TTL and schedule: transcript parse (1h/5m, context size), the
-  settings-precedence fallback, ping times, and grace. Tests first.
+  settings-precedence fallback, ping times, grace, and the bare-`/brb` default duration. Tests first.
 - [ ] `brb.py` arm/stop/prompt modes plus the `hooks.json` entries (an
   asyncRewake Stop and a UserPromptSubmit), with the Codex early exit and
   the min-token guard.
@@ -76,6 +78,8 @@ leaving while its cache is still warm. Both are opt-in.
 - Auto-compact is spiked first, and the fallback is built only if a path
   works; otherwise a nudge - the user's choice.
 - A spike gates the build (step 1) - the user's choice.
+- Bare `/brb` defaults to one cycle on 1h TTL, 30m on 5m TTL - the user's
+  choice; a 5m cycle is too short for a real break.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
   belongs to the session, not the task, and nothing is written to the repo.
 - The plugin's wakes arrive as system reminders, not user prompts, so the
