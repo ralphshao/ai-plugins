@@ -18,7 +18,9 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
 
 ## 2. Review
 
-`checkpoint`, then use the `deep-review` skill on the task's `diff-scope`. Fix every confirmed
+`checkpoint`, then use the `deep-review` skill on the task's `diff-scope`,
+with `.flow/<slug>/plan.md` as the spec path, so reviewers check the diff
+against the approved acceptance criteria. Fix every confirmed
 finding, rerun the test command, `checkpoint`. Findings that fall under the
 escalation rule (see the `flow` skill) are parked as open questions, not
 fixed silently.

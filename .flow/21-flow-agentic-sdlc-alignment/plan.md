@@ -18,7 +18,7 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 - `claude plugin eval` cases - catches: review catches and false drops, sizing/gating regressions after trims / misses: model variance between runs.
 
 ## Steps
-- [ ] ship passes plan.md as deep-review spec path
+- [x] ship passes plan.md as deep-review spec path
 - [ ] guard.py: main-session guard after GATE 1, with tests (TDD)
 - [ ] ADR 0012: flow guards the main session after GATE 1
 - [ ] Eval cases review-seeded-bug and review-true-finding-kept
