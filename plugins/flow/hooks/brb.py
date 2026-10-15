@@ -120,9 +120,12 @@ def next_wake(now, ttl, until):
 
 # --- hook modes ---------------------------------------------------------------
 #
-# prompt (UserPromptSubmit): `/brb [duration]` arms the keepalive; any other
-#   prompt cancels it. The plugin's own wakes arrive as system reminders, not
-#   prompts, so they never cancel it.
+# expand (UserPromptExpansion): typing `/brb [duration]` or `/flow:brb ...`
+#   arms the keepalive. Codex has no such event, so it never arms there.
+# prompt (UserPromptSubmit): any prompt except the `/brb` command itself
+#   cancels it. This event also fires for scheduled tasks, background
+#   subagents reporting back, and cross-session messages, which cancel it too.
+#   The keepalive's own wakes arrive as system reminders and don't fire it.
 # stop (Stop, asyncRewake): if armed, sleep until the next ping is due, then
 #   exit 2 so Claude Code wakes the idle session. That ping turn ends with
 #   another Stop, which re-reads the TTL and schedules the next one.
@@ -130,7 +133,7 @@ def next_wake(now, ttl, until):
 # State is one JSON file per session in the system temp folder: it belongs to
 # the session, not to a task, and losing it only stops the keepalive.
 
-BRB = re.compile(r"/(?:flow:)?brb(?:\s+(\S+))?\s*")
+BRB = re.compile(r"/(?:flow:)?brb(?:\s.*)?", re.S)
 POLL = 30  # seconds between cancel checks while sleeping
 PING = ("flow /brb keepalive: the user is away and this turn only keeps the "
         "prompt cache warm. Reply with only \"ok\". Don't run tools.")
@@ -166,18 +169,24 @@ def drop(path):
         pass
 
 
-def on_prompt(data):
+def on_expand(data):
     path = state_path(data.get("session_id"))
-    m = BRB.fullmatch(str(data.get("prompt") or "").strip())
-    # Codex has no asyncRewake, and a sleeping Stop hook would block it.
-    if not m or "/.codex/" in str(data.get("transcript_path") or ""):
+    if data.get("command_name") not in ("brb", "flow:brb"):
         drop(path)
         return
-    duration = parse_duration(m.group(1)) if m.group(1) else None
-    if m.group(1) and not duration:
-        drop(path)  # the skill tells the user the duration didn't parse
+    # Codex has no asyncRewake, and a sleeping Stop hook would block it.
+    transcript = str(data.get("transcript_path") or "").replace("\\", "/")
+    args = str(data.get("command_args") or "").strip()
+    duration = parse_duration(args) if args else None
+    if "/.codex/" in transcript or (args and not duration):
+        drop(path)  # the skill tells the user a bad duration armed nothing
         return
     save(path, {"armed_at": now(), "duration": duration})
+
+
+def on_prompt(data):
+    if not BRB.fullmatch(str(data.get("prompt") or "").strip()):
+        drop(state_path(data.get("session_id")))
 
 
 def on_stop(data):
@@ -217,6 +226,9 @@ def main():
     try:
         data = json.load(sys.stdin)
     except ValueError:
+        return 0
+    if mode == "expand":
+        on_expand(data)
         return 0
     if mode == "prompt":
         on_prompt(data)

@@ -22,10 +22,13 @@ prefix, and Claude Code kills its async hooks at teardown.
 `/brb [duration]` is a user-only flow skill. Two hooks do the work, in
 `hooks/brb.py`:
 
-- **UserPromptSubmit** arms the keepalive when the prompt is `/brb` or
-  `/flow:brb` (with an optional duration), and cancels it on any other
-  prompt. The keepalive's own wakes arrive as system reminders, not
-  prompts, so they don't cancel it.
+- **UserPromptExpansion** arms the keepalive when the typed command is
+  `/brb` or `/flow:brb`, with an optional duration in `command_args`.
+  Codex has no such event, so it never arms there.
+- **UserPromptSubmit** cancels it on any other prompt. That event also
+  fires for scheduled tasks, background subagents reporting back, and
+  cross-session messages, so those cancel it too. The keepalive's own wakes
+  arrive as system reminders, not prompts, so they don't cancel it.
 - **Stop, with `asyncRewake: true`**, sleeps until the TTL minus a lead
   (55 minutes on 1h, 4 on 5m), then exits 2. Claude Code wakes the idle
   session, Claude answers `ok`, and that turn's Stop re-reads the TTL and
@@ -43,7 +46,8 @@ A spike in the CLI confirmed the mechanism: the Stop hook woke an idle
 session after 60 seconds, and `/usage` showed no cache misses on the 1h TTL.
 
 Claude Code only. Codex has no asyncRewake and would run the sleeping hook
-synchronously, so `brb.py` never arms for a Codex transcript.
+synchronously. Besides lacking UserPromptExpansion, `brb.py` refuses to arm
+for a transcript under `.codex/`.
 
 ## /later was dropped
 

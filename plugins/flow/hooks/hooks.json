@@ -68,6 +68,17 @@
           }
         ]
       }
+    ],
+    "UserPromptExpansion": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$(command -v python3 || command -v python)\" \"${CLAUDE_PLUGIN_ROOT}/hooks/brb.py\" expand",
+            "commandWindows": "for %P in (py.exe) do @if not \"%~$PATH:P\"==\"\" (py -3 \"%PLUGIN_ROOT%\\hooks\\brb.py\" expand) else (python \"%PLUGIN_ROOT%\\hooks\\brb.py\" expand)"
+          }
+        ]
+      }
     ]
   }
 }

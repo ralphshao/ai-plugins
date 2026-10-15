@@ -68,8 +68,9 @@ Claude Code and `flow-<name>` in Codex.
   (ruff, prettier, gofmt, rustfmt). It never blocks an edit.
 - `stop_gate.py` blocks the agent from stopping while the approved plan's
   test command fails.
-- `brb.py` runs `/brb`'s keepalive (Claude Code only). A UserPromptSubmit
-  hook arms it on `/brb` and cancels it on any other prompt. A background
+- `brb.py` runs `/brb`'s keepalive (Claude Code only). A UserPromptExpansion
+  hook arms it on `/brb`, and a UserPromptSubmit hook cancels it on any
+  other prompt. A background
   Stop hook (`asyncRewake`) wakes the idle session for a cheap cached turn
   shortly before the cache expires, until the break plus grace ends. See
   [ADR 12](../../docs/adr/0012-flow-brb-keepalive-uses-asyncrewake.md).

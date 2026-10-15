@@ -120,9 +120,16 @@ def test_stop_without_brb_does_nothing(run):
     assert run("stop") == (0, "")
 
 
-@pytest.mark.parametrize("prompt", ["/brb", "/flow:brb 90m", "  /brb 2h "])
-def test_brb_prompt_arms_and_stop_pings(run, prompt):
-    run("prompt", prompt=prompt)
+def arm(run, args="", name="flow:brb", **kw):
+    """Type `/<name> <args>`: the expansion arms, the submit must not cancel."""
+    run("expand", command_name=name, command_args=args, **kw)
+    run("prompt", prompt=f"/{name} {args}".strip(), **kw)
+
+
+@pytest.mark.parametrize("name,args", [
+    ("flow:brb", ""), ("flow:brb", "90m"), ("brb", " 2h "), ("brb", "1h 30m")])
+def test_brb_arms_and_stop_pings(run, name, args):
+    arm(run, args, name)
     assert run.state.exists()
     code, err = run("stop")
     assert code == 2 and "keepalive" in err
@@ -130,25 +137,34 @@ def test_brb_prompt_arms_and_stop_pings(run, prompt):
 
 
 def test_other_prompt_cancels(run):
-    run("prompt", prompt="/brb")
+    arm(run)
     run("prompt", prompt="I'm back")
     assert not run.state.exists()
     assert run("stop") == (0, "")
 
 
-def test_bad_duration_does_not_arm(run):
-    run("prompt", prompt="/brb soon")
+def test_other_command_cancels(run):
+    arm(run)
+    run("expand", command_name="flow:plan", command_args="")
+    run("prompt", prompt="/flow:plan")
     assert not run.state.exists()
 
 
-def test_codex_never_arms(run):
-    run("prompt", prompt="/brb",
-        transcript_path="/home/u/.codex/sessions/rollout-1.jsonl")
+@pytest.mark.parametrize("args", ["soon", "0", "0m", "1h extra"])
+def test_bad_duration_does_not_arm(run, args):
+    arm(run, args)
+    assert not run.state.exists()
+
+
+@pytest.mark.parametrize("path", ["/home/u/.codex/sessions/rollout-1.jsonl",
+                                  r"C:\Users\u\.codex\sessions\r.jsonl"])
+def test_codex_never_arms(run, path):
+    arm(run, transcript_path=path)
     assert not run.state.exists()
 
 
 def test_stops_after_deadline(run):
-    run("prompt", prompt="/brb 60m", at=0)        # 1h TTL: until = 2h
+    arm(run, "60m", at=0)                         # 1h TTL: until = 2h
     assert run("stop", at=0)[0] == 2
     assert run("stop", at=3300)[0] == 2           # next ping at 6600 < 7200
     assert run("stop", at=6600)[0] == 0           # 9900 would be past it
@@ -157,7 +173,7 @@ def test_stops_after_deadline(run):
 
 def test_small_context_is_not_worth_pinging(run):
     run.transcript.write_text(usage_line(h1=500), encoding="utf-8")
-    run("prompt", prompt="/brb")
+    arm(run)
     assert run("stop")[0] == 0
     assert not run.state.exists()
 
@@ -168,14 +184,14 @@ def test_bad_stdin_is_ignored():
     assert p.returncode == 0
 
 
-@pytest.mark.parametrize("prompt", ["/brbx", "/brb 1h extra", "please /brb", ""])
-def test_non_brb_prompts_do_not_arm(run, prompt):
+@pytest.mark.parametrize("prompt", ["/brbx", "please /brb", ""])
+def test_typed_text_never_arms(run, prompt):
     run("prompt", prompt=prompt)
     assert not run.state.exists()
 
 
 def test_rearm_replaces_state_and_corrupt_state_is_inert(run):
-    run("prompt", prompt="/brb 30m", at=5)
+    arm(run, "30m", at=5)
     assert json.loads(run.state.read_text()) == {"armed_at": 5.0,
                                                  "duration": 1800}
     run.state.write_text("{not json")
