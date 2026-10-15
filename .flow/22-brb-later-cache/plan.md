@@ -2,8 +2,8 @@
 
 ## Goal
 Before a break, the user runs `/brb 90m` and comes back to a warm prompt cache
-instead of paying a full cache rewrite. `/later` compacts a session they're
-leaving while its cache is still warm. Both are opt-in.
+instead of paying a full cache rewrite. `/later` waits out the cache TTL in
+case they come back, then compacts just before the cache goes cold. Both are opt-in.
 
 ## Acceptance criteria
 - `/brb <duration>` in Claude Code (CLI and desktop app) wakes the idle
@@ -22,8 +22,9 @@ leaving while its cache is still warm. Both are opt-in.
 - On expiry, `/brb` falls back to compacting, if the step 1 spike finds a
   path that works. Otherwise its last wake posts a reminder to run
   `/compact`.
-- `/later` compacts now, or tells the user to run `/compact` if the spike
-  found no path.
+- `/later` sends no pings. It arms one wake at TTL minus the lead, which a
+  real user prompt cancels. That wake compacts, or posts a reminder to run
+  `/compact` if the spike found no auto-compact path.
 - Codex: `/brb` hooks exit at once and never block. `/later` works as far as
   the spike allows.
 - Hooks are stdlib-only and run on Python 3.9+, on Linux, macOS, and Windows.
@@ -54,7 +55,8 @@ leaving while its cache is still warm. Both are opt-in.
   the min-token guard.
 - [ ] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
   add it to USER_ONLY.
-- [ ] `skills/later/` user-only skill, plus the expiry fallback. Auto-compact
+- [ ] `skills/later/` user-only skill (one wake at TTL minus the lead, no
+  pings), plus the shared expiry/compact fallback. Auto-compact
   if the spike found a path, otherwise a nudge.
 - [ ] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
   in `.flow/`, the Codex scope, and the compact fallback outcome.
@@ -80,6 +82,9 @@ leaving while its cache is still warm. Both are opt-in.
 - A spike gates the build (step 1) - the user's choice.
 - Bare `/brb` defaults to one cycle on 1h TTL, 30m on 5m TTL - the user's
   choice; a 5m cycle is too short for a real break.
+- `/later` waits until just before the TTL ends instead of compacting at
+  once - the user's intent: coming back within the TTL keeps the full
+  context. It reuses `/brb`'s timer with zero pings.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
   belongs to the session, not the task, and nothing is written to the repo.
 - The plugin's wakes arrive as system reminders, not user prompts, so the
