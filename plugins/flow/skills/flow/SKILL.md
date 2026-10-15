@@ -48,21 +48,14 @@ Size by what changes, not by how many lines. A one-line change to what a
 public function returns, raises, or accepts is Normal, not Trivial. When
 unsure between two sizes, pick the larger.
 
-This first call only has to tell Trivial from the rest; the facts come
-later. Re-size at these points, and nowhere else:
-
-- **After exploring** (`plan`), before the drafts and the interview.
-- **At GATE 1**, against the written plan.
-- **During a Trivial edit**, upward only: if the change turns out to alter
-  behavior a caller could notice, stop, switch to Normal, and run `start`,
-  telling `isolate` which files the edit touched so it keeps them with the
-  task.
-
-Never re-size down to Trivial once a branch and brief exist: the gates
-stay. On each change, say `Size: <old> -> <new> - <reason>` in one line,
-update the brief's `Size:` line, and add the reason under `## Decisions`
-(if `plan.md` doesn't exist yet, when you write it). During the build, don't re-size: if the work looks
-bigger than its size, that's a scope change, so escalate it.
+The first call only has to tell Trivial from the rest. Re-size after
+exploring (`plan`), at GATE 1, and upward during a Trivial edit that turns
+out to change behavior (switch to Normal and run `start`, telling `isolate`
+which files the edit touched). Never re-size down to Trivial once a branch
+and brief exist, and never during the build: work that looks bigger is a
+scope change, so escalate it. On each change, say `Size: <old> -> <new> -
+<reason>`, update the brief's `Size:` line, and record the reason under
+`## Decisions`.
 
 ## 3. Run the path
 
