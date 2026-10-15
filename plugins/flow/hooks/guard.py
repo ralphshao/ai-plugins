@@ -15,9 +15,16 @@ codex_agents.py installs (flow-tester).
   only. A test file it writes can still edit source when a runner runs it;
   that gap is accepted (ADR 4).
 
+- Main session, once a plan's Status starts with "Approved" and it has no
+  unticked open question (ADR 12): no Edit or Write that changes the plan's
+  test command, or removes or changes lines of an existing test file, so the
+  stop gate's tests can't be weakened to pass. Adding lines and new test
+  files stays allowed; parking an open question lifts the guard. Bash and
+  apply_patch aren't checked here (accepted gap).
+
 Writes are Write and Edit (Claude Code) and apply_patch (Codex, which hooks
-match as Write|Edit). Every other caller (the main session, other agents)
-passes through. Exit 2 blocks the call and shows stderr to the agent.
+match as Write|Edit). Every other caller (other agents) passes through.
+Exit 2 blocks the call and shows stderr to the agent.
 
 A guard bug fails closed for flow's agents (exit 2) and open for everyone
 else (exit 0), so it can't let a reviewer write or block the main session.
@@ -28,10 +35,12 @@ exits with a non-blocking error and the guard doesn't run at all. Python
 Bash, Write, and Edit in the main session too, on a machine without Python.
 """
 import json
+from collections import Counter
+import os
 import re
 import shlex
 import sys
-from pathlib import PurePath
+from pathlib import Path, PurePath
 from typing import NoReturn
 
 REVIEWERS = {"flow:code-reviewer", "flow:strong-reviewer",
@@ -216,7 +225,7 @@ def check_test_path(path, cwd):
             raise Denied(f"only files inside {cwd} may be written: {path}")
     if ".." in p.parts:
         raise Denied(f"no '..' in paths: {path}")
-    if TEST_DIRS.isdisjoint(p.parts[:-1]) and not TEST_FILE.match(p.name):
+    if not is_test(p):
         raise Denied(f"only test files may be written: {path}")
 
 
@@ -229,6 +238,55 @@ def written_paths(tool, inp):
             raise Denied("could not find the files this patch changes")
         return paths
     return [inp.get("file_path", "")]
+
+
+def is_test(p):
+    return not TEST_DIRS.isdisjoint(p.parts[:-1]) or bool(TEST_FILE.match(p.name))
+
+
+def guarded_plans(root):
+    """Approved plans, or none if any plan is parked on an open question."""
+    from stop_gate import section
+    plans = []
+    for path in root.glob(".flow/*/plan.md"):
+        text = path.read_text(encoding="utf-8")
+        if not section(text, "Status").strip().startswith("Approved"):
+            continue
+        if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.M):
+            return []
+        plans.append(path)
+    return plans
+
+
+def check_main(tool, inp, cwd):
+    if tool not in ("Write", "Edit"):
+        return
+    from stop_gate import repo_root, section
+    root = repo_root(cwd or ".")
+    plans = guarded_plans(root)
+    path = Path(root, inp.get("file_path", ""))
+    if not plans or not path.is_file():
+        return  # new files are always allowed
+    old = path.read_text(encoding="utf-8")
+    if tool == "Edit":
+        a, b = inp.get("old_string") or "", inp.get("new_string") or ""
+        new = old.replace(a, b) if inp.get("replace_all") else old.replace(a, b, 1)
+    else:
+        new = inp.get("content") or ""
+    hint = ("the plan is approved; park an open question in plan.md and get "
+            "the user's answer first")
+    rel = PurePath(os.path.relpath(path, root))
+    # Lowercased too: macOS and Windows open TESTS/ and PLAN.md as usual.
+    same = os.path.normcase(path.resolve()).lower()
+    if same in [os.path.normcase(p.resolve()).lower() for p in plans]:
+        if section(old, "Test command") != section(new, "Test command"):
+            raise Denied(f"no changing the test command: {hint}")
+        if not section(new, "Status").strip().startswith("Approved"):
+            raise Denied(f"no changing the approved Status: {hint}")
+    elif any(map(is_test, (rel, PurePath(*(x.lower() for x in rel.parts))))):
+        # Every old line must survive, duplicates counted.
+        if Counter(old.splitlines()) - Counter(new.splitlines()):
+            raise Denied(f"only additions to existing tests: {hint}")
 
 
 def check(data):
@@ -245,13 +303,24 @@ def check(data):
         elif tool in WRITES:
             for path in written_paths(tool, inp):
                 check_test_path(path, data.get("cwd"))
+    elif not agent:
+        check_main(tool, inp, data.get("cwd"))
 
 
 def main() -> NoReturn:
     raw = sys.stdin.read()
-    # Before parsing, so a payload that won't parse still fails closed.
-    flow_agent = any(f'"{a}"' in raw for a in FLOW_AGENTS)
-    who = "tester" if any(f'"{a}"' in raw for a in TESTERS) else "reviewer"
+    try:
+        agent = json.loads(raw).get("agent_type")
+    except Exception:
+        # Unparseable: guess from the raw text, so a flow agent fails closed.
+        agent = next((a for a in FLOW_AGENTS if f'"{a}"' in raw), None)
+    flow_agent = agent in FLOW_AGENTS
+    if not flow_agent:
+        who = "main-session"
+    elif agent in TESTERS:
+        who = "tester"
+    else:
+        who = "reviewer"
     try:
         check(json.loads(raw))
     except Denied as e:

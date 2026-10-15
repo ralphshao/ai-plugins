@@ -1,0 +1,38 @@
+name: flow evals
+
+# Reruns flow's claude plugin eval cases when its skills, agents (including
+# a model pin in agents/*.md), hooks, or evals change. Needs the
+# ANTHROPIC_API_KEY repo secret; skips with a notice without it, so forks
+# and PRs from outside stay green.
+on:
+  pull_request:
+    paths:
+      - "plugins/flow/skills/**"
+      - "plugins/flow/agents/**"
+      - "plugins/flow/hooks/**"
+      - "plugins/flow/evals/**"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - if: env.HAS_KEY != 'true'
+        run: echo "::notice::ANTHROPIC_API_KEY not set; skipping flow evals"
+      - if: env.HAS_KEY == 'true'
+        uses: actions/checkout@v5
+      - if: env.HAS_KEY == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - if: env.HAS_KEY == 'true'
+        working-directory: plugins/flow
+        # Only this step gets the key, not checkout or the npm install.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: >-
+          claude plugin eval . --scaffold --trust-plugin --no-publish
+          --ablation none --runs 1 -j 4 --threshold 1.0
+          --allow-tools 'Bash(git:*)'
