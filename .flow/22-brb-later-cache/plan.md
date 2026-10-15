@@ -19,9 +19,9 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   5m tokens), re-read after each ping. Fallback: the settings precedence
   chain from the issue.
 - No wake when the context is below a minimum-token threshold.
-- On expiry, `/brb` falls back to compacting, if the step 1 spike finds a
-  path that works. Otherwise its last wake posts a reminder to run
-  `/compact`.
+- `/brb`'s last wake, at duration + grace, hands off to `/later`: it
+  pings once more and arms `/later`'s single wake. The session then gets one
+  more TTL to return before it compacts.
 - `/later` sends no pings. It arms one wake at TTL minus the lead, which a
   real user prompt cancels. That wake compacts, or posts a reminder to run
   `/compact` if the spike found no auto-compact path.
@@ -85,6 +85,8 @@ case they come back, then compacts just before the cache goes cold. Both are opt
 - `/later` waits until just before the TTL ends instead of compacting at
   once - the user's intent: coming back within the TTL keeps the full
   context. It reuses `/brb`'s timer with zero pings.
+- `/brb`'s last wake switches to `/later` instead of compacting - the user's
+  choice; one shared compact path, plus one more TTL to return.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
   belongs to the session, not the task, and nothing is written to the repo.
 - The plugin's wakes arrive as system reminders, not user prompts, so the
