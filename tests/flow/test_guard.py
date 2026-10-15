@@ -272,3 +272,98 @@ def test_patch_import_failure_fails_closed(tmp_path):
                        input=json.dumps({"agent_type": TESTER, "tool_name": "apply_patch",
                                          "tool_input": {"command": "*** Add File: tests/a.py"}}))
     assert p.returncode == 2
+
+
+# Main-session guard after GATE 1: no agent_type, a plan whose Status starts
+# with Approved, and no unticked open question.
+PLAN = """# t
+
+## Steps
+- [ ] one
+
+## Test command
+`pytest`
+
+## Open questions
+{questions}
+## Status
+{status}
+"""
+
+
+def main_repo(tmp_path, status="Approved - building", questions=""):
+    flow = tmp_path / ".flow" / "t"
+    flow.mkdir(parents=True)
+    (flow / "plan.md").write_text(PLAN.format(status=status, questions=questions))
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_a.py").write_text("def test_a():\n    assert 1\n")
+    return tmp_path
+
+
+def main_call(root, tool, path, **inp):
+    code, err = run({"tool_name": tool, "cwd": str(root),
+                     "tool_input": {"file_path": str(root / path), **inp}})
+    return code, err
+
+
+def test_main_cannot_change_test_command(tmp_path):
+    root = main_repo(tmp_path)
+    code, err = main_call(root, "Edit", ".flow/t/plan.md",
+                          old_string="`pytest`", new_string="`true`")
+    assert code == 2
+    assert "open question" in err
+
+
+def test_main_cannot_rewrite_plan_test_command(tmp_path):
+    root = main_repo(tmp_path)
+    text = (root / ".flow/t/plan.md").read_text().replace("`pytest`", "`true`")
+    assert main_call(root, "Write", ".flow/t/plan.md", content=text)[0] == 2
+
+
+def test_main_may_tick_steps(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Edit", ".flow/t/plan.md",
+                     old_string="- [ ] one", new_string="- [x] one")[0] == 0
+
+
+def test_main_cannot_change_existing_test_lines(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Edit", "tests/test_a.py",
+                     old_string="assert 1", new_string="pass")[0] == 2
+
+
+def test_main_may_add_to_existing_test(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Edit", "tests/test_a.py", old_string="assert 1",
+                     new_string="assert 1\n\n\ndef test_b():\n    assert 2")[0] == 0
+
+
+def test_main_cannot_overwrite_test_dropping_lines(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Write", "tests/test_a.py",
+                     content="def test_a():\n    pass\n")[0] == 2
+
+
+def test_main_may_overwrite_test_keeping_lines(tmp_path):
+    root = main_repo(tmp_path)
+    content = "import os\n\ndef test_a():\n    assert 1\n"
+    assert main_call(root, "Write", "tests/test_a.py", content=content)[0] == 0
+
+
+def test_main_may_write_new_tests_and_source(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Write", "tests/test_new.py", content="x")[0] == 0
+    (root / "app.py").write_text("a = 1\n")
+    assert main_call(root, "Edit", "app.py", old_string="a = 1",
+                     new_string="a = 2")[0] == 0
+
+
+@pytest.mark.parametrize("status,questions", [
+    ("Awaiting GATE 1", ""),
+    ("Approved - building", "- [ ] Q1 change the test? - blocks: 2\n"),
+])
+def test_main_unguarded_before_approval_or_while_parked(tmp_path, status, questions):
+    root = main_repo(tmp_path, status, questions)
+    assert main_call(root, "Edit", "tests/test_a.py",
+                     old_string="assert 1", new_string="pass")[0] == 0

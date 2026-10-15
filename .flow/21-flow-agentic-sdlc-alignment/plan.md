@@ -19,8 +19,8 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 
 ## Steps
 - [x] ship passes plan.md as deep-review spec path
-- [ ] guard.py: main-session guard after GATE 1, with tests (TDD)
-- [ ] ADR 0012: flow guards the main session after GATE 1
+- [x] guard.py: main-session guard after GATE 1, with tests (TDD)
+- [x] ADR 0012: flow guards the main session after GATE 1
 - [ ] Eval cases review-seeded-bug and review-true-finding-kept
 - [ ] CI workflow flow-evals.yml
 - [ ] Trim deep-review scans and flow/SKILL.md re-sizing, evals before/after
