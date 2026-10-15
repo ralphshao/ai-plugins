@@ -1,9 +1,8 @@
-# flow: opt-in /brb cache warmer and /later compactor
+# flow: opt-in /brb cache warmer
 
 ## Goal
 Before a break, the user runs `/brb 90m` and comes back to a warm prompt cache
-instead of paying a full cache rewrite. `/later` waits out the cache TTL in
-case they come back, then compacts just before the cache goes cold. Both are opt-in.
+instead of paying a full cache rewrite. Opt-in.
 
 ## Acceptance criteria
 - `/brb <duration>` in Claude Code (CLI and desktop app) wakes the idle
@@ -19,14 +18,9 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   5m tokens), re-read after each ping. Fallback: the settings precedence
   chain from the issue.
 - No wake when the context is below a minimum-token threshold.
-- `/brb`'s last wake, at duration + grace, hands off to `/later`: it
-  pings once more and arms `/later`'s single wake. The session then gets one
-  more TTL to return before it compacts.
-- `/later` sends no pings. It arms one wake at TTL minus the lead, which a
-  real user prompt cancels. That wake compacts, or posts a reminder to run
-  `/compact` if the spike found no auto-compact path.
-- Codex: `/brb` hooks exit at once and never block. `/later` works as far as
-  the spike allows.
+- No wake is scheduled past duration + grace. After that, Claude Code's
+  native idle compaction (terminal, 1h TTL) handles the idle session.
+- Codex: the `/brb` hooks exit at once and never block.
 - Hooks are stdlib-only and run on Python 3.9+, on Linux, macOS, and Windows.
 
 ## Seams under test
@@ -37,7 +31,7 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   really wakes the session and hits the cache (covered by the spike and a
   manual check at ship)
 - `tests/flow/test_layout.py` - catches: user-only frontmatter and
-  openai.yaml for `brb`/`later`, hook commands that resolve / misses:
+  openai.yaml for `brb`, hook commands that resolve / misses:
   runtime behavior
 
 ## Steps
@@ -55,11 +49,8 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   the min-token guard.
 - [ ] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
   add it to USER_ONLY.
-- [ ] `skills/later/` user-only skill (one wake at TTL minus the lead, no
-  pings), plus the shared expiry/compact fallback. Auto-compact
-  if the spike found a path, otherwise a nudge.
 - [ ] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
-  in `.flow/`, the Codex scope, and the compact fallback outcome.
+  in `.flow/`, Claude Code only, and no `/later` (native idle compaction).
 - [ ] flow README: Skills and Hooks sections (update the hook count).
 
 ## Test command
@@ -96,8 +87,10 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   cache. `Skill("compact")` is rejected: "compact is a built-in CLI
   command, not a skill". No auto-compact path from a woken turn. Draft and
   desktop-app runs not done yet.
-- `/brb`'s last wake switches to `/later` instead of compacting - the user's
-  choice; one shared compact path, plus one more TTL to return.
+- Q1: drop `/later` entirely, on Claude Code and Codex - the user's choice;
+  no skill or woken turn can run `/compact` (spike), and native idle
+  compaction covers the leaving case. Supersedes the `/later` decisions
+  above.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
   belongs to the session, not the task, and nothing is written to the repo.
 - The plugin's wakes arrive as system reminders, not user prompts, so the
@@ -105,7 +98,7 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   confirms it.
 
 ## Open questions
-- [ ] Q1 Claude Code already compacts idle sessions shortly before a 1h cache
+- [x] Q1 Claude Code already compacts idle sessions shortly before a 1h cache
   expires (`idleCompaction`, on by default, terminal sessions, 1h TTL only).
   Drop `/later` and the compact fallback on Claude Code: `/brb` just stops
   pinging at duration + grace and native idle compaction takes over; `/later`

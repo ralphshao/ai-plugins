@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in prompt-cache keepalive for /brb and /later (Claude Code only).
+"""Opt-in prompt-cache keepalive for /brb (Claude Code only).
 
 This module holds the timing logic: how long the session's cache lives (its
 TTL), how big the context is, and when the next wake is due. The hook modes
@@ -104,14 +104,11 @@ def deadline(armed_at, duration, ttl):
     return armed_at + duration + max(duration // 2, ttl)
 
 
-def next_wake(now, ttl, mode, until=None):
-    """(when, kind) for the next wake.
+def next_wake(now, ttl, until):
+    """When to ping next, or None once that would pass /brb's deadline.
 
-    kind is "ping" while /brb's deadline is beyond the next wake, then
-    "later": /brb's last wake pings once more and hands off to /later, whose
-    single wake is "compact".
+    After the deadline the session is left idle, and Claude Code's own idle
+    compaction takes over.
     """
     when = now + ttl - LEAD[ttl]
-    if mode == "later":
-        return when, "compact"
-    return when, ("ping" if until is None or when < until else "later")
+    return when if when < until else None

@@ -83,8 +83,7 @@ def test_deadline_grace_and_default():
 
 
 def test_next_wake():
-    assert brb.next_wake(0, H, "brb", until=2 * H) == (55 * 60, "ping")
-    assert brb.next_wake(0, M5, "brb", until=H) == (240, "ping")
-    assert brb.next_wake(H, H, "brb", until=2 * H)[1] == "ping"
-    assert brb.next_wake(H + 300, H, "brb", until=2 * H)[1] == "later"
-    assert brb.next_wake(0, H, "later") == (55 * 60, "compact")
+    assert brb.next_wake(0, H, 2 * H) == 55 * 60
+    assert brb.next_wake(0, M5, H) == 240
+    assert brb.next_wake(H, H, 2 * H) == H + 55 * 60
+    assert brb.next_wake(H + 300, H, 2 * H) is None
