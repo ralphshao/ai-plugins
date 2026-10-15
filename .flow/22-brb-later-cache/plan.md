@@ -41,7 +41,7 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   runtime behavior
 
 ## Steps
-- [ ] Spike (throwaway, not committed as code): an asyncRewake Stop hook
+- [x] Spike (throwaway, not committed as code): an asyncRewake Stop hook
   that sleeps 60s and exits 2, in the desktop app and the CLI. Check that it
   wakes an idle session, that the woken turn shows a full cache read, how it
   interacts with a typed draft, and that Codex doesn't block on it. Also
@@ -91,6 +91,11 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   teardown. No hook or documented API triggers `/compact`.
 - Q2: yes - spike plugin at `.flow/22-brb-later-cache/spike/`, run by the
   user in CLI and desktop app.
+- Spike, CLI (2026-10-15): asyncRewake Stop hook woke the idle session
+  after 60s; `/usage` showed no misses, 1h TTL warm, so the ping read the
+  cache. `Skill("compact")` is rejected: "compact is a built-in CLI
+  command, not a skill". No auto-compact path from a woken turn. Draft and
+  desktop-app runs not done yet.
 - `/brb`'s last wake switches to `/later` instead of compacting - the user's
   choice; one shared compact path, plus one more TTL to return.
 - State lives in `tempfile.gettempdir()/flow-brb-<session_id>.json` - it
