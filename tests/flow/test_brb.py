@@ -2,6 +2,9 @@
 
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 
 import pytest
 
@@ -87,3 +90,79 @@ def test_next_wake():
     assert brb.next_wake(0, M5, H) == 240
     assert brb.next_wake(H, H, 2 * H) == H + 55 * 60
     assert brb.next_wake(H + 300, H, 2 * H) is None
+
+
+# --- hook modes, run as the hooks run ----------------------------------------
+
+SCRIPT = REPO_ROOT / "plugins" / "flow" / "hooks" / "brb.py"
+
+
+@pytest.fixture
+def run(tmp_path):
+    transcript = tmp_path / "t.jsonl"
+    transcript.write_text(usage_line(h1=500, read=50_000), encoding="utf-8")
+
+    def run(mode, at=1000.0, **payload):
+        env = {**os.environ, "FLOW_BRB_STATE_DIR": str(tmp_path),
+               "FLOW_BRB_NOW": str(at), "FLOW_BRB_NO_SLEEP": "1"}
+        payload = {"session_id": "s1", "transcript_path": str(transcript),
+                   "cwd": str(tmp_path), **payload}
+        p = subprocess.run([sys.executable, str(SCRIPT), mode],
+                           input=json.dumps(payload), capture_output=True,
+                           text=True, env=env)
+        return p.returncode, p.stderr
+    run.state = tmp_path / "flow-brb-s1.json"
+    run.transcript = transcript
+    return run
+
+
+def test_stop_without_brb_does_nothing(run):
+    assert run("stop") == (0, "")
+
+
+@pytest.mark.parametrize("prompt", ["/brb", "/flow:brb 90m", "  /brb 2h "])
+def test_brb_prompt_arms_and_stop_pings(run, prompt):
+    run("prompt", prompt=prompt)
+    assert run.state.exists()
+    code, err = run("stop")
+    assert code == 2 and "keepalive" in err
+    assert json.loads(run.state.read_text())["until"] > 1000
+
+
+def test_other_prompt_cancels(run):
+    run("prompt", prompt="/brb")
+    run("prompt", prompt="I'm back")
+    assert not run.state.exists()
+    assert run("stop") == (0, "")
+
+
+def test_bad_duration_does_not_arm(run):
+    run("prompt", prompt="/brb soon")
+    assert not run.state.exists()
+
+
+def test_codex_never_arms(run):
+    run("prompt", prompt="/brb",
+        transcript_path="/home/u/.codex/sessions/rollout-1.jsonl")
+    assert not run.state.exists()
+
+
+def test_stops_after_deadline(run):
+    run("prompt", prompt="/brb 60m", at=0)        # 1h TTL: until = 2h
+    assert run("stop", at=0)[0] == 2
+    assert run("stop", at=3300)[0] == 2           # next ping at 6600 < 7200
+    assert run("stop", at=6600)[0] == 0           # 9900 would be past it
+    assert not run.state.exists()
+
+
+def test_small_context_is_not_worth_pinging(run):
+    run.transcript.write_text(usage_line(h1=500), encoding="utf-8")
+    run("prompt", prompt="/brb")
+    assert run("stop")[0] == 0
+    assert not run.state.exists()
+
+
+def test_bad_stdin_is_ignored():
+    p = subprocess.run([sys.executable, str(SCRIPT), "stop"], input="nope",
+                       capture_output=True, text=True)
+    assert p.returncode == 0

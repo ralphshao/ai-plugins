@@ -44,13 +44,16 @@ instead of paying a full cache rewrite. Opt-in.
   Decisions. If the asyncRewake wake fails, stop and re-plan.
 - [x] `brb.py` TTL and schedule: transcript parse (1h/5m, context size), the
   settings-precedence fallback, ping times, grace, and the bare-`/brb` default duration. Tests first.
-- [ ] `brb.py` arm/stop/prompt modes plus the `hooks.json` entries (an
+- [x] `brb.py` arm/stop/prompt modes plus the `hooks.json` entries (an
   asyncRewake Stop and a UserPromptSubmit), with the Codex early exit and
   the min-token guard.
 - [ ] `skills/brb/` user-only skill (SKILL.md and agents/openai.yaml), and
   add it to USER_ONLY.
 - [ ] ADR 0012: asyncRewake as the ping path, state in the temp dir and not
-  in `.flow/`, Claude Code only, and no `/later` (native idle compaction).
+  in `.flow/`, Claude Code only, and why `/later` was dropped: its intent
+  (wait out the TTL in case the user returns, then compact), the spike
+  results (asyncRewake wakes an idle session with a cache hit;
+  `Skill("compact")` is rejected), and native idle compaction covering it.
 - [ ] flow README: Skills and Hooks sections (update the hook count).
 
 ## Test command

@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Opt-in prompt-cache keepalive for /brb (Claude Code only).
 
-This module holds the timing logic: how long the session's cache lives (its
-TTL), how big the context is, and when the next wake is due. The hook modes
-that arm and cancel the timer build on it.
+Timing logic first: how long the session's cache lives (its TTL), how big
+the context is, and when the next wake is due. The hook modes below use it.
 """
 import json
+import os
 import re
+import sys
+import tempfile
+import time
+import uuid
 from pathlib import Path
 
 HOUR, FIVE_MIN = 3600, 300
@@ -112,3 +116,115 @@ def next_wake(now, ttl, until):
     """
     when = now + ttl - LEAD[ttl]
     return when if when < until else None
+
+
+# --- hook modes ---------------------------------------------------------------
+#
+# prompt (UserPromptSubmit): `/brb [duration]` arms the keepalive; any other
+#   prompt cancels it. The plugin's own wakes arrive as system reminders, not
+#   prompts, so they never cancel it.
+# stop (Stop, asyncRewake): if armed, sleep until the next ping is due, then
+#   exit 2 so Claude Code wakes the idle session. That ping turn ends with
+#   another Stop, which re-reads the TTL and schedules the next one.
+#
+# State is one JSON file per session in the system temp folder: it belongs to
+# the session, not to a task, and losing it only stops the keepalive.
+
+BRB = re.compile(r"/(?:flow:)?brb(?:\s+(\S+))?\s*")
+POLL = 30  # seconds between cancel checks while sleeping
+PING = ("flow /brb keepalive: the user is away and this turn only keeps the "
+        "prompt cache warm. Reply with only \"ok\". Don't run tools.")
+
+
+def now():
+    return float(os.environ.get("FLOW_BRB_NOW") or time.time())
+
+
+def state_path(session_id):
+    root = os.environ.get("FLOW_BRB_STATE_DIR") or tempfile.gettempdir()
+    safe = re.sub(r"[^A-Za-z0-9_-]", "_", str(session_id))
+    return Path(root) / f"flow-brb-{safe}.json"
+
+
+def load(path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def save(path, state):
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state), encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def drop(path):
+    try:
+        path.unlink()
+    except OSError:
+        pass
+
+
+def on_prompt(data):
+    path = state_path(data.get("session_id"))
+    m = BRB.fullmatch(str(data.get("prompt") or "").strip())
+    # Codex has no asyncRewake, and a sleeping Stop hook would block it.
+    if not m or "/.codex/" in str(data.get("transcript_path") or ""):
+        drop(path)
+        return
+    duration = parse_duration(m.group(1)) if m.group(1) else None
+    if m.group(1) and not duration:
+        drop(path)  # the skill tells the user the duration didn't parse
+        return
+    save(path, {"armed_at": now(), "duration": duration})
+
+
+def on_stop(data):
+    """Return the exit code: 2 wakes the session for a ping, 0 does nothing."""
+    path = state_path(data.get("session_id"))
+    state = load(path)
+    if not state:
+        return 0
+    usage = last_usage(data.get("transcript_path"))
+    if context_tokens(usage) < MIN_CONTEXT:
+        drop(path)
+        return 0
+    ttl = detect_ttl(usage, os.environ, settings_files(data.get("cwd")))
+    until = state.get("until") or deadline(state["armed_at"],
+                                           state.get("duration"), ttl)
+    t = now()
+    when = next_wake(t, ttl, until)
+    if when is None:
+        drop(path)
+        return 0
+    token = uuid.uuid4().hex  # a newer Stop's sleeper supersedes this one
+    save(path, {**state, "until": until, "token": token})
+    if not os.environ.get("FLOW_BRB_NO_SLEEP"):
+        while t < when:
+            time.sleep(min(POLL, when - t))
+            t = time.time()
+            if (load(path) or {}).get("token") != token:
+                return 0
+    if (load(path) or {}).get("token") != token:
+        return 0
+    print(PING, file=sys.stderr)
+    return 2
+
+
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    try:
+        data = json.load(sys.stdin)
+    except ValueError:
+        return 0
+    if mode == "prompt":
+        on_prompt(data)
+        return 0
+    if mode == "stop":
+        return on_stop(data)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
