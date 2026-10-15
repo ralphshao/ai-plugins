@@ -24,7 +24,7 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 - [x] Eval cases review-seeded-bug and review-true-finding-kept
 - [x] CI workflow flow-evals.yml
 - [ ] Trim deep-review scans and flow/SKILL.md re-sizing, evals before/after
-- [ ] README section mapping flow to the labs' guidance
+- [x] README section mapping flow to the labs' guidance
 
 ## Test command
 `uv run --with pytest pytest tests/flow`

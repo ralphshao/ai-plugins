@@ -59,7 +59,9 @@ Claude Code and `flow-<name>` in Codex.
 `hooks/hooks.json` wires four hooks, shared by Claude Code and Codex:
 
 - `guard.py` keeps the reviewers read-only and limits `tester` to writing
-  test files. It runs only when Python starts: without a usable interpreter
+  test files. Once a plan is approved, it also stops the main session from
+  changing the plan's test command or removing lines from existing tests
+  (Edit and Write only); parking an open question lifts that. It runs only when Python starts: without a usable interpreter
   the hook errors without blocking, and the agents run unguarded.
 - `codex_agents.py` converts `agents/*.md` into Codex role files and keeps
   them current, because Codex plugins can't ship agents.
@@ -81,6 +83,34 @@ Optional: the reviewers preload `andrej-karpathy-skills:karpathy-guidelines`
 and `ponytail:ponytail-review` when those plugins are installed, and run
 without them otherwise.
 
+## How flow maps to the labs' guidance
+
+Anthropic's [AI-native SDLC playbook](https://claude.com/blog/the-ai-native-sdlc-playbook)
+and OpenAI's [harness engineering](https://openai.com/index/harness-engineering/)
+(with [Rethinking skills and prompts for GPT-6 Astra](https://learn.chatgpt.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra)
+and [Building an AI-Native Engineering Team](https://learn.chatgpt.com/guides/build-ai-native-engineering-team))
+describe the same loop. flow's pieces:
+
+| Shared shape | flow |
+| --- | --- |
+| The repo is the agent's world | Reads the repo's own standards files; `retro` keeps them short |
+| Written intent, then a committed plan | `brief.md`, then `plan.md` with acceptance criteria, seams, and decisions |
+| The agent verifies its own work | `tdd` at the plan's seams; `stop_gate.py` blocks stopping while tests fail |
+| Mechanical enforcement | `guard.py` for subagents, and for the main session's tests after GATE 1 |
+| Agent review before humans | `deep-review` lenses and validator, checked against `plan.md` |
+| Mistakes become checks | `retro`, on demand |
+| Re-test on model or config change | `evals/` run in CI when skills, agents, or hooks change |
+
+Where flow differs on purpose:
+
+- **Human gates.** flow keeps two blocking gates (plan, landing), on
+  Anthropic's side rather than OpenAI's mostly-ungated merges.
+- **No kept plans.** `ship` deletes `.flow/` before review
+  ([ADR 3](../../docs/adr/0003-flow-task-state-travels-with-the-work.md)):
+  stale plans get trusted. Lasting decisions go to ADRs and the PR body.
+- **Not covered:** a Maintain stage, cleanup agents, and org governance.
+  They fit an org rollout, not a per-task plugin.
+
 ## Design
 
 The decisions behind flow are in the repo's [`docs/adr/`](../../docs/adr/).
@@ -98,3 +128,6 @@ Without uv: `python3 -m pytest tests/flow`.
 
 `evals/` holds `claude plugin eval` cases. They stay inside the plugin
 because `claude plugin eval` reads its eval folder from below the plugin.
+They cover sizing and gating, and deep-review's catches and validator drops.
+`.github/workflows/flow-evals.yml` runs them on PRs that change flow's
+skills, agents, hooks, or evals, when the `ANTHROPIC_API_KEY` secret is set.
