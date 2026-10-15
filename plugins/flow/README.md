@@ -9,6 +9,30 @@ alone instead of guessing.
 flow works in git repos (GitHub for reviews) and in Perforce workspaces
 (Helix Swarm for reviews).
 
+## Stages
+
+1. **start** - turns the prompt or issue into its own branch (or worktree,
+   or changelist) and writes `.flow/<slug>/brief.md` with the request
+   verbatim.
+2. **plan** - an explorer subagent maps the code, `interview` settles open
+   decisions with you, and flow writes `plan.md`: acceptance criteria, seams
+   under test, steps, the test command, and decisions.
+3. **GATE 1** - you approve the plan. Nothing is built before that.
+4. **build** - `tdd` slices at the plan's seams, one commit per step.
+   Questions the plan doesn't cover are parked under `## Open questions`
+   instead of guessed. `stop_gate.py` blocks stopping while the test command
+   fails, and `guard.py` blocks weakening the plan's test command or existing
+   tests.
+5. **ship** - reruns the tests, then `deep-review` checks the diff against
+   `plan.md` with parallel lenses and a validator per file; confirmed
+   findings get fixed. `.flow/` is deleted, and the review is marked ready.
+6. **GATE 2** - you land it. flow never merges.
+
+Trivial tasks skip all but build: one commit on its own branch, pushed;
+opening a review is up to you. Large tasks add two
+contrasting plan drafts, ADRs for one-way doors, and a `tester` pass in
+ship.
+
 ## Usage
 
 In Claude Code and Codex:
@@ -18,17 +42,9 @@ In Claude Code and Codex:
 /flow:flow                                 resume the task in .flow/
 ```
 
-flow sizes the task first:
-
-- **Trivial** (typos, docs, formatting): makes the change on its own
-  branch (or the worktree's, when the session starts in one), runs the
-  tests, commits, and pushes. Opening a review is up to you. No plan, no
-  gates.
-- **Normal** (a feature or bug fix): start, plan, GATE 1, build test-first,
-  ship, GATE 2.
-- **Large** (crosses modules or redesigns an API): as Normal, plus two
-  contrasting plan drafts, ADRs for one-way-door decisions, and a
-  test-coverage pass.
+flow sizes the task first: **Trivial** for typos, docs, and formatting;
+**Normal** for a feature or bug fix; **Large** when it crosses modules or
+redesigns an API. Say "treat as large" to override.
 
 Task state lives in `.flow/<slug>/` (`brief.md`, `plan.md`) and is committed
 with the work, so a task can resume on another machine. `ship` removes it
