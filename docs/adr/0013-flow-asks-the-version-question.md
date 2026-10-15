@@ -23,6 +23,8 @@ and the like), flow asks about the version twice.
   intent ("Still bump <pkg> to Y?", or "Still no bump?" for none). It
   changes the number only on a yes with the number. If the diff touches a
   versioned package and the plan has no Version line, ship asks fresh.
+  Ship asks and waits rather than parking the question (ADR 2): it is the
+  last phase, so there is no unblocked work to continue with.
 - **Trivial tasks** have no gates, so the final report asks the question.
 
 ADR 9's rule stands: a bump listed in the plan is not a go.

@@ -19,10 +19,11 @@ Two things only the user can give, and only explicitly:
 - **Version changes.** Never change a version number (package, plugin,
   release) unless the user asks for that change, names the number, and
   says when. When a task touches a versioned package (any file under a
-  folder with a version manifest: `plugin.json`, `package.json`,
+  package root with a version manifest: `plugin.json`, including one in a
+  `.claude-plugin/` or `.codex-plugin/` subfolder, `package.json`,
   `pyproject.toml`, or the like), ask: GATE 1 records the intent, and ship
-  asks for the go. A "yes" to ship's "Still bump <pkg> to Y?" is the go:
-  it names the number, and ship is the when.
+  asks for the go. At ship, a "yes" to "Still bump <pkg> to Y?" or a reply
+  naming the number is the go: the number is named, and ship is the when.
 
 Arguments: `$ARGUMENTS`
 
@@ -73,8 +74,7 @@ then:
 4. Report the branch, the commit, and the test result, and stop. Opening a
    review and landing it are the user's. If the edit touched a versioned
    package, the report also asks "<pkg> is at X. Bump to what, or none?"
-   On a reply naming the number, bump it in a new commit, `checkpoint`,
-   and `publish`; without one, don't bump.
+   Don't bump it yourself.
 
 If the edit turns out to change behavior, see re-sizing above.
 

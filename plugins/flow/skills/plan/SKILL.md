@@ -94,6 +94,8 @@ Rules:
 - Record interview answers under Decisions.
 - `## Version`: only when the change touches a versioned package (as the
   `flow` skill defines it). Leave it out otherwise. GATE 1 fills in the target.
+  A version bump is never a step: it lives in `## Version`, and ship
+  applies it.
 - Large: add one step per one-way-door decision to write its ADR. The
   `flow:tester` pass belongs to `ship` and needs no step.
 

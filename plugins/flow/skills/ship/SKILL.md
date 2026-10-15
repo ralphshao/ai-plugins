@@ -14,9 +14,10 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
 - Version. Each `## Version` line is intent from GATE 1, not a go.
   Re-confirm each: "Still bump <pkg> to Y?", or for "none", "<pkg> stays at
   X. Still no bump?" If `diff-scope` touches a versioned package and the
-  plan has no `## Version` line, ask fresh: "<pkg> is at X. Bump to what,
+  plan has no `## Version` line (or the line has no target), ask fresh: "<pkg> is at X. Bump to what,
   or none?" A "yes" to "Still bump <pkg> to Y?", or a reply naming a
-  number, is the go: change the number, then `checkpoint`. Ask and wait,
+  number, is the go: set `## Version` to the confirmed target, add a `## Decisions`
+  line with the go, change the number, then `checkpoint`. Ask and wait,
   don't park it as an open question: don't ready the review without the
   answer.
 - Run the plan's test command. It must pass.
