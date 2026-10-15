@@ -21,8 +21,8 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 - [x] ship passes plan.md as deep-review spec path
 - [x] guard.py: main-session guard after GATE 1, with tests (TDD)
 - [x] ADR 0012: flow guards the main session after GATE 1
-- [ ] Eval cases review-seeded-bug and review-true-finding-kept
-- [ ] CI workflow flow-evals.yml
+- [x] Eval cases review-seeded-bug and review-true-finding-kept
+- [x] CI workflow flow-evals.yml
 - [ ] Trim deep-review scans and flow/SKILL.md re-sizing, evals before/after
 - [ ] README section mapping flow to the labs' guidance
 
@@ -45,6 +45,7 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 - Q7 one ADR (guard); CI evals recorded here only.
 
 ## Open questions
+- [ ] Q8 Evals can't run in this sandbox (harness mkdtemp in /tmp gets EPERM). Make the trims now and judge them by the flow-evals CI run on PR #23, once you add the ANTHROPIC_API_KEY secret (or by your local run), reverting any trim that regresses? - recommended: yes - blocks: trims
 
 ## Status
 Approved - building
