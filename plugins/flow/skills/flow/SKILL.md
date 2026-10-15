@@ -18,7 +18,8 @@ Two things only the user can give, and only explicitly:
   you can't tell, ask.
 - **Version changes.** Never change a version number (package, plugin,
   release) unless the user asks for that change, names the number, and
-  says when. A planned bump stays unticked until they give the go.
+  says when. When a task touches a versioned package, ask: GATE 1 records
+  the intent, and ship asks for the go.
 
 Arguments: `$ARGUMENTS`
 
@@ -67,7 +68,9 @@ then:
 2. Make the change and run the relevant tests.
 3. `checkpoint` it as one commit, then `publish`.
 4. Report the branch, the commit, and the test result, and stop. Opening a
-   review and landing it are the user's.
+   review and landing it are the user's. If the edit touched a versioned
+   package, the report also asks "<pkg> is at X. Bump to what, or none?"
+   Don't bump in this task without the user's go.
 
 If the edit turns out to change behavior, see re-sizing above.
 

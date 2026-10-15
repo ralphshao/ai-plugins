@@ -168,6 +168,8 @@ plan, is not a go: ask, and wait. (`ai-plugins:update` copying an upstream
 plugin's new version into the catalog is the exception: running it is the
 go.) Change it per plugin entry, never with a search-and-replace across a
 file: several plugins can share a version string.
+flow asks the version question itself: intent at GATE 1, the go at ship
+([ADR 13](docs/adr/0013-flow-asks-the-version-question.md)).
 
 ## Design records
 

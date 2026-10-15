@@ -16,10 +16,10 @@ When a flow task touches a versioned package, flow asks the user what the versio
 - Skill text only. No test seam exists for prose, so checks are the existing pytest suite (catalog and hooks still pass) and plugin-dev:skill-reviewer on each changed skill.
 
 ## Steps
-- [ ] plan skill: Version section in template, version question at GATE 1, intent under Decisions
-- [ ] ship skill: re-confirm or ask fresh in Verify, bump only on a yes with the number
-- [ ] flow skill: Trivial report asks; top-level Version changes bullet mentions the ask
-- [ ] AGENTS.md Versions line + ADR 0013
+- [x] plan skill: Version section in template, version question at GATE 1, intent under Decisions
+- [x] ship skill: re-confirm or ask fresh in Verify, bump only on a yes with the number
+- [x] flow skill: Trivial report asks; top-level Version changes bullet mentions the ask
+- [x] AGENTS.md Versions line + ADR 0013
 - [ ] Run tests, plugin-validator, skill-reviewer on plan/ship/flow
 
 ## Test command
