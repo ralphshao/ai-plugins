@@ -255,3 +255,43 @@ def test_superseded_while_sleeping_exits_quietly(sleeper):
     sleeper.on_nap = newer_stop
     assert brb.on_stop(sleeper.data) == 0
     assert json.loads(sleeper.state.read_text())["token"] == "newer"
+
+
+def test_missing_usage_keeps_state_for_the_next_stop(run):
+    run.transcript.write_text('{"type": "user"}', encoding="utf-8")
+    arm(run)
+    assert run("stop")[0] == 0
+    assert run.state.exists()
+
+
+def test_save_leaves_no_temp_files(tmp_path):
+    path = tmp_path / "flow-brb-s.json"
+    brb.save(path, {"a": 1})
+    brb.save(path, {"a": 2})
+    assert [p.name for p in tmp_path.iterdir()] == [path.name]
+    assert brb.load(path) == {"a": 2}
+
+
+def test_skill_states_the_hook_constants():
+    skill = (REPO_ROOT / "plugins" / "flow" / "skills" / "brb" / "SKILL.md"
+             ).read_text(encoding="utf-8")
+    assert f"{brb.DEFAULT_DURATION[H] // 60}m on a 1h cache" in skill
+    assert f"{brb.DEFAULT_DURATION[M5] // 60}m on 5m" in skill
+    assert f"~{brb.MIN_CONTEXT // 1000}k tokens" in skill
+    assert brb.PING.split(":")[0] in skill  # "flow /brb keepalive"
+
+
+def test_hooks_json_wires_brb():
+    hooks = json.loads((REPO_ROOT / "plugins" / "flow" / "hooks" / "hooks.json"
+                        ).read_text(encoding="utf-8"))["hooks"]
+
+    def brb_entries(event, mode):
+        return [h for group in hooks.get(event, []) for h in group["hooks"]
+                if h["command"].endswith(f'brb.py" {mode}')]
+
+    (stop,) = brb_entries("Stop", "stop")
+    assert stop["asyncRewake"] is True
+    # Claude Code enforces timeout on asyncRewake hooks: it must outlast a sleep.
+    assert stop["timeout"] > H - brb.LEAD[H]
+    assert len(brb_entries("UserPromptSubmit", "prompt")) == 1
+    assert len(brb_entries("UserPromptExpansion", "expand")) == 1

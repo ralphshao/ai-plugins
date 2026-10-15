@@ -73,8 +73,9 @@ def settings_ttl(env, settings_files):
                 "promptCacheTtl")
         except (OSError, ValueError, AttributeError):
             continue
-        if _ttl_value(value or ""):
-            return _ttl_value(value)
+        ttl = _ttl_value(value)
+        if ttl:
+            return ttl
     if env.get("ENABLE_PROMPT_CACHING_1H") == "1":
         return HOUR
     # shortcut: the plan default (1h on a subscription within plan usage) isn't
@@ -157,9 +158,16 @@ def load(path):
 
 
 def save(path, state):
-    tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(state), encoding="utf-8")
+    # A random, exclusive temp name: a shared /tmp can't plant it as a symlink.
+    fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.stem, suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps(state))
     os.replace(tmp, path)
+
+
+def superseded(path, token):
+    """Cancelled by a prompt, or replaced by a newer Stop's sleeper."""
+    return (load(path) or {}).get("token") != token
 
 
 def drop(path):
@@ -196,6 +204,8 @@ def on_stop(data):
     if not state:
         return 0
     usage = last_usage(data.get("transcript_path"))
+    if usage is None:
+        return 0  # transcript unreadable or not flushed yet: the next Stop retries
     if context_tokens(usage) < MIN_CONTEXT:
         drop(path)
         return 0
@@ -213,9 +223,9 @@ def on_stop(data):
         while t < when:
             time.sleep(min(POLL, when - t))
             t = time.time()
-            if (load(path) or {}).get("token") != token:
+            if superseded(path, token):
                 return 0
-    if (load(path) or {}).get("token") != token:
+    if superseded(path, token):  # also covers a loop that never slept
         return 0
     print(PING, file=sys.stderr)
     return 2

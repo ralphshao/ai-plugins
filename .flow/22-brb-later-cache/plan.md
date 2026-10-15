@@ -107,6 +107,16 @@ instead of paying a full cache rewrite. Opt-in.
   pinging at duration + grace and native idle compaction takes over; `/later`
   stays for Codex only (if the spike finds a compact path there) - recommended:
   yes - blocks: spike's compact part, `skills/later/` step, ADR wording
+- [ ] Q3 With an approved flow plan whose tests fail, stop_gate blocks the
+  `/brb` turn (and maybe ping turns), so the agent keeps working unattended
+  and a ping can land mid-work. Have stop_gate stand down while `/brb` is
+  armed for the session (a change to ADR 5's gate, recorded in ADR 12) -
+  recommended: yes - blocks: ship
+- [ ] Q4 Before GATE 2, a live CLI check with the real plugin
+  (`claude --plugin-dir plugins/flow`): `/brb 10m` on a ~20k+ context arms,
+  a wake arrives and chains to a second one, and typing a message cancels
+  it. Also one Codex start to confirm it accepts the new hooks.json keys -
+  recommended: yes - blocks: ship
 - [x] Q2 The spike needs a live interactive session (desktop app and CLI) with
   a throwaway asyncRewake Stop hook; I can't install hooks into your settings
   from the sandbox. You run it from a test plugin I prepare - recommended: yes
