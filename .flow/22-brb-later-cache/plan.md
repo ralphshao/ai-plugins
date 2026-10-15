@@ -48,7 +48,7 @@ case they come back, then compacts just before the cache goes cold. Both are opt
   look for any working auto-compact path: a woken turn, `claude -p --resume`
   with `/compact`, or Codex `codex exec resume`. Record the results under
   Decisions. If the asyncRewake wake fails, stop and re-plan.
-- [ ] `brb.py` TTL and schedule: transcript parse (1h/5m, context size), the
+- [x] `brb.py` TTL and schedule: transcript parse (1h/5m, context size), the
   settings-precedence fallback, ping times, grace, and the bare-`/brb` default duration. Tests first.
 - [ ] `brb.py` arm/stop/prompt modes plus the `hooks.json` entries (an
   asyncRewake Stop and a UserPromptSubmit), with the Codex early exit and
