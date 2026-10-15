@@ -39,6 +39,7 @@ flow 0.2.5 -> 0.2.6 (intent; applied at ship only on the user's go)
 - ADR number 0013 - 0012 is taken twice; 0013 is free.
 
 - A "yes" to ship's "Still bump <pkg> to Y?" is the go - the question names the number and ship is the when; skill-reviewer flagged the ambiguity.
+- flow bumped to 0.2.6 at ship - user's go: "Yes, bump flow to 0.2.6 now."
 - "Versioned package" = any file under a folder with a version manifest, defined once in flow/SKILL.md - skill-reviewer: undefined term.
 
 ## Open questions
