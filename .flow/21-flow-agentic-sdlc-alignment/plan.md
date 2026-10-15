@@ -47,4 +47,4 @@ flow enforces more of its own loop mechanically (plan-checked review, guarded te
 ## Open questions
 
 ## Status
-Awaiting GATE 1
+Approved - building
