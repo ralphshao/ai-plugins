@@ -45,6 +45,12 @@ State is one JSON file per session in the system temp folder, not in
 A spike in the CLI confirmed the mechanism: the Stop hook woke an idle
 session after 60 seconds, and `/usage` showed no cache misses on the 1h TTL.
 
+While `/brb` is armed, flow's test gate (ADR 5) stands down: with an
+approved plan's tests failing it would block the `/brb` turn and ping
+turns, sending the agent into unattended work while the user is away, with
+pings landing mid-work. The user's next prompt disarms `/brb`, and the gate
+applies again.
+
 Claude Code only. Codex has no asyncRewake and would run the sleeping hook
 synchronously. Besides lacking UserPromptExpansion, `brb.py` refuses to arm
 for a transcript under `.codex/`.

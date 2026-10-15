@@ -67,7 +67,7 @@ Claude Code and `flow-<name>` in Codex.
 - `format.py` formats an edited file with a formatter the repo already uses
   (ruff, prettier, gofmt, rustfmt). It never blocks an edit.
 - `stop_gate.py` blocks the agent from stopping while the approved plan's
-  test command fails.
+  test command fails, except while `/brb` is armed.
 - `brb.py` runs `/brb`'s keepalive (Claude Code only). A UserPromptExpansion
   hook arms it on `/brb`, and a UserPromptSubmit hook cancels it on any
   other prompt. A background
