@@ -10,8 +10,16 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
 
 - Every step in `## Steps` is ticked. If not, go back to building.
 - `## Open questions` has no unticked item. If one does, stop: it is still
-  waiting on the user. A version bump waiting for the user's go counts as
-  open: ask for it, and don't bump without it.
+  waiting on the user.
+- Version. Each `## Version` line is intent from GATE 1, not a go.
+  Re-confirm each: "Still bump <pkg> to Y?", or for "none", "<pkg> stays at
+  X. Still no bump?" If `diff-scope` touches a versioned package and the
+  plan has no `## Version` line (or the line has no target), ask fresh: "<pkg> is at X. Bump to what,
+  or none?" A "yes" to "Still bump <pkg> to Y?", or a reply naming a
+  number, is the go: set `## Version` to the confirmed target, add a `## Decisions`
+  line with the go, change the number, then `checkpoint`. Ask and wait,
+  don't park it as an open question: don't ready the review without the
+  answer.
 - Run the plan's test command. It must pass.
 - Large tasks: spawn `flow:tester` on the `diff-scope` diff for coverage
   gaps; `checkpoint` the tests it adds.
