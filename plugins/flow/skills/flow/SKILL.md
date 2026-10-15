@@ -55,7 +55,7 @@ which files the edit touched). Never re-size down to Trivial once a branch
 and brief exist, and never during the build: work that looks bigger is a
 scope change, so escalate it. On each change, say `Size: <old> -> <new> -
 <reason>`, update the brief's `Size:` line, and record the reason under
-`## Decisions`.
+`## Decisions` (if `plan.md` doesn't exist yet, when you write it).
 
 ## 3. Run the path
 

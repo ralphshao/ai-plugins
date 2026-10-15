@@ -367,3 +367,46 @@ def test_main_unguarded_before_approval_or_while_parked(tmp_path, status, questi
     root = main_repo(tmp_path, status, questions)
     assert main_call(root, "Edit", "tests/test_a.py",
                      old_string="assert 1", new_string="pass")[0] == 0
+
+
+@pytest.mark.parametrize("new", ["# assert 1", "assert 1 or True", "assert 10"])
+def test_main_cannot_wrap_existing_test_lines(tmp_path, new):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Edit", "tests/test_a.py",
+                     old_string="assert 1", new_string=new)[0] == 2
+
+
+def test_main_cannot_drop_a_duplicate_line(tmp_path):
+    root = main_repo(tmp_path)
+    (root / "tests/test_a.py").write_text("assert 1\nassert 1\n")
+    assert main_call(root, "Write", "tests/test_a.py", content="assert 1\n")[0] == 2
+
+
+def test_main_replace_all_is_checked(tmp_path):
+    root = main_repo(tmp_path)
+    (root / "tests/test_a.py").write_text("x = 1\nassert x\n")
+    assert main_call(root, "Edit", "tests/test_a.py", old_string="x",
+                     new_string="y", replace_all=True)[0] == 2
+
+
+def test_main_cannot_unapprove_the_plan(tmp_path):
+    root = main_repo(tmp_path)
+    assert main_call(root, "Edit", ".flow/t/plan.md",
+                     old_string="Approved - building", new_string="Building")[0] == 2
+
+
+def test_main_case_variant_paths_still_guarded(tmp_path):
+    root = main_repo(tmp_path)
+    (root / "Fixtures").mkdir()
+    (root / "Fixtures/b.py").write_text("assert 1\n")
+    assert main_call(root, "Edit", "Fixtures/b.py",
+                     old_string="assert 1", new_string="pass")[0] == 2
+
+
+def test_main_denial_is_labelled_and_ignores_agent_names_in_text(tmp_path):
+    root = main_repo(tmp_path)
+    (root / "tests/test_a.py").write_text('A = "flow:tester"\n')
+    code, err = main_call(root, "Edit", "tests/test_a.py",
+                          old_string='"flow:tester"', new_string='"x"')
+    assert code == 2
+    assert "flow main-session guard" in err

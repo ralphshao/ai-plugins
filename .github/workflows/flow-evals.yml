@@ -19,16 +19,19 @@ jobs:
   evals:
     runs-on: ubuntu-latest
     env:
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
     steps:
-      - if: env.ANTHROPIC_API_KEY == ''
+      - if: env.HAS_KEY != 'true'
         run: echo "::notice::ANTHROPIC_API_KEY not set; skipping flow evals"
-      - if: env.ANTHROPIC_API_KEY != ''
+      - if: env.HAS_KEY == 'true'
         uses: actions/checkout@v5
-      - if: env.ANTHROPIC_API_KEY != ''
+      - if: env.HAS_KEY == 'true'
         run: npm install -g @anthropic-ai/claude-code
-      - if: env.ANTHROPIC_API_KEY != ''
+      - if: env.HAS_KEY == 'true'
         working-directory: plugins/flow
+        # Only this step gets the key, not checkout or the npm install.
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: >-
           claude plugin eval . --scaffold --trust-plugin --no-publish
           --ablation none --runs 1 -j 4 --threshold 1.0

@@ -35,6 +35,7 @@ exits with a non-blocking error and the guard doesn't run at all. Python
 Bash, Write, and Edit in the main session too, on a machine without Python.
 """
 import json
+from collections import Counter
 import os
 import re
 import shlex
@@ -224,7 +225,7 @@ def check_test_path(path, cwd):
             raise Denied(f"only files inside {cwd} may be written: {path}")
     if ".." in p.parts:
         raise Denied(f"no '..' in paths: {path}")
-    if TEST_DIRS.isdisjoint(p.parts[:-1]) and not TEST_FILE.match(p.name):
+    if not is_test(p):
         raise Denied(f"only test files may be written: {path}")
 
 
@@ -268,19 +269,23 @@ def check_main(tool, inp, cwd):
         return  # new files are always allowed
     old = path.read_text(encoding="utf-8")
     if tool == "Edit":
-        a, b = inp.get("old_string", ""), inp.get("new_string", "")
+        a, b = inp.get("old_string") or "", inp.get("new_string") or ""
         new = old.replace(a, b) if inp.get("replace_all") else old.replace(a, b, 1)
     else:
-        a, b, new = None, None, inp.get("content", "")
+        new = inp.get("content") or ""
     hint = ("the plan is approved; park an open question in plan.md and get "
             "the user's answer first")
-    if path in plans or path.resolve() in [p.resolve() for p in plans]:
+    rel = PurePath(os.path.relpath(path, root))
+    # Lowercased too: macOS and Windows open TESTS/ and PLAN.md as usual.
+    same = os.path.normcase(path.resolve()).lower()
+    if same in [os.path.normcase(p.resolve()).lower() for p in plans]:
         if section(old, "Test command") != section(new, "Test command"):
             raise Denied(f"no changing the test command: {hint}")
-    elif is_test(PurePath(os.path.relpath(path, root))):
-        kept = (a in b) if tool == "Edit" else \
-            set(old.splitlines()) <= set(new.splitlines())
-        if not kept:
+        if not section(new, "Status").strip().startswith("Approved"):
+            raise Denied(f"no changing the approved Status: {hint}")
+    elif any(map(is_test, (rel, PurePath(*(x.lower() for x in rel.parts))))):
+        # Every old line must survive, duplicates counted.
+        if Counter(old.splitlines()) - Counter(new.splitlines()):
             raise Denied(f"only additions to existing tests: {hint}")
 
 
@@ -304,9 +309,18 @@ def check(data):
 
 def main() -> NoReturn:
     raw = sys.stdin.read()
-    # Before parsing, so a payload that won't parse still fails closed.
-    flow_agent = any(f'"{a}"' in raw for a in FLOW_AGENTS)
-    who = "main-session" if not flow_agent else "tester" if any(f'"{a}"' in raw for a in TESTERS) else "reviewer"
+    try:
+        agent = json.loads(raw).get("agent_type")
+    except Exception:
+        # Unparseable: guess from the raw text, so a flow agent fails closed.
+        agent = next((a for a in FLOW_AGENTS if f'"{a}"' in raw), None)
+    flow_agent = agent in FLOW_AGENTS
+    if not flow_agent:
+        who = "main-session"
+    elif agent in TESTERS:
+        who = "tester"
+    else:
+        who = "reviewer"
     try:
         check(json.loads(raw))
     except Denied as e:
