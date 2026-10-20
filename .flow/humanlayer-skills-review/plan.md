@@ -58,7 +58,7 @@ person can do, and review bodies say why the change exists.
       terminal output from `divide`) with `file_exists` plan.md and an
       `llm` grader for a `(manual)` criterion; update the README's
       "Tests and evals" coverage line.
-- [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
+- [x] Run plugin-dev's `plugin-validator` on `plugins/flow` and
       `skill-reviewer` on `plan`, `ship`, `change-body`; apply what fits
       this repo's conventions.
 
@@ -93,6 +93,7 @@ flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
 - manual-criterion prompt asks for output a non-programmer can read at a glance, not green output - ANSI color is testable, so a model could rightly leave it untagged; readability is judgment only.
 - All (manual) criteria go to the user at GATE 2, with no confirmed/unconfirmed filter - flow has no place to record a confirmation, and the reviewer flagged the filters disagreeing.
 - Skipped skill-reviewer's optional trigger phrases for change-body's description - ship calls it by name.
+- explore-neutral grader matches only Agent calls with subagent_type Explore - plugin-validator noted interview lookups or Large Plan drafters may carry the request legitimately.
 - Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
