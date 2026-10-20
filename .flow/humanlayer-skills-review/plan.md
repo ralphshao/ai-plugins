@@ -93,7 +93,7 @@ flow 0.2.6 -> 0.2.7 (confirmed at ship)
 - manual-criterion prompt asks for output a non-programmer can read at a glance, not green output - ANSI color is testable, so a model could rightly leave it untagged; readability is judgment only.
 - All (manual) criteria go to the user at GATE 2, with no confirmed/unconfirmed filter - flow has no place to record a confirmation, and the reviewer flagged the filters disagreeing.
 - Skipped skill-reviewer's optional trigger phrases for change-body's description - ship calls it by name.
-- explore-neutral grader matches only Agent calls with subagent_type Explore - plugin-validator noted interview lookups or Large Plan drafters may carry the request legitimately.
+- explore-neutral grader matches only Agent calls with subagent_type Explore - this exempts Large's Plan drafters, which get the brief by design. Explore calls from any step, interview lookups included, are graded: a lookup about current code has no reason to name ValueError, so the residual false-fail risk is accepted rather than changing interview's behavior to suit a test.
 - Version go: flow 0.2.7 - user said yes at ship.
 - Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
