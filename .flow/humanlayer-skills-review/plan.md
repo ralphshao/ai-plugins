@@ -29,7 +29,8 @@ person can do, and review bodies say why the change exists.
       criteria; `ship/SKILL.md` Verify and GATE 2 report the pending ones;
       `change-body` Evidence gets a `Manual:` line (Q2).
 - [ ] `change-body/SKILL.md`: `## Why` one-sentence section first, rule for
-      it, and credit to HumanLayer's `visual-pr` (Q3).
+      it, and credit to HumanLayer's `visual-pr` in the existing
+      "Adapted from" line at the top of the skill (Q3).
 - [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
       `skill-reviewer` on `plan`, `ship`, `change-body`; apply what fits
       this repo's conventions.
