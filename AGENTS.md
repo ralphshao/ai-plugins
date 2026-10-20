@@ -75,6 +75,11 @@ that changed. Weigh their advice
 against this file and the ADRs; they don't know this repo's conventions
 (e.g. the `codex-*` agent frontmatter is intentional).
 
+To see how a local plugin's skills behave without the user's own plugins,
+hooks, CLAUDE.md, and settings, run `scripts/clean-claude.sh <plugin>...`.
+Pass Claude flags after `--`, e.g. `-- -p "<prompt>"`. It still loads plugins
+enabled on the user's claude.ai account.
+
 ## Installed vs. repo copy
 
 A session runs the installed copy of a plugin, not this repo's. Its version

@@ -44,6 +44,7 @@ plugins/                          # source for the local plugins
   ai-plugins/                     #   marketplace maintenance plugin
   flow/                           #   engineering workflow plugin
   memory-keeper/                  #   claude.ai memory maintenance (Claude only)
+scripts/clean-claude.sh           # try local plugins without your own setup
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
   flow/                           #   tests for plugins/flow
