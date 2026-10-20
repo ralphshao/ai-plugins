@@ -152,5 +152,5 @@ Without uv: `python3 -m pytest tests/flow`.
 `evals/` holds `claude plugin eval` cases. They stay inside the plugin
 because `claude plugin eval` reads its eval folder from below the plugin.
 They cover sizing and gating, and deep-review's catches and validator drops.
-`.github/workflows/flow-evals.yml` runs them on PRs that change flow's
+`.github/workflows/evals.yml` runs them on PRs that change flow's
 skills, agents, hooks, or evals, when the `ANTHROPIC_API_KEY` secret is set.
