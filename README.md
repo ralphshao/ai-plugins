@@ -31,8 +31,10 @@ codex plugin add <plugin-name>@ai-plugins
 
 ### ChatGPT
 
-A workspace admin imports the repo from **Admin Console > Plugins > Add >
-Import marketplace**. ChatGPT syncs it daily after that.
+Add `ralphshao/ai-plugins` as a marketplace from ChatGPT's plugin
+settings, then install plugins from it. Workspace admins can also import
+it for the whole workspace from **Admin Console > Plugins > Add > Import
+marketplace**, which syncs daily.
 
 ## Plugins
 
