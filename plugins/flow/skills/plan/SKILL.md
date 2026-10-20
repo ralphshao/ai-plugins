@@ -10,7 +10,10 @@ Input: `.flow/<slug>/brief.md` from `start`.
 
 Spawn an exploration subagent (`Explore` in Claude Code, `explorer` in
 Codex) to find the code the request touches: entry points, callers, existing
-tests and their style, the test command, and repo standards files. Ask it
+tests and their style, the test command, and repo standards files. Give it
+neutral questions about how that code works today, and leave the desired
+change out of its prompt, so its findings aren't bent toward the answer
+you want. Tell it to describe what exists, not propose changes. Ask it
 to end with the 5-10 files most worth reading, and read those yourself
 before going on. Facts are your job: never ask the user something you can
 look up.

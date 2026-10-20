@@ -37,7 +37,7 @@ person can do, and review bodies say why the change exists.
   test command.
 
 ## Steps
-- [ ] `plan/SKILL.md` step 1: the Explore prompt is current-state questions
+- [x] `plan/SKILL.md` step 1: the Explore prompt is current-state questions
       plus the describe-only rule, with the request kept out (Q1).
 - [ ] `plan/SKILL.md` template and rules: `(manual)` tag on acceptance
       criteria; `ship/SKILL.md` Verify and GATE 2 report the pending ones;
