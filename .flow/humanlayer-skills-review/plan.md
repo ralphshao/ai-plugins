@@ -50,7 +50,8 @@ person can do, and review bodies say why the change exists.
 `uv run --with pytest pytest tests/flow`
 
 ## Out of scope
-- An implementer subagent for the build step (Q4: no).
+- An implementer subagent for the build step (Q4: no; tracked in
+  https://github.com/ralphshao/ai-plugins/issues/27).
 - Per-phase documents or fresh sessions per phase (Q5: no).
 - Bundling `show-me` or HumanLayer's other plugins into flow (Q6: no).
 - New `claude plugin eval` cases for the changed prose.
