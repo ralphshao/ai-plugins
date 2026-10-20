@@ -18,6 +18,10 @@ person can do, and review bodies say why the change exists.
   skill's source, including HumanLayer's `visual-pr` and `show-me`, and
   linking `plugins/flow/THIRD_PARTY_NOTICES.md`, which holds each
   upstream's full MIT notice.
+- `normal-feature` eval fails if any `Agent` call's input contains
+  `ValueError` (the desired change leaking into Explore).
+- A new `manual-criterion` eval passes only when the plan tags a
+  judgment-only acceptance criterion `(manual)`.
 - `tests/flow` passes and `claude plugin validate .` passes.
 
 ## Seams under test
@@ -26,6 +30,11 @@ person can do, and review bodies say why the change exists.
 - `tests/flow` (pytest) - catches: hooks that parse plan.md sections
   (`guard.py`, `stop_gate.py` read `## Test command` only) still work /
   misses: skill prose; no unit test covers it.
+- `claude plugin eval` cases (`plugins/flow/evals/`) - catches: Explore
+  prompt leaking the request (Q1), plan missing the `(manual)` tag (Q2) /
+  misses: ship's GATE 2 list and change-body's `## Why` (ship-only, too
+  costly to exercise); runs on the API, so in CI or by hand, not in the
+  test command.
 
 ## Steps
 - [ ] `plan/SKILL.md` step 1: the Explore prompt is current-state questions
@@ -42,6 +51,13 @@ person can do, and review bodies say why the change exists.
       mattpocock/skills and humanlayer/skills and link it from the table.
 - [ ] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
       superseding ADR 1's credit-in-the-skill line (Q7).
+- [ ] Evals: add a `tool_used` grader on `Agent` with
+      `input_match: 'ValueError'`, `max: 0` to `normal-feature` (first
+      confirm `input_match` searches the Agent prompt); add a
+      `manual-criterion` case (calc fixture, prompt asking for green
+      terminal output from `divide`) with `file_exists` plan.md and an
+      `llm` grader for a `(manual)` criterion; update the README's
+      "Tests and evals" coverage line.
 - [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
       `skill-reviewer` on `plan`, `ship`, `change-body`; apply what fits
       this repo's conventions.
@@ -54,7 +70,8 @@ person can do, and review bodies say why the change exists.
   https://github.com/ralphshao/ai-plugins/issues/27).
 - Per-phase documents or fresh sessions per phase (Q5: no).
 - Bundling `show-me` or HumanLayer's other plugins into flow (Q6: no).
-- New `claude plugin eval` cases for the changed prose.
+- Evals for ship's GATE 2 manual list and change-body's `## Why` - need a
+  full ship run with deep-review and a remote.
 
 ## Version
 flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
@@ -70,6 +87,7 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Q7 ADR 14 supersedes ADR 1's credit line - user said yes.
 - Q8 Fowler citation stays in smell-baseline.md; only the mattpocock part moves - user said yes.
 - Q9 full MIT notices in plugins/flow/THIRD_PARTY_NOTICES.md, linked from a short README Credits table - user chose it.
+- Evals: Explore grader on normal-feature plus a manual-criterion case - user chose both.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
 ## Open questions
