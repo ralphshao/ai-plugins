@@ -90,7 +90,7 @@ flow 0.2.6 -> 0.2.7 (confirmed at ship)
 - Evals: Explore grader on normal-feature plus a manual-criterion case - user chose both.
 - Credits table also lists rpi for plan and ship's borrowed ideas - crediting visual-pr's idea but not rpi's would be inconsistent.
 - tool_used input_match is a regex over the JSON-serialized tool input - read in CLI 2.1.301's eval code, so the Explore grader sees the Agent prompt.
-- manual-criterion prompt asks for output a non-programmer can read at a glance, not green output - ANSI color is testable, so a model could rightly leave it untagged; readability is judgment only.
+- manual-criterion prompt pins the output (`6 / 3 = 2`) and zero handling, and keeps "reads naturally to a non-programmer" as the judgment-only part - ANSI color is testable, and deep-review confirmed an open format invites an interview round that ends the run before plan.md exists.
 - All (manual) criteria go to the user at GATE 2, with no confirmed/unconfirmed filter - flow has no place to record a confirmation, and the reviewer flagged the filters disagreeing.
 - Skipped skill-reviewer's optional trigger phrases for change-body's description - ship calls it by name.
 - explore-neutral grader matches only Agent calls with subagent_type Explore - this exempts Large's Plan drafters, which get the brief by design. Explore calls from any step, interview lookups included, are graded: a lookup about current code has no reason to name ValueError, so the residual false-fail risk is accepted rather than changing interview's behavior to suit a test.
