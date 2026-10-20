@@ -12,7 +12,10 @@ person can do, and review bodies say why the change exists.
   for checks that need a person (UI, hardware, judgment).
 - `ship` lists the unconfirmed `(manual)` criteria in the GATE 2 report.
 - `change-body` opens with a one-sentence `## Why`, and its Evidence lists
-  manual checks still pending; it credits HumanLayer's `visual-pr`.
+  manual checks still pending.
+- No file under `plugins/flow/skills/` carries an upstream credit line;
+  `plugins/flow/README.md` has a `## Credits` section naming each adapted
+  skill's source, including HumanLayer's `visual-pr` and `show-me`.
 - `tests/flow` passes and `claude plugin validate .` passes.
 
 ## Seams under test
@@ -28,9 +31,11 @@ person can do, and review bodies say why the change exists.
 - [ ] `plan/SKILL.md` template and rules: `(manual)` tag on acceptance
       criteria; `ship/SKILL.md` Verify and GATE 2 report the pending ones;
       `change-body` Evidence gets a `Manual:` line (Q2).
-- [ ] `change-body/SKILL.md`: `## Why` one-sentence section first, rule for
-      it, and credit to HumanLayer's `visual-pr` in the existing
-      "Adapted from" line at the top of the skill (Q3).
+- [ ] `change-body/SKILL.md`: `## Why` one-sentence section first, and a
+      rule for it (Q3).
+- [ ] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
+      `deep-review/references/smell-baseline.md` into a `## Credits`
+      section at the end of `plugins/flow/README.md`, adding `visual-pr`.
 - [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
       `skill-reviewer` on `plan`, `ship`, `change-body`; apply what fits
       this repo's conventions.
@@ -55,7 +60,13 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Q4-Q6: skip - user took only 1-3.
 - No new ADR - prose changes inside existing phases, no one-way door.
 
+- Credits move to flow's README, swept across all of flow - user asked.
+- Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
+
 ## Open questions
+- [ ] Q7 Write a short ADR 14 superseding ADR 1's "credit it in the skill" line? - recommended: yes - blocks: credits step
+- [ ] Q8 Keep "From Fowler's *Refactoring*, ch. 3" in smell-baseline.md and move only the mattpocock part? - recommended: yes - blocks: credits step
+- [ ] Q9 Give each upstream its copyright line and LICENSE link in the Credits section? - recommended: yes - blocks: credits step
 
 ## Status
 Awaiting GATE 1
