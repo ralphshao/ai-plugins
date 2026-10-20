@@ -17,6 +17,7 @@ Template:
 
 - **Before:** <failing test, output, or screenshot>
 - **After:** <passing test, output, or screenshot>
+- **Manual:** <checks a person still has to do>
 
 ## Merge danger
 
@@ -38,7 +39,9 @@ Rules:
   flow, a file tree for layout changes, a short diff sketch for an API
   change. Don't restate the diff.
 - **Evidence:** real output from this branch. A test that failed before and
-  passes now is the best evidence.
+  passes now is the best evidence. **Manual** lists a flow plan's
+  `(manual)` acceptance criteria nobody has confirmed; drop the line when
+  there are none.
 - **Door:** one-way when merging is hard to undo (schema, data, public API,
   published artifacts); two-way otherwise.
 - **Decisions:** from a flow plan, every decision made between the gates.

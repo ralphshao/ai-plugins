@@ -21,6 +21,8 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
   don't park it as an open question: don't ready the review without the
   answer.
 - Run the plan's test command. It must pass.
+- List the acceptance criteria tagged `(manual)`. You can't confirm them;
+  they go to the user at GATE 2.
 - Large tasks: spawn `flow:tester` on the `diff-scope` diff for coverage
   gaps; `checkpoint` the tests it adds.
 
@@ -46,5 +48,6 @@ list. `publish`, then `ready-for-review`.
 ## 5. GATE 2
 
 Report the review link (or the branch or changelist, with no host), test
-results, and the review summary. The user lands it (`land`). Never land it
+results, the `(manual)` checks the user still has to do, and the review
+summary. The user lands it (`land`). Never land it
 yourself, and never enable auto-merge unless asked.

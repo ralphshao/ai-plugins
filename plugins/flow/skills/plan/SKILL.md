@@ -89,6 +89,9 @@ Rules:
 - Seams are public interfaces where tests observe behavior. Prefer existing
   seams and the highest one that works; fewer is better. Each gets one line
   on what a test there catches and misses.
+- Tag an acceptance criterion `(manual)` when no test or command can check
+  it: how a UI looks, real hardware, a judgment call. Ship hands those to
+  the user at GATE 2.
 - Steps are vertical slices, each small enough for one checkpoint.
 - The test command must exist in the repo already. If there isn't one, add
   `No test command in repo - stop-time test gate off` under Decisions and
