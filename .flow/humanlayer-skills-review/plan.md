@@ -36,6 +36,8 @@ person can do, and review bodies say why the change exists.
 - [ ] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
       `deep-review/references/smell-baseline.md` into a `## Credits`
       section at the end of `plugins/flow/README.md`, adding `visual-pr`.
+- [ ] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
+      superseding ADR 1's credit-in-the-skill line (Q7).
 - [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
       `skill-reviewer` on `plan`, `ship`, `change-body`; apply what fits
       this repo's conventions.
@@ -60,11 +62,13 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Q4-Q6: skip - user took only 1-3.
 - No new ADR for Q1-Q3 - prose changes inside existing phases, no one-way door.
 - Credits move to flow's README, swept across all of flow - user asked.
+- Q7 ADR 14 supersedes ADR 1's credit line - user said yes.
+- Q8 Fowler citation stays in smell-baseline.md; only the mattpocock part moves - user said yes.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
 ## Open questions
-- [ ] Q7 Write a short ADR 14 superseding ADR 1's "credit it in the skill" line? - recommended: yes - blocks: credits step
-- [ ] Q8 Keep "From Fowler's *Refactoring*, ch. 3" in smell-baseline.md and move only the mattpocock part? - recommended: yes - blocks: credits step
+- [x] Q7 Write a short ADR 14 superseding ADR 1's "credit it in the skill" line? - recommended: yes - blocks: credits step
+- [x] Q8 Keep "From Fowler's *Refactoring*, ch. 3" in smell-baseline.md and move only the mattpocock part? - recommended: yes - blocks: credits step
 - [ ] Q9 Give each upstream its copyright line and LICENSE link in the Credits section? - recommended: yes - blocks: credits step
 
 ## Status
