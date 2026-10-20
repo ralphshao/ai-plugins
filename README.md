@@ -1,10 +1,19 @@
 # ai-plugins
 
-A personal Claude Code / Codex plugin marketplace. Every plugin except
+A personal plugin marketplace for Claude, Claude Code, ChatGPT, and
+Codex. Every plugin except
 `ai-plugins`, `flow`, and `memory-keeper` is fetched directly from its upstream git repo,
 pinned to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
+
+### Claude
+
+Open **Customize > Plugins**, select **Add marketplace**, and enter
+`ralphshao/ai-plugins`. Then install plugins from it like any other.
+Installed plugins are saved to your account, so they also show up in
+Claude Code. Hooks and agents run only in Cowork and Claude Code, not in
+chat.
 
 ### Claude Code
 
@@ -12,6 +21,11 @@ pinned to a specific commit SHA — there's no vendored copy in this repo.
 claude plugin marketplace add ralphshao/ai-plugins
 claude plugin install <plugin-name>@ai-plugins
 ```
+
+### ChatGPT
+
+Add `ralphshao/ai-plugins` as a marketplace from ChatGPT's plugin
+settings, then install plugins from it.
 
 ### Codex
 
@@ -37,13 +51,14 @@ codex plugin add <plugin-name>@ai-plugins
 ## Repo structure
 
 ```
-.agents/plugins/marketplace.json  # Codex marketplace catalog
-.claude-plugin/marketplace.json   # Claude Code marketplace catalog
+.agents/plugins/marketplace.json  # Codex / ChatGPT marketplace catalog
+.claude-plugin/marketplace.json   # Claude marketplace catalog
 docs/adr/                         # architecture decision records
 plugins/                          # source for the local plugins
   ai-plugins/                     #   marketplace maintenance plugin
   flow/                           #   engineering workflow plugin
   memory-keeper/                  #   claude.ai memory maintenance (Claude only)
+scripts/clean-claude.sh           # try local plugins without your own setup
 tests/                            # pytest suite: conftest.py, catalog checks
   ai_plugins/                     #   tests for plugins/ai-plugins
   flow/                           #   tests for plugins/flow

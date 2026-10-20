@@ -4,7 +4,8 @@ Instructions for coding agents working in this repo.
 
 ## What this repo is
 
-A Claude Code / Codex plugin marketplace. Every plugin except `ai-plugins`,
+A plugin marketplace for Claude, Claude Code, ChatGPT, and Codex. Every
+plugin except `ai-plugins`,
 `flow`, and `memory-keeper` is a pinned remote git ref (`url` or `git-subdir` source, with a
 `sha`) — not a vendored copy, not a submodule. There's nothing to edit
 locally for those plugins; a fix belongs in the upstream repo. `ai-plugins`,
@@ -20,8 +21,11 @@ link the plugin's folder instead.
 
 ## Two marketplace files, kept in sync
 
-- `.claude-plugin/marketplace.json` — read by Claude Code.
-- `.agents/plugins/marketplace.json` — read by Codex. Same plugins (except
+- `.claude-plugin/marketplace.json` — read by Claude and Claude Code.
+  In Claude chat, hooks and agents don't run, so a skill
+  meant for chat can't depend on them.
+- `.agents/plugins/marketplace.json` — read by Codex. ChatGPT shares
+  Codex's plugin format. Same plugins (except
   Claude-only local plugins: `memory-keeper`, which needs claude.ai memory
   tools Codex lacks; listed in `CLAUDE_ONLY` in `tests/test_marketplace.py`), same
   `source` object shape (`url`/`git-subdir` with `sha` and `ref`). A plugin
@@ -74,6 +78,11 @@ no shell, so it can't run a diff: name the changed files and the sections
 that changed. Weigh their advice
 against this file and the ADRs; they don't know this repo's conventions
 (e.g. the `codex-*` agent frontmatter is intentional).
+
+To see how a local plugin's skills behave without the user's own plugins,
+hooks, CLAUDE.md, and settings, run `scripts/clean-claude.sh <plugin>...`.
+Pass Claude flags after `--`, e.g. `-- -p "<prompt>"`. It still loads plugins
+enabled on the user's claude.ai account.
 
 ## Installed vs. repo copy
 
