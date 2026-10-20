@@ -18,7 +18,7 @@ Template:
 
 - **Before:** <failing test, output, or screenshot>
 - **After:** <passing test, output, or screenshot>
-- **Manual:** <checks a person still has to do>
+- **Manual:** <`(manual)` criteria a person still has to check>
 
 ## Merge danger
 
@@ -37,14 +37,14 @@ Rules:
 
 - No preamble. Keep prose short.
 - **Why:** exactly one sentence, from the reader's side: what was wrong or
-  missing, not what the diff does.
+  missing and what fixing it makes possible, not what the diff does.
 - **Summary:** pick one form: pseudocode for logic, a call tree for control
   flow, a file tree for layout changes, a short diff sketch for an API
   change. Don't restate the diff.
 - **Evidence:** real output from this branch. A test that failed before and
-  passes now is the best evidence. **Manual** lists a flow plan's
-  `(manual)` acceptance criteria nobody has confirmed; drop the line when
-  there are none.
+  passes now is the best evidence.
+- **Manual:** the flow plan's `(manual)` acceptance criteria. Drop the line
+  when there are none.
 - **Door:** one-way when merging is hard to undo (schema, data, public API,
   published artifacts); two-way otherwise.
 - **Decisions:** from a flow plan, every decision made between the gates.
