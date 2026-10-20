@@ -21,6 +21,8 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
   don't park it as an open question: don't ready the review without the
   answer.
 - Run the plan's test command. It must pass.
+- List the `(manual)` acceptance criteria. You can't check them; they go
+  to the user at GATE 2.
 - Large tasks: spawn `flow:tester` on the `diff-scope` diff for coverage
   gaps; `checkpoint` the tests it adds.
 
@@ -28,23 +30,24 @@ Input: an approved `.flow/<slug>/plan.md` with every step ticked.
 
 `checkpoint`, then use the `deep-review` skill on the task's `diff-scope`,
 with `.flow/<slug>/plan.md` as the spec path, so reviewers check the diff
-against the approved acceptance criteria. Fix every confirmed
-finding, rerun the test command, `checkpoint`. Findings that fall under the
-escalation rule (see the `flow` skill) are parked as open questions, not
-fixed silently.
+against the approved acceptance criteria (`(manual)` ones need no test).
+Fix every confirmed finding, rerun the test command, `checkpoint`. Findings
+that fall under the escalation rule (see the `flow` skill) are parked as
+open questions, not fixed silently.
 
 ## 3. Clean up
 
-Copy `## Decisions` out of the plan first; the review body needs it. Then
-`drop-state`.
+Copy `## Decisions` and the `(manual)` criteria out of the plan first; the
+review body and GATE 2 need them. Then `drop-state`.
 
 ## 4. Review request
 
 Write the review body with the `change-body` skill, including the Decisions
-list. `publish`, then `ready-for-review`.
+list and the `(manual)` criteria. `publish`, then `ready-for-review`.
 
 ## 5. GATE 2
 
 Report the review link (or the branch or changelist, with no host), test
-results, and the review summary. The user lands it (`land`). Never land it
+results, the `(manual)` criteria the user has to check before landing, and
+the review summary. The user lands it (`land`). Never land it
 yourself, and never enable auto-merge unless asked.

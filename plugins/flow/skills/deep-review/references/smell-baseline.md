@@ -1,6 +1,6 @@
 # Smell baseline
 
-From Fowler's *Refactoring*, ch. 3; list adapted from mattpocock/skills (MIT).
+From Fowler's *Refactoring*, ch. 3.
 Report a smell as a Readability or Simplification finding labelled
 "possible <smell>", never as a hard violation, and drop it where a
 documented repo standard endorses the pattern.

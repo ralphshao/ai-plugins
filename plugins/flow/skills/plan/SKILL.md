@@ -9,8 +9,12 @@ Input: `.flow/<slug>/brief.md` from `start`.
 ## 1. Explore
 
 Spawn an exploration subagent (`Explore` in Claude Code, `explorer` in
-Codex) to find the code the request touches: entry points, callers, existing
-tests and their style, the test command, and repo standards files. Ask it
+Codex) to find the code in the area the brief names: entry points, callers,
+existing tests and their style, the test command, and repo standards files.
+Name the area (the feature, command, files, or symbols), not the change:
+ask how it works today, and leave the desired change out of the prompt so
+the findings aren't bent toward it. Tell it to describe what exists, not
+propose changes. Ask it
 to end with the 5-10 files most worth reading, and read those yourself
 before going on. Facts are your job: never ask the user something you can
 look up.
@@ -86,6 +90,10 @@ Rules:
 - Seams are public interfaces where tests observe behavior. Prefer existing
   seams and the highest one that works; fewer is better. Each gets one line
   on what a test there catches and misses.
+- End an acceptance criterion with `(manual)` when no test or command can
+  check it: how a UI looks, real hardware, whether wording reads well.
+  Prefer a test: a criterion that is only hard to test is not `(manual)`.
+  Ship hands these to the user at GATE 2.
 - Steps are vertical slices, each small enough for one checkpoint.
 - The test command must exist in the repo already. If there isn't one, add
   `No test command in repo - stop-time test gate off` under Decisions and

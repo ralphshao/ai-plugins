@@ -3,8 +3,6 @@ name: interview
 description: Interview the user about a plan, design, or decision in rounds of numbered questions with recommended answers, until no decision is left open. Use when a plan has open decisions, or the user says "interview me", "grill me", or asks to stress-test an idea.
 ---
 
-Adapted from the `grilling` skill in mattpocock/skills (MIT).
-
 Map the decisions as a tree: each decision branches into the ones that
 depend on it. The **frontier** is every open decision whose prerequisites
 are settled.
