@@ -74,7 +74,7 @@ person can do, and review bodies say why the change exists.
   full ship run with deep-review and a remote.
 
 ## Version
-flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
+flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
 
 ## Decisions
 - Reviewed humanlayer/skills at 653b6411c1f70c275a18e37673b042ff99f67ceb - the head on 2026-10-08.
@@ -88,6 +88,7 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Q8 Fowler citation stays in smell-baseline.md; only the mattpocock part moves - user said yes.
 - Q9 full MIT notices in plugins/flow/THIRD_PARTY_NOTICES.md, linked from a short README Credits table - user chose it.
 - Evals: Explore grader on normal-feature plus a manual-criterion case - user chose both.
+- Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
 ## Open questions
@@ -96,4 +97,4 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - [x] Q9 Give each upstream its copyright line and LICENSE link in the Credits section? - recommended: yes - blocks: credits step
 
 ## Status
-Awaiting GATE 1
+Approved - building
