@@ -51,7 +51,7 @@ person can do, and review bodies say why the change exists.
       mattpocock/skills and humanlayer/skills and link it from the table.
 - [x] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
       superseding ADR 1's credit-in-the-skill line (Q7).
-- [ ] Evals: add a `tool_used` grader on `Agent` with
+- [x] Evals: add a `tool_used` grader on `Agent` with
       `input_match: 'ValueError'`, `max: 0` to `normal-feature` (first
       confirm `input_match` searches the Agent prompt); add a
       `manual-criterion` case (calc fixture, prompt asking for green
@@ -89,6 +89,8 @@ flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
 - Q9 full MIT notices in plugins/flow/THIRD_PARTY_NOTICES.md, linked from a short README Credits table - user chose it.
 - Evals: Explore grader on normal-feature plus a manual-criterion case - user chose both.
 - Credits table also lists rpi for plan and ship's borrowed ideas - crediting visual-pr's idea but not rpi's would be inconsistent.
+- tool_used input_match is a regex over the JSON-serialized tool input - read in CLI 2.1.301's eval code, so the Explore grader sees the Agent prompt.
+- manual-criterion prompt asks for output a non-programmer can read at a glance, not green output - ANSI color is testable, so a model could rightly leave it untagged; readability is judgment only.
 - Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
