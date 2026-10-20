@@ -58,8 +58,7 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Q2 manual checks: adopt - user said yes.
 - Q3 one-sentence Why in change-body: adopt - user said yes.
 - Q4-Q6: skip - user took only 1-3.
-- No new ADR - prose changes inside existing phases, no one-way door.
-
+- No new ADR for Q1-Q3 - prose changes inside existing phases, no one-way door.
 - Credits move to flow's README, swept across all of flow - user asked.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
