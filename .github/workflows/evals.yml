@@ -1,11 +1,13 @@
-name: flow evals
+name: evals
 
-# Reruns flow's claude plugin eval cases when its skills, agents (including
-# a model pin in agents/*.md), hooks, or evals change. Needs the
-# ANTHROPIC_API_KEY repo secret; skips with a notice without it, so forks
-# and PRs from outside stay green.
+# Reruns local plugins' claude plugin eval cases, one job per plugin. Needs
+# the ANTHROPIC_API_KEY repo secret; each job skips with a notice without
+# it, so forks and PRs from outside stay green.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    # shortcut: workflow-level paths fit while flow is the only job; a second
+    # plugin's job needs per-job change detection instead.
     paths:
       - "plugins/flow/skills/**"
       - "plugins/flow/agents/**"
@@ -16,7 +18,11 @@ permissions:
   contents: read
 
 jobs:
-  evals:
+  # When flow's skills, agents (including a model pin in agents/*.md), hooks,
+  # or evals change.
+  flow:
+    # Skip draft PRs; ready_for_review runs them once marked ready.
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     env:
       HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
