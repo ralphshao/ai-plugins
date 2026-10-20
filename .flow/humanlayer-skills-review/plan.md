@@ -74,7 +74,7 @@ person can do, and review bodies say why the change exists.
   full ship run with deep-review and a remote.
 
 ## Version
-flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
+flow 0.2.6 -> 0.2.7 (confirmed at ship)
 
 ## Decisions
 - Reviewed humanlayer/skills at 653b6411c1f70c275a18e37673b042ff99f67ceb - the head on 2026-10-08.
@@ -94,6 +94,7 @@ flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
 - All (manual) criteria go to the user at GATE 2, with no confirmed/unconfirmed filter - flow has no place to record a confirmation, and the reviewer flagged the filters disagreeing.
 - Skipped skill-reviewer's optional trigger phrases for change-body's description - ship calls it by name.
 - explore-neutral grader matches only Agent calls with subagent_type Explore - plugin-validator noted interview lookups or Large Plan drafters may carry the request legitimately.
+- Version go: flow 0.2.7 - user said yes at ship.
 - Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
