@@ -1,6 +1,6 @@
 ---
 name: change-body
-description: The shape of a code review description (pull request, Swarm review, or changelist description) - a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating one.
+description: The shape of a code review description (pull request, Swarm review, or changelist description) - a one-sentence why, a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating one.
 ---
 
 Adapted from the `pr` skill in mattpocock/skills (MIT), itself credited to
@@ -9,6 +9,10 @@ Humanlayer's `show-me`.
 Template:
 
 ```markdown
+## Why
+
+<one sentence: the problem this solves and what it makes possible>
+
 ## Summary
 
 <the smallest visual that makes the change clear>
@@ -35,6 +39,8 @@ Closes #<n>
 Rules:
 
 - No preamble. Keep prose short.
+- **Why:** exactly one sentence, from the reader's side: what was wrong or
+  missing, not what the diff does.
 - **Summary:** pick one form: pseudocode for logic, a call tree for control
   flow, a file tree for layout changes, a short diff sketch for an API
   change. Don't restate the diff.

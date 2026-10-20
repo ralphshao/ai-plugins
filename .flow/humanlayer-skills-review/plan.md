@@ -42,7 +42,7 @@ person can do, and review bodies say why the change exists.
 - [x] `plan/SKILL.md` template and rules: `(manual)` tag on acceptance
       criteria; `ship/SKILL.md` Verify and GATE 2 report the pending ones;
       `change-body` Evidence gets a `Manual:` line (Q2).
-- [ ] `change-body/SKILL.md`: `## Why` one-sentence section first, and a
+- [x] `change-body/SKILL.md`: `## Why` one-sentence section first, and a
       rule for it (Q3).
 - [ ] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
       `deep-review/references/smell-baseline.md` into a `## Credits`
