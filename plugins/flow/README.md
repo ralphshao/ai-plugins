@@ -157,13 +157,14 @@ skills, agents, hooks, or evals, when the `ANTHROPIC_API_KEY` secret is set.
 
 ## Credits
 
-These skills adapt skills from other MIT-licensed projects. Their license
+These skills adapt skills or ideas from other MIT-licensed projects. Their license
 notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 | flow skill | Adapted from |
 | --- | --- |
 | `change-body` | mattpocock/skills [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr), itself credited to humanlayer/skills [`show-me`](https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me); its Why line from humanlayer/skills [`visual-pr`](https://github.com/humanlayer/skills/tree/main/plugins/visual-pr/skills/visual-pr) |
 | `deep-review` | smell list from mattpocock/skills [`code-review`](https://github.com/mattpocock/skills/tree/main/skills/engineering/code-review) |
+| `plan`, `ship` | neutral exploration and `(manual)` checks: ideas from humanlayer/skills [`rpi`](https://github.com/humanlayer/skills/tree/main/plugins/rpi) |
 | `interview` | mattpocock/skills [`grilling`](https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling) |
 | `retro` | mattpocock/skills [`retro`](https://github.com/mattpocock/skills/tree/main/skills/engineering/retro) |
 | `tdd` | mattpocock/skills [`tdd`](https://github.com/mattpocock/skills/tree/main/skills/engineering/tdd) |

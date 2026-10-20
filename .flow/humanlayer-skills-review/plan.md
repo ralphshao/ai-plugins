@@ -49,7 +49,7 @@ person can do, and review bodies say why the change exists.
       section at the end of `plugins/flow/README.md`, adding `visual-pr`;
       write `plugins/flow/THIRD_PARTY_NOTICES.md` with the full MIT text of
       mattpocock/skills and humanlayer/skills and link it from the table.
-- [ ] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
+- [x] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
       superseding ADR 1's credit-in-the-skill line (Q7).
 - [ ] Evals: add a `tool_used` grader on `Agent` with
       `input_match: 'ValueError'`, `max: 0` to `normal-feature` (first
@@ -88,6 +88,7 @@ flow 0.2.6 -> 0.2.7 (intent; applied at ship only on the user's go)
 - Q8 Fowler citation stays in smell-baseline.md; only the mattpocock part moves - user said yes.
 - Q9 full MIT notices in plugins/flow/THIRD_PARTY_NOTICES.md, linked from a short README Credits table - user chose it.
 - Evals: Explore grader on normal-feature plus a manual-criterion case - user chose both.
+- Credits table also lists rpi for plan and ship's borrowed ideas - crediting visual-pr's idea but not rpi's would be inconsistent.
 - Version intent: flow 0.2.6 -> 0.2.7 at ship - user said so at GATE 1.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
