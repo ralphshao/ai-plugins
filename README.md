@@ -1,11 +1,19 @@
 # ai-plugins
 
-A personal plugin marketplace for Claude (Claude Code, claude.ai, and
-Claude Desktop) and OpenAI (Codex and ChatGPT). Every plugin except
+A personal plugin marketplace for Claude, Claude Code, ChatGPT, and
+Codex. Every plugin except
 `ai-plugins`, `flow`, and `memory-keeper` is fetched directly from its upstream git repo,
 pinned to a specific commit SHA — there's no vendored copy in this repo.
 
 ## Install
+
+### Claude
+
+Open **Customize > Plugins**, select **Add marketplace**, and enter
+`ralphshao/ai-plugins`. Then install plugins from it like any other.
+Installed plugins are saved to your account, so they also show up in
+Claude Code. Hooks and agents run only in Cowork and Claude Code, not in
+chat.
 
 ### Claude Code
 
@@ -14,13 +22,10 @@ claude plugin marketplace add ralphshao/ai-plugins
 claude plugin install <plugin-name>@ai-plugins
 ```
 
-### claude.ai and Claude Desktop
+### ChatGPT
 
-Open **Customize > Plugins**, select **Add marketplace**, and enter
-`ralphshao/ai-plugins`. Then install plugins from it like any other.
-Installed plugins are saved to your account, so they also show up in
-Claude Code. Hooks and agents run only in Cowork and Claude Code, not in
-chat.
+Add `ralphshao/ai-plugins` as a marketplace from ChatGPT's plugin
+settings, then install plugins from it.
 
 ### Codex
 
@@ -28,11 +33,6 @@ chat.
 codex plugin marketplace add ralphshao/ai-plugins
 codex plugin add <plugin-name>@ai-plugins
 ```
-
-### ChatGPT
-
-Add `ralphshao/ai-plugins` as a marketplace from ChatGPT's plugin
-settings, then install plugins from it.
 
 ## Plugins
 
