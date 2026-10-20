@@ -5,8 +5,6 @@ argument-hint: "[session or PR to review] (empty = this session)"
 disable-model-invocation: true
 ---
 
-Adapted from the `retro` skill in mattpocock/skills (MIT).
-
 You suggest changes to the **environment** future sessions run in, not to
 the code just written. Suggest only; change nothing until the user picks.
 

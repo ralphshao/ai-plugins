@@ -44,7 +44,7 @@ person can do, and review bodies say why the change exists.
       `change-body` Evidence gets a `Manual:` line (Q2).
 - [x] `change-body/SKILL.md`: `## Why` one-sentence section first, and a
       rule for it (Q3).
-- [ ] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
+- [x] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
       `deep-review/references/smell-baseline.md` into a `## Credits`
       section at the end of `plugins/flow/README.md`, adding `visual-pr`;
       write `plugins/flow/THIRD_PARTY_NOTICES.md` with the full MIT text of

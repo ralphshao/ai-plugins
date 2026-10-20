@@ -3,8 +3,6 @@ name: tdd
 description: Test-driven development in red-green slices at agreed seams. Use when building a feature or fixing a bug test-first, or when the user mentions TDD or red-green-refactor.
 ---
 
-Adapted from the `tdd` skill in mattpocock/skills (MIT).
-
 ## Seams
 
 A seam is the public interface where a test observes behavior without

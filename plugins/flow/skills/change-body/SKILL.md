@@ -3,9 +3,6 @@ name: change-body
 description: The shape of a code review description (pull request, Swarm review, or changelist description) - a one-sentence why, a minimal summary visual, before/after evidence, and a merge-danger call. Use when writing or updating one.
 ---
 
-Adapted from the `pr` skill in mattpocock/skills (MIT), itself credited to
-Humanlayer's `show-me`.
-
 Template:
 
 ```markdown
