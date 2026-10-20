@@ -15,7 +15,9 @@ person can do, and review bodies say why the change exists.
   manual checks still pending.
 - No file under `plugins/flow/skills/` carries an upstream credit line;
   `plugins/flow/README.md` has a `## Credits` section naming each adapted
-  skill's source, including HumanLayer's `visual-pr` and `show-me`.
+  skill's source, including HumanLayer's `visual-pr` and `show-me`, and
+  linking `plugins/flow/THIRD_PARTY_NOTICES.md`, which holds each
+  upstream's full MIT notice.
 - `tests/flow` passes and `claude plugin validate .` passes.
 
 ## Seams under test
@@ -35,7 +37,9 @@ person can do, and review bodies say why the change exists.
       rule for it (Q3).
 - [ ] Move credits out of `change-body`, `tdd`, `interview`, `retro`, and
       `deep-review/references/smell-baseline.md` into a `## Credits`
-      section at the end of `plugins/flow/README.md`, adding `visual-pr`.
+      section at the end of `plugins/flow/README.md`, adding `visual-pr`;
+      write `plugins/flow/THIRD_PARTY_NOTICES.md` with the full MIT text of
+      mattpocock/skills and humanlayer/skills and link it from the table.
 - [ ] Write `docs/adr/0014-flow-credits-its-sources-in-its-readme.md`,
       superseding ADR 1's credit-in-the-skill line (Q7).
 - [ ] Run plugin-dev's `plugin-validator` on `plugins/flow` and
@@ -64,12 +68,13 @@ flow 0.2.6 -> ? (intent; applied at ship only on the user's go)
 - Credits move to flow's README, swept across all of flow - user asked.
 - Q7 ADR 14 supersedes ADR 1's credit line - user said yes.
 - Q8 Fowler citation stays in smell-baseline.md; only the mattpocock part moves - user said yes.
+- Q9 full MIT notices in plugins/flow/THIRD_PARTY_NOTICES.md, linked from a short README Credits table - user chose it.
 - Credits section goes last in the README, as a table of flow skill and source - fits the README's table style.
 
 ## Open questions
 - [x] Q7 Write a short ADR 14 superseding ADR 1's "credit it in the skill" line? - recommended: yes - blocks: credits step
 - [x] Q8 Keep "From Fowler's *Refactoring*, ch. 3" in smell-baseline.md and move only the mattpocock part? - recommended: yes - blocks: credits step
-- [ ] Q9 Give each upstream its copyright line and LICENSE link in the Credits section? - recommended: yes - blocks: credits step
+- [x] Q9 Give each upstream its copyright line and LICENSE link in the Credits section? - recommended: yes - blocks: credits step
 
 ## Status
 Awaiting GATE 1
