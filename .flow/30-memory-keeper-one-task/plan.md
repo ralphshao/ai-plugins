@@ -18,11 +18,11 @@ One account-level scheduled task maintains all memory, including every project's
 - plugin-dev:plugin-validator and plugin-dev:skill-reviewer catch structure and instruction quality / miss live memory behavior, which needs a Cowork run after merge.
 
 ## Steps
-- [ ] maintain: remove mode selection, add the project guard, update description, tiers, write cap and rule-line protection
-- [ ] maintain: merge checks and safe fixes, remove instruction checks, add flags
-- [ ] maintain: retarget preference candidates, update proposals, report and approvals
-- [ ] setup: remove project mode, add the guard, set schedule and name
-- [ ] Update plugin README and the three plugin descriptions
+- [x] maintain: remove mode selection, add the project guard, update description, tiers, write cap and rule-line protection
+- [x] maintain: merge checks and safe fixes, remove instruction checks, add flags
+- [x] maintain: retarget preference candidates, update proposals, report and approvals
+- [x] setup: remove project mode, add the guard, set schedule and name
+- [x] Update plugin README and the three plugin descriptions
 
 ## Test command
 `uv run --with pytest pytest tests/test_marketplace.py`
