@@ -33,9 +33,11 @@ One account-level scheduled task maintains all memory, including every project's
 - Detecting a separate-memory project whose folder never appears
 
 ## Version
-memory-keeper 0.1.0 -> TBD at GATE 1 (intent; applied at ship only on the user's go)
+memory-keeper 0.1.0 -> 0.1.1 (intent; applied at ship only on the user's go)
 
 ## Decisions
+- memory-keeper version target 0.1.1 - user answer at GATE 1
+
 - Size Normal - rewrites two skills and docs, no code
 - Skipped the Explore subagent - the plugin is three files, all read directly
 - Unreachable signal: folder lists empty or fails to list or read; flag, don't stop - may be a new project with no memories yet
@@ -49,4 +51,4 @@ memory-keeper 0.1.0 -> TBD at GATE 1 (intent; applied at ship only on the user's
 ## Open questions
 
 ## Status
-Awaiting GATE 1
+Approved - building
