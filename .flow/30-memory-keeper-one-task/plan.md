@@ -37,6 +37,7 @@ memory-keeper 0.1.0 -> 0.1.1 (intent; applied at ship only on the user's go)
 
 ## Decisions
 - memory-keeper version target 0.1.1 - user answer at GATE 1
+- Version go for 0.1.1 given at ship
 
 - Size Normal - rewrites two skills and docs, no code
 - Skipped the Explore subagent - the plugin is three files, all read directly
