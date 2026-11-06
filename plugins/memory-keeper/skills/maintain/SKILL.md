@@ -9,7 +9,7 @@ Keeps the user's memory accurate, deduplicated and in the right tier. Runs one-s
 
 ## Before you start
 
-- **Project instructions present in this conversation** → you're inside a project, where writes are confined to that project. Say this skill must run outside a project and stop, using SendUserMessage if available so a scheduled run notifies the user.
+- **Project instructions present in this conversation** → you're inside a project, where writes are confined to that project. Say this skill must run outside a project and stop, sending that via SendUserMessage (load it as in step 5) so a scheduled run notifies the user.
 - **"dry run" in the request** → make no writes; report what would be applied under "Would apply".
 
 ## Rules for correct memory
@@ -81,7 +81,7 @@ Use this template; omit empty sections.
 
 **Profile instructions to add** (only rules memory filters would drop)
 [paste-ready lines under short headings]
-After pasting, these memory lines get removed: [file: line]
+After pasting, these memory lines get removed: [file: line]. Reply 'pasted' when done.
 
 **Applied** (or **Would apply** on a dry run)
 - [file]: [what changed]
@@ -106,7 +106,7 @@ Example (illustrative only; these are not real memory contents):
 
 **Proposed**
 1. /areas/example-c.md: "visit on Oct 10" is past — replace with "[outcome]" or delete — date passed, outcome not in memory
-2. A fact sits in both a project file and /topics/example-d.md — remove from /topics/example-d.md — the project mainly uses and edits it
+2. /projects/example-f/preferences.md: delete rule "cite sources" — already in /preferences.md, and rule lines are proposal-only
 
 **Flagged**
 - /projects/example-e: no preferences.md
@@ -118,4 +118,4 @@ If nothing needs doing, send one line saying so, without the reply prompt. Omit 
 
 ## Approvals
 
-When the user replies approving numbers, apply exactly those, as written. Re-read each file first and follow the same write rules as step 3; if a proposal no longer fits the current content, skip it and say why. Unapproved proposals stay undone. Instruction edits can't be applied by you: remind the user to paste them, and remove a candidate's memory lines only after they confirm the paste. Report one line per change made.
+When the user replies approving numbers, apply exactly those, as written. Re-read each file first and follow the same write rules as step 3; if a proposal no longer fits the current content, skip it and say why. Unapproved proposals stay undone. Instruction edits can't be applied by you: remind the user to paste them, and remove a candidate's memory lines only after they confirm the paste. The write cap doesn't apply to approved proposals. Report one line per change made.
