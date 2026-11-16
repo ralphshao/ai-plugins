@@ -1,4 +1,4 @@
-# 12. flow's /brb keepalive wakes the session with an asyncRewake Stop hook
+# 15. flow's /brb keepalive wakes the session with an asyncRewake Stop hook
 
 Status: accepted (#22, 2026-10-15).
 
