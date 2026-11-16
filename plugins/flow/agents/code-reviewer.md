@@ -7,7 +7,6 @@ effort: medium
 codex-model: gpt-6.1-sol
 codex-effort: medium
 skills:
-  - andrej-karpathy-skills:karpathy-guidelines
   - ponytail:ponytail-review
 ---
 

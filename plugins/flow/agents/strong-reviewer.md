@@ -7,7 +7,6 @@ effort: high
 codex-model: gpt-6.1-sol
 codex-effort: high
 skills:
-  - andrej-karpathy-skills:karpathy-guidelines
   - ponytail:ponytail-review
 ---
 

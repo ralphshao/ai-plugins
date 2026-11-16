@@ -26,20 +26,6 @@
       "category": "Productivity"
     },
     {
-      "name": "andrej-karpathy-skills",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/multica-ai/andrej-karpathy-skills.git",
-        "sha": "2c606141936f1eeef17fa3043a72095b4765b9c2",
-        "ref": "main"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
       "name": "avoid-ai-writing",
       "source": {
         "source": "url",
@@ -61,20 +47,6 @@
         "path": "./plugins/caveman",
         "sha": "e20f07e8152a0c0360f58c09e79d30ac94329991",
         "ref": "v3.2.0"
-      },
-      "policy": {
-        "installation": "AVAILABLE",
-        "authentication": "ON_INSTALL"
-      },
-      "category": "Productivity"
-    },
-    {
-      "name": "context-mode",
-      "source": {
-        "source": "url",
-        "url": "https://github.com/mksglu/context-mode.git",
-        "sha": "589d8214d56740a28b5f7bf63167743d586b0b40",
-        "ref": "v1.0.169"
       },
       "policy": {
         "installation": "AVAILABLE",

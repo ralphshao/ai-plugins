@@ -29,9 +29,8 @@ link the plugin's folder instead.
   Claude-only local plugins: `memory-keeper`, which needs claude.ai memory
   tools Codex lacks; listed in `CLAUDE_ONLY` in `tests/test_marketplace.py`), same
   `source` object shape (`url`/`git-subdir` with `sha` and `ref`). A plugin
-  with only one manifest (e.g. `andrej-karpathy-skills`, which has no
-  `.codex-plugin/plugin.json`) uses that manifest's folder as the plugin
-  root in both files; Claude Code and Codex both load either layout.
+  with only one manifest (say, no `.codex-plugin/plugin.json`) uses that
+  manifest's folder as the plugin root in both files; Claude Code and Codex both load either layout.
 
 When adding, removing, or re-pinning a plugin, update both files. The
 `ai-plugins` skills do this for you.
