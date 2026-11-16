@@ -1,6 +1,6 @@
 {
   "name": "ai-plugins",
-  "description": "Ralph's collection of Claude Code plugins",
+  "description": "Ralph's collection of plugins for Claude, Claude Code, ChatGPT, and Codex",
   "owner": {
     "name": "Ralph Shao",
     "email": "ralph@ralphshao.com"
