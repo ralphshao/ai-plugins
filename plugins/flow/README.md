@@ -91,7 +91,7 @@ Claude Code and `flow-<name>` in Codex.
   other prompt. A background
   Stop hook (`asyncRewake`) wakes the idle session for a cheap cached turn
   shortly before the cache expires, until the break plus grace ends. See
-  [ADR 12](../../docs/adr/0012-flow-brb-keepalive-uses-asyncrewake.md).
+  [ADR 15](../../docs/adr/0015-flow-brb-keepalive-uses-asyncrewake.md).
 
 On Codex, the hooks run only after you accept Codex's hook trust prompt for
 this plugin.

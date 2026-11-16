@@ -9,7 +9,7 @@ It allows the stop when:
 - the plan has an unticked item under "## Open questions" (parked work
   waiting on the user), or
 - stop_hook_active is set (the agent already got one block this turn), or
-- /brb is armed for the session (the user is away; ADR 12), or
+- /brb is armed for the session (the user is away; ADR 15), or
 - in a git repo, nothing changed since the command last passed: same HEAD,
   same staged and unstaged diff, same untracked files and contents. Files
   under .flow/ don't count. The fingerprint lives in the system temp
