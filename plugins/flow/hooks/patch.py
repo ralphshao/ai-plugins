@@ -9,7 +9,7 @@ import re
 
 # Codex trims each line before matching, so allow leading blanks.
 HEADER = re.compile(r"^[ \t]*\*\*\* (Add File|Update File|Delete File|Move to): (.+)$",
-                    re.M)
+                    re.MULTILINE)
 
 
 def patch_paths(tool_input):

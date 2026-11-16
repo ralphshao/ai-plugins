@@ -50,10 +50,10 @@ PREAMBLE = (
 
 def parse(path):
     text = path.read_text(encoding="utf-8")
-    m = re.match(r"---\n(.*?)\n---\n(.*)", text, re.S)
+    m = re.match(r"---\n(.*?)\n---\n(.*)", text, re.DOTALL)
     if not m:
         sys.exit(f"{path}: no frontmatter")
-    fields = dict(re.findall(r"^([\w-]+):[ \t]*(.*)$", m.group(1), re.M))
+    fields = dict(re.findall(r"^([\w-]+):[ \t]*(.*)$", m.group(1), re.MULTILINE))
     for key in ("name", "description"):
         if not fields.get(key):
             sys.exit(f"{path}: frontmatter has no {key}")

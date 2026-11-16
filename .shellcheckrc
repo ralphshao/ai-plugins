@@ -1,0 +1,3 @@
+# The eval setup.sh files source ../fixtures/repo.sh relative to themselves.
+external-sources=true
+source-path=SCRIPTDIR

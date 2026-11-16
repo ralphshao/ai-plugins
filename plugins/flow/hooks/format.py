@@ -118,7 +118,7 @@ def main():
         try:
             if path.is_file():
                 format_file(path.resolve())
-        except Exception as e:  # best-effort: still format the other files
+        except Exception as e:  # noqa: BLE001  best-effort: still format the other files
             print(f"flow format: {path}: {e}", file=sys.stderr)
 
 

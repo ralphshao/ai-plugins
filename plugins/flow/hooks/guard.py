@@ -35,11 +35,11 @@ exits with a non-blocking error and the guard doesn't run at all. Python
 Bash, Write, and Edit in the main session too, on a machine without Python.
 """
 import json
-from collections import Counter
 import os
 import re
 import shlex
 import sys
+from collections import Counter
 from pathlib import Path, PurePath
 from typing import NoReturn
 
@@ -252,7 +252,7 @@ def guarded_plans(root):
         text = path.read_text(encoding="utf-8")
         if not section(text, "Status").strip().startswith("Approved"):
             continue
-        if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.M):
+        if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.MULTILINE):
             return []
         plans.append(path)
     return plans
@@ -283,10 +283,10 @@ def check_main(tool, inp, cwd):
             raise Denied(f"no changing the test command: {hint}")
         if not section(new, "Status").strip().startswith("Approved"):
             raise Denied(f"no changing the approved Status: {hint}")
-    elif any(map(is_test, (rel, PurePath(*(x.lower() for x in rel.parts))))):
-        # Every old line must survive, duplicates counted.
-        if Counter(old.splitlines()) - Counter(new.splitlines()):
-            raise Denied(f"only additions to existing tests: {hint}")
+    elif (any(map(is_test, (rel, PurePath(*(x.lower() for x in rel.parts)))))
+          # Every old line must survive, duplicates counted.
+          and Counter(old.splitlines()) - Counter(new.splitlines())):
+        raise Denied(f"only additions to existing tests: {hint}")
 
 
 def check(data):
@@ -311,7 +311,7 @@ def main() -> NoReturn:
     raw = sys.stdin.read()
     try:
         agent = json.loads(raw).get("agent_type")
-    except Exception:
+    except Exception:  # noqa: BLE001  any failure must fall through to the guess
         # Unparseable: guess from the raw text, so a flow agent fails closed.
         agent = next((a for a in FLOW_AGENTS if f'"{a}"' in raw), None)
     flow_agent = agent in FLOW_AGENTS
@@ -326,7 +326,7 @@ def main() -> NoReturn:
     except Denied as e:
         print(f"flow {who} guard blocked this: {e}", file=sys.stderr)
         sys.exit(2)
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001  a flow agent fails closed on any error
         if flow_agent:
             print(f"flow {who} guard failed, blocking: {e!r}", file=sys.stderr)
             sys.exit(2)

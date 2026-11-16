@@ -5,6 +5,14 @@ They keep the Claude Code catalog (`.claude-plugin/marketplace.json`), the
 Codex catalog (`.agents/plugins/marketplace.json`), and the README plugin
 table in sync.
 
+## Install
+
+In Claude Code 2.1.275 or later:
+
+```
+/plugin install ai-plugins --marketplace ralphshao/ai-plugins
+```
+
 ## Skills
 
 | Skill | Does |

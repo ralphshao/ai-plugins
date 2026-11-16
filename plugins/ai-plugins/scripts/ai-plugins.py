@@ -452,7 +452,7 @@ def parse_repo(spec):
         web = f"https://github.com/{owner}/{repo}"
         return f"{web}.git", web, m.group("ref"), m.group("path")
     if "://" in spec:
-        web = spec[:-4] if spec.endswith(".git") else spec
+        web = spec.removesuffix(".git")
         return f"{web}.git", web, None, None
     die(f"Not a GitHub URL or owner/repo slug: {spec}")
 

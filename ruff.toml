@@ -1,0 +1,23 @@
+# Lint only: CI runs `ruff check` (see AGENTS.md, "Validating changes").
+# The plugin scripts run on whatever python3 the user has, 3.9 at the oldest,
+# so ruff must not suggest newer syntax.
+target-version = "py39"
+# Makes the format exclude below apply to a file named on the command line.
+force-exclude = true
+
+[lint]
+ignore = [
+    # Every subprocess.run here reads returncode itself, or ignores it on
+    # purpose (best-effort kills, formatters): check=False on each call
+    # would say nothing new.
+    "PLW1510",
+]
+
+[lint.isort]
+# tests/conftest.py is imported as a top-level module (no packages in tests/).
+known-first-party = ["conftest"]
+
+[format]
+# The code is not ruff-formatted. flow's format hook runs `ruff format` on an
+# edited file once a ruff config exists, which would rewrite whole files.
+exclude = ["*.py"]
