@@ -45,6 +45,21 @@ def test_update_moves_sha_in_both_catalogs(market, make_remote):
     assert "version:" not in result.stdout
     assert market.plugin("mover")["version"] == "1.0.0"
     assert market.table_rows()[-1].endswith("| Does 1.0.0 | 1.0.0 |")
+    # Claude Code won't offer the new commit to installed users: say so.
+    assert ("warning: mover is still 1.0.0, so installed users won't get this "
+            "commit until upstream bumps its version") in result.stdout
+
+
+def test_update_unversioned_entry_gets_no_version_warning(market, make_remote):
+    # With no version anywhere, Claude Code falls back to the sha, which moved.
+    remote = make_remote("bare")
+    old = remote.commit({CLAUDE: '{"name": "bare"}'})
+    remote.commit({"x": "1"})
+    pin(market, remote, old, version="")
+
+    result = market.run("update", check=True)
+    assert "== bare: updated ==" in result.stdout
+    assert "warning:" not in result.stdout
 
 
 def test_update_bumps_version_and_readme_row(market, make_remote):
@@ -55,6 +70,7 @@ def test_update_bumps_version_and_readme_row(market, make_remote):
 
     result = market.run("update", check=True)
     assert "version: 1.0.0 -> 1.1.0" in result.stdout
+    assert "warning:" not in result.stdout  # a new version reaches installed users
     assert market.plugin("bumpy")["version"] == "1.1.0"
     # Only the version cell changes, even though the description mentions 1.0.0.
     assert market.table_rows()[-1] == f"| [bumpy]({remote.web_url}) | Does 1.0.0 | 1.1.0 |"
@@ -148,6 +164,7 @@ def test_update_failed_fetch_of_new_commit_says_why(market, make_remote, ai_plug
     out = capsys.readouterr().out
     assert (f"note: version left at 1.0.0 (could not fetch {new[:12]}: "
             "git fetch timed out after 120s)") in out
+    assert "warning:" not in out  # upstream's version is unknown, so no claim about it
     assert market.plugin("flaky")["source"]["sha"] == new
 
 

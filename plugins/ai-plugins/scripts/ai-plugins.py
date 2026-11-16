@@ -416,6 +416,11 @@ def cmd_update(_args):
             plugin["version"] = new_version
             if name in rows:
                 rows[name] = set_row_version(rows[name], new_version)
+        elif old_version and not fetch_error:
+            # Claude Code detects an update by version before sha, so a new
+            # sha under the same version is not an update to it.
+            print(f"   warning: {name} is still {old_version}, so installed users "
+                  "won't get this commit until upstream bumps its version")
         print()
 
     save_catalog(CLAUDE_FILE, claude)
