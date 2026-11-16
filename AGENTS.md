@@ -157,6 +157,13 @@ above. It lists the lines that still mention the plugin, so update those by
 hand. All three leave their edits uncommitted. Review them with `git diff`
 before committing.
 
+A re-pin with an unchanged version does not reach installed users. Claude
+Code detects a plugin update by version (`plugin.json`, then the
+marketplace entry) before SHA, so they keep the old commit until upstream
+bumps its version; only new installs get the new one. `update` prints a
+`warning:` line for each such plugin. Don't bump the catalog version by
+hand to force it: upstream's `plugin.json` version wins anyway.
+
 ## flow's Codex agents
 
 `plugins/flow/agents/*.md` (Claude Code format) is the only source for

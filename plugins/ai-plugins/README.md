@@ -31,6 +31,17 @@ the two marketplace files use different `path`s for the same plugin. `add`
 detects this; [AGENTS.md](../../AGENTS.md#path-quirks) lists which plugins
 do it and the `path` each file uses.
 
+### What a re-pin delivers
+
+Claude Code decides whether an installed plugin needs updating by its
+version: the plugin's `plugin.json` `version` first, then the marketplace
+entry's `version`, and the commit SHA only when neither is set. So a new
+`sha` under an unchanged version reaches new installs, but users who
+already installed the plugin keep the old commit until upstream bumps its
+version. This mostly affects plugins pinned to a branch, where upstream can
+add commits without a version bump. `update` prints a `warning:` line for
+each plugin it re-pins this way.
+
 ## Requirements
 
 - Python 3.9+ on PATH (stdlib only).
