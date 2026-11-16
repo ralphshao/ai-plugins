@@ -1,6 +1,6 @@
 ---
 name: flow
-description: Start or resume an engineering task. Sizes the work (trivial, normal, large) and walks it through start, plan, build, and ship with two human gates.
+description: Starts or resumes an engineering task. Sizes the work (trivial, normal, large) and walks it through start, plan, build, and ship with two human gates.
 argument-hint: "[prompt | issue reference] (empty = resume)"
 disable-model-invocation: true
 ---

@@ -1,6 +1,6 @@
 ---
 name: remove
-description: Remove a named plugin from this marketplace, from the Claude and Codex catalogs and the README plugin table. Use for "remove plugin", "drop <name> from the marketplace", or /ai-plugins:remove.
+description: Remove a named plugin from this marketplace, from the Claude and Codex catalogs and the README plugin table. Use for "remove plugin", "drop a plugin from the marketplace", or /ai-plugins:remove.
 argument-hint: <plugin-name>
 ---
 

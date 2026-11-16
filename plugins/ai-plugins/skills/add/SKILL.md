@@ -1,6 +1,6 @@
 ---
 name: add
-description: Add a new plugin to this marketplace from a GitHub URL or owner/repo slug, pinned to its latest release (or latest commit if it has none), in the Claude and Codex catalogs and the README table. Use for "add plugin", "add <repo> to the marketplace", or /ai-plugins:add.
+description: Add a new plugin to this marketplace from a GitHub URL or owner/repo slug, pinned to its latest release (or latest commit if it has none), in the Claude and Codex catalogs and the README table. Use for "add plugin", "add owner/repo to the marketplace", or /ai-plugins:add.
 argument-hint: <github-url-or-owner/repo> [--path <subdir>] [--description <text>]
 ---
 
