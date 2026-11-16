@@ -102,9 +102,8 @@ this plugin.
 - `git` or `p4`. `gh` or the GitHub MCP tools for GitHub reviews.
 - On Windows (Codex), the `py` launcher or `python` on PATH.
 
-Optional: the reviewers preload `andrej-karpathy-skills:karpathy-guidelines`
-and `ponytail:ponytail-review` when those plugins are installed, and run
-without them otherwise.
+Optional: the reviewers preload `ponytail:ponytail-review` when that plugin
+is installed, and run without it otherwise.
 
 ## How flow maps to the labs' guidance
 
