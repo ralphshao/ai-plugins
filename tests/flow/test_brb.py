@@ -218,6 +218,7 @@ class Sleeper:
         self.state = brb.state_path("s1")
         self.state.write_text(json.dumps({"armed_at": 1000, "duration": None}))
         self.clock, self.naps, self.on_nap = 1000.0, [], None
+        self.transcript = transcript
         self.data = {"session_id": "s1", "transcript_path": str(transcript),
                      "cwd": str(tmp_path)}
         monkeypatch.setattr(brb.time, "time", lambda: self.clock)
@@ -257,11 +258,63 @@ def test_superseded_while_sleeping_exits_quietly(sleeper):
     assert json.loads(sleeper.state.read_text())["token"] == "newer"
 
 
-def test_missing_usage_keeps_state_for_the_next_stop(run):
+def test_missing_usage_still_schedules_the_first_ping(run):
+    # #42: the user is away, so no later Stop would retry.
     run.transcript.write_text('{"type": "user"}', encoding="utf-8")
     arm(run)
-    assert run("stop")[0] == 0
-    assert run.state.exists()
+    code, err = run("stop")
+    assert code == 2 and "keepalive" in err
+    assert json.loads(run.state.read_text())["until"] > 1000
+
+
+def test_unreadable_transcript_still_pings(run):
+    arm(run)
+    assert run("stop", transcript_path=None)[0] == 2
+
+
+def test_usage_that_never_appears_falls_back_after_a_bounded_wait(sleeper):
+    sleeper.transcript.write_text('{"type": "user"}', encoding="utf-8")
+    assert brb.on_stop(sleeper.data) == 2
+    waits = [brb.USAGE_POLL] * brb.USAGE_TRIES
+    assert sleeper.naps[:len(waits)] == waits
+    assert sleeper.naps[len(waits)] > brb.USAGE_POLL  # then the real sleep
+
+
+def test_usage_appearing_during_the_wait_is_used(sleeper):
+    sleeper.transcript.write_text('{"type": "user"}', encoding="utf-8")
+
+    def flush(n):
+        if n == 2:
+            sleeper.transcript.write_text(usage_line(h1=500, read=50_000),
+                                          encoding="utf-8")
+    sleeper.on_nap = flush
+    assert brb.on_stop(sleeper.data) == 2
+    assert sleeper.naps[:3] == [brb.USAGE_POLL, brb.USAGE_POLL, 1000]
+    # The record's 1h TTL, not the settings fallback: bare /brb ends at 2h.
+    assert json.loads(sleeper.state.read_text())["until"] == 1000 + 2 * H
+
+
+def test_stale_small_usage_is_replaced_during_the_wait(sleeper):
+    sleeper.transcript.write_text(usage_line(h1=500), encoding="utf-8")
+    sleeper.on_nap = lambda n: sleeper.transcript.write_text(
+        usage_line(h1=500, read=50_000), encoding="utf-8")
+    assert brb.on_stop(sleeper.data) == 2
+
+
+def test_small_context_disarms_after_the_wait(sleeper):
+    sleeper.transcript.write_text(usage_line(h1=500), encoding="utf-8")
+    assert brb.on_stop(sleeper.data) == 0
+    assert sleeper.naps == [brb.USAGE_POLL] * brb.USAGE_TRIES
+    assert not sleeper.state.exists()
+
+
+def test_cancel_while_waiting_for_usage_exits_quietly(sleeper, capsys):
+    sleeper.transcript.write_text('{"type": "user"}', encoding="utf-8")
+    sleeper.on_nap = lambda n: sleeper.state.unlink()
+    assert brb.on_stop(sleeper.data) == 0
+    assert sleeper.naps == [brb.USAGE_POLL]
+    assert not sleeper.state.exists()  # the cancel is not undone
+    assert capsys.readouterr().err == ""
 
 
 def test_save_leaves_no_temp_files(tmp_path):

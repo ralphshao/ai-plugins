@@ -129,13 +129,16 @@ def next_wake(now, ttl, until):
 #   The keepalive's own wakes arrive as system reminders and don't fire it.
 # stop (Stop, asyncRewake): if armed, sleep until the next ping is due, then
 #   exit 2 so Claude Code wakes the idle session. That ping turn ends with
-#   another Stop, which re-reads the TTL and schedules the next one.
+#   another Stop, which re-reads the TTL and schedules the next one. The
+#   transcript can lag behind the turn that just ended, so it first waits a
+#   few seconds for that turn's usage record.
 #
 # State is one JSON file per session in the system temp folder: it belongs to
 # the session, not to a task, and losing it only stops the keepalive.
 
 BRB = re.compile(r"/(?:flow:)?brb(?:\s.*)?", re.S)
 POLL = 30  # seconds between cancel checks while sleeping
+USAGE_POLL, USAGE_TRIES = 1, 10  # wait this long for the turn's usage record
 PING = ("flow /brb keepalive: the user is away and this turn only keeps the "
         "prompt cache warm. Reply with only \"ok\". Don't run tools.")
 
@@ -197,16 +200,38 @@ def on_prompt(data):
         drop(state_path(data.get("session_id")))
 
 
+def settled_usage(transcript_path, path, token):
+    """last_usage, re-read while it is missing or too small to ping.
+
+    The transcript can lag behind the turn that just ended, so the newest
+    record may be absent, or an older one from when the session was small.
+    There is no later Stop to retry on: the user is away.
+    """
+    usage = last_usage(transcript_path)
+    if os.environ.get("FLOW_BRB_NO_SLEEP"):
+        return usage
+    for _ in range(USAGE_TRIES):
+        if context_tokens(usage) >= MIN_CONTEXT or superseded(path, token):
+            break
+        time.sleep(USAGE_POLL)
+        usage = last_usage(transcript_path)
+    return usage
+
+
 def on_stop(data):
     """Return the exit code: 2 wakes the session for a ping, 0 does nothing."""
     path = state_path(data.get("session_id"))
     state = load(path)
     if not state:
         return 0
-    usage = last_usage(data.get("transcript_path"))
-    if usage is None:
-        return 0  # transcript unreadable or not flushed yet: the next Stop retries
-    if context_tokens(usage) < MIN_CONTEXT:
+    token = uuid.uuid4().hex  # a newer Stop's sleeper supersedes this one
+    save(path, {**state, "token": token})
+    usage = settled_usage(data.get("transcript_path"), path, token)
+    if superseded(path, token):
+        return 0
+    # No usage at all (unreadable or still not flushed): the context size is
+    # unknown, so ping on the settings TTL rather than silently never start.
+    if usage is not None and context_tokens(usage) < MIN_CONTEXT:
         drop(path)
         return 0
     ttl = detect_ttl(usage, os.environ, settings_files(data.get("cwd")))
@@ -217,7 +242,6 @@ def on_stop(data):
     if when is None:
         drop(path)
         return 0
-    token = uuid.uuid4().hex  # a newer Stop's sleeper supersedes this one
     save(path, {**state, "until": until, "token": token})
     if not os.environ.get("FLOW_BRB_NO_SLEEP"):
         while t < when:
