@@ -136,7 +136,7 @@ def next_wake(now, ttl, until):
 # State is one JSON file per session in the system temp folder: it belongs to
 # the session, not to a task, and losing it only stops the keepalive.
 
-BRB = re.compile(r"/(?:flow:)?brb(?:\s.*)?", re.S)
+BRB = re.compile(r"/(?:flow:)?brb(?:\s.*)?", re.DOTALL)
 POLL = 30  # seconds between cancel checks while sleeping
 USAGE_POLL, USAGE_TRIES = 1, 10  # wait this long for the turn's usage record
 PING = ("flow /brb keepalive: the user is away and this turn only keeps the "

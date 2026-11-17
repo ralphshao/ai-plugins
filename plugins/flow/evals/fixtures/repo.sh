@@ -23,6 +23,7 @@ def test_add():
 def test_divide():
     assert divide(6, 3) == 2
 PY
+# shellcheck disable=SC2016  # the backticks are literal Markdown
 printf '# calc\n\nRun tests: `python3 -m pytest -q`\n' > README.md
 git init -q -b main
 git -c user.name=eval -c user.email=eval@example.com add -A

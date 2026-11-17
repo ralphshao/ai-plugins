@@ -18,9 +18,9 @@ SKILLS = sorted(p.parent.name for p in (FLOW / "skills").glob("*/SKILL.md"))
 
 
 def frontmatter(path):
-    m = re.match(r"---\n(.*?)\n---\n", path.read_text(encoding="utf-8"), re.S)
+    m = re.match(r"---\n(.*?)\n---\n", path.read_text(encoding="utf-8"), re.DOTALL)
     assert m, f"{path} has no frontmatter"
-    return dict(re.findall(r"^([\w-]+):\s*(.*)$", m.group(1), re.M))
+    return dict(re.findall(r"^([\w-]+):\s*(.*)$", m.group(1), re.MULTILINE))
 
 
 @pytest.mark.parametrize("name", SKILLS)
@@ -116,12 +116,12 @@ VCS_FREE = [n for n in SKILLS if not n.startswith(("vcs-", "host-"))]
 
 def body(name):
     text = (FLOW / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
-    return re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.S)
+    return re.sub(r"\A---\n.*?\n---\n", "", text, flags=re.DOTALL)
 
 
 def ops(name):
     return [op for op in VCS_OPS + HOST_OPS
-            if re.search(rf"^## `?{op}`?\s*$", body(name), re.M)]
+            if re.search(rf"^## `?{op}`?\s*$", body(name), re.MULTILINE)]
 
 
 @pytest.mark.parametrize("name", ["vcs-git", "vcs-perforce"])
@@ -156,4 +156,4 @@ def test_host_specifics_stay_in_their_skill(name):
     if name != "host-github":
         assert not re.search(r"`gh\b", body(name)), name
     if name != "host-swarm":
-        assert not re.search(r"(?<!host-)swarm", body(name), re.I), name
+        assert not re.search(r"(?<!host-)swarm", body(name), re.IGNORECASE), name

@@ -9,6 +9,14 @@ alone instead of guessing.
 flow works in git repos (GitHub for reviews) and in Perforce workspaces
 (Helix Swarm for reviews).
 
+## Install
+
+In Claude Code 2.1.275 or later:
+
+```
+/plugin install flow --marketplace ralphshao/ai-plugins
+```
+
 ## Stages
 
 1. **start** - turns the prompt or issue into its own branch (or worktree,

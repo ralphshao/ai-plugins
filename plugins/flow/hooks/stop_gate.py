@@ -46,7 +46,7 @@ def warn(message):
 
 def section(text, heading):
     m = re.search(rf"^## {re.escape(heading)}[ \t]*\n(.*?)(?=^## |\Z)",
-                  text, re.M | re.S)
+                  text, re.MULTILINE | re.DOTALL)
     return m.group(1) if m else ""
 
 
@@ -69,7 +69,7 @@ def active_plans(root):
             continue
         if not section(text, "Status").strip().startswith("Approved"):
             continue
-        if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.M):
+        if re.search(r"^\s*- \[ \]", section(text, "Open questions"), re.MULTILINE):
             return []  # parked: let it stop
         cmd = test_command(text)
         if cmd:
@@ -121,7 +121,7 @@ def repo_root(cwd):
     if top:
         return top
     info = run(["p4", "-ztag", "info"], cwd) or ""
-    m = re.search(r"^\.\.\. clientRoot (.+)$", info, re.M)
+    m = re.search(r"^\.\.\. clientRoot (.+)$", info, re.MULTILINE)
     if m:
         root = Path(m.group(1).strip()).resolve()
         if root == cwd or root in cwd.parents:
@@ -151,7 +151,7 @@ def fingerprint(root):
 
 
 def pass_file(root, cmd):
-    key = hashlib.sha256(f"{root}\0{cmd}".encode("utf-8")).hexdigest()[:16]
+    key = hashlib.sha256(f"{root}\0{cmd}".encode()).hexdigest()[:16]
     return Path(tempfile.gettempdir()) / f"flow-stop-gate-{key}"
 
 

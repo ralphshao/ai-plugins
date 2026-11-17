@@ -8,7 +8,6 @@ import pytest
 
 from conftest import manifest
 
-
 # --- parse_repo -------------------------------------------------------------
 
 GH = "https://github.com/owner/repo"

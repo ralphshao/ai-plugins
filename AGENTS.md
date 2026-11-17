@@ -60,10 +60,20 @@ fine; just don't commit the clone.)
 ## Validating changes
 
 ```bash
-claude plugin validate .
+claude plugin validate . --strict       # the marketplace; --strict fails on warnings
+claude plugin validate plugins/flow --strict    # one local plugin; repeat per folder
+uv run --no-project --with ruff==0.17.5 ruff check
+git ls-files -z '*.sh' | xargs -0 uv run --no-project --with shellcheck-py==0.11.0.1 shellcheck
 ```
 
-only checks `.claude-plugin/marketplace.json`, and only validates local
+CI's `lint` job (`.github/workflows/tests.yml`) runs these four checks on
+every PR and on `main`, with the versions pinned there; keep the versions
+above the same. `ruff.toml` holds the lint rules (target Python 3.9, no
+formatting: the code is not ruff-formatted) and `.shellcheckrc` the
+shellcheck options. Fix a finding, or silence it on its line with a
+`noqa`/`disable` comment that says why.
+
+`claude plugin validate .` only checks `.claude-plugin/marketplace.json`, and only validates local
 relative-path sources' `plugin.json` — it does not fetch remote `url`/
 `git-subdir` sources to check them. There's no CLI validator for the Codex
 file either; check its JSON parses and that `source.sha` is a real commit
@@ -123,6 +133,7 @@ repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
 `https://github.com/` to point at them.
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
+Its `lint` job runs the checks under [Validating changes](#validating-changes).
 Keep `.python-version` on the same version as CI's main matrix entry.
 
 The workflows pin each action to a full commit SHA, with the tag in a

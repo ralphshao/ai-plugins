@@ -227,7 +227,7 @@ def test_guard_fails_closed_for_flow_agents(agent):
     # tool_input of the wrong type makes check() raise.
     code, err = run({"agent_type": agent, "tool_name": "Bash", "tool_input": "ls"})
     assert code == 2 and "guard failed" in err
-    code, _ = raw('{"agent_type": "%s", "tool_name": ' % agent)
+    code, _ = raw('{"agent_type": "' + agent + '", "tool_name": ')
     assert code == 2
 
 

@@ -143,7 +143,7 @@ def test_codex_settings_come_from_codex_keys(home, tmp_path):
         shipped = installed[f"flow-{source.stem}"]
         for src, key in (("codex-model", "model"),
                          ("codex-effort", "model_reasoning_effort")):
-            value = re.search(rf"^{src}:\s*(\S+)$", text, re.M)
+            value = re.search(rf"^{src}:\s*(\S+)$", text, re.MULTILINE)
             assert shipped.get(key) == (value and value.group(1)), (source.name, key)
 
 

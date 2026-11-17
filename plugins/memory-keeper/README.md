@@ -5,6 +5,14 @@ deduplicated, and in the right tier. Claude only: it uses the claude.ai
 memory tools (`memory_list`, `memory_delete`, ...), which Claude Code's CLI
 and Codex don't have. Meant for Cowork, including cloud scheduled runs.
 
+## Install
+
+In Claude Code 2.1.275 or later:
+
+```
+/plugin install memory-keeper --marketplace ralphshao/ai-plugins
+```
+
 ## Skills
 
 | Skill | Does |
