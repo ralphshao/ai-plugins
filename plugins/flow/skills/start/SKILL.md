@@ -1,6 +1,6 @@
 ---
 name: start
-description: First flow phase. Turns a prompt or issue into an isolated workspace (branch, worktree, or changelist) and a checkpointed .flow/<slug>/brief.md.
+description: First flow phase. Turns a prompt or issue into an isolated workspace (branch, worktree, or changelist) and a checkpointed .flow/[slug]/brief.md.
 argument-hint: "[prompt | issue reference]"
 disable-model-invocation: true
 ---

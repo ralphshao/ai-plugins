@@ -1,6 +1,6 @@
 ---
 name: plan
-description: Second flow phase. Explores the code, interviews the user on open decisions, writes .flow/<slug>/plan.md, and stops at GATE 1 for approval.
+description: Second flow phase. Explores the code, interviews the user on open decisions, writes .flow/[slug]/plan.md, and stops at GATE 1 for approval.
 disable-model-invocation: true
 ---
 
