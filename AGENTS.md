@@ -124,6 +124,13 @@ repos are local git repos, and a private `GIT_CONFIG_GLOBAL` rewrites
 
 CI (`.github/workflows/tests.yml`) runs them on Linux, macOS, and Windows.
 Keep `.python-version` on the same version as CI's main matrix entry.
+
+The workflows pin each action to a full commit SHA, with the tag in a
+trailing comment, and `evals.yml` pins the `@anthropic-ai/claude-code`
+version. Dependabot (`.github/dependabot.yml`) opens weekly PRs that move
+the action pins; nothing moves the CLI pin, so bump it by hand. Don't
+replace a pin with a tag or an unversioned install.
+
 When you change a script or hook, add or update a test for the new behavior.
 
 ## Maintenance script
