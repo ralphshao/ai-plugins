@@ -39,8 +39,8 @@ jobs:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version-file: .python-version
       # Versions are pinned so a new release can't turn main red; bump them
@@ -50,7 +50,7 @@ jobs:
       - run: ruff check
       - run: git ls-files -z '*.sh' | xargs -0 shellcheck
       # validate reads only local files: no API key or login needed.
-      - run: npm install -g @anthropic-ai/claude-code@2.1.301
+      - run: npm install -g @anthropic-ai/claude-code@2.1.326
       - run: |
           claude plugin validate . --strict
           for plugin in plugins/*/; do
