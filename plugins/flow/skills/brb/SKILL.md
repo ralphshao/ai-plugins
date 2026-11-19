@@ -1,7 +1,7 @@
 ---
 name: brb
 description: Keeps this session's prompt cache warm during a break, so the first turn back reads the cache instead of rewriting the whole context. Claude Code only.
-argument-hint: "[duration, e.g. 90m, 2h; empty = one cache lifetime]"
+argument-hint: "[duration, e.g. 90m, 2h; empty = 60m on a 1h cache, 30m on a 5m cache]"
 disable-model-invocation: true
 ---
 
@@ -16,7 +16,7 @@ then end your turn. Don't run tools.
   extra words, arms nothing): say so, show those forms, and say nothing was
   armed.
 - **Otherwise:** say the keepalive is armed for the duration given, or for
-  one cache lifetime when none was given (60m on a 1h cache, 30m on 5m),
+  the default when none was given (60m on a 1h cache, 30m on a 5m cache),
   plus grace: half the duration, at least one cache lifetime. Add that any
   message cancels it, that small sessions (under ~20k tokens) aren't
   pinged, and that after it ends, Claude Code's own idle compaction handles

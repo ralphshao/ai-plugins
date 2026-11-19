@@ -329,7 +329,7 @@ def test_skill_states_the_hook_constants():
     skill = (REPO_ROOT / "plugins" / "flow" / "skills" / "brb" / "SKILL.md"
              ).read_text(encoding="utf-8")
     assert f"{brb.DEFAULT_DURATION[H] // 60}m on a 1h cache" in skill
-    assert f"{brb.DEFAULT_DURATION[M5] // 60}m on 5m" in skill
+    assert f"{brb.DEFAULT_DURATION[M5] // 60}m on a 5m cache" in skill
     assert f"~{brb.MIN_CONTEXT // 1000}k tokens" in skill
     assert brb.PING.split(":")[0] in skill  # "flow /brb keepalive"
 
